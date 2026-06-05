@@ -34,21 +34,12 @@ export const WalletView: React.FC = () => {
 
   const [walletTab, setWalletTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [selectedMethod, setSelectedMethod] = useState<'bKash' | 'Nagad' | 'Rocket'>('bKash');
-  const [depositMode, setDepositMode] = useState<'auto' | 'manual'>('auto');
   
   // Deposit Form
   const [depAmount, setDepAmount] = useState('');
   const [depPhone, setDepPhone] = useState('');
   const [depTxId, setDepTxId] = useState('');
   const [depMsg, setDepMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // Auto Deposit SDK Gateway states
-  const [showAutoModal, setShowAutoModal] = useState(false);
-  const [autoStep, setAutoStep] = useState<'phone' | 'otp' | 'pin' | 'processing' | 'success'>('phone');
-  const [gatewayPhone, setGatewayPhone] = useState('');
-  const [gatewayOtp, setGatewayOtp] = useState('');
-  const [gatewayPin, setGatewayPin] = useState('');
-  const [gatewayError, setGatewayError] = useState<string | null>(null);
 
   // Withdraw Form
   const [wdAmount, setWdAmount] = useState('');
@@ -116,85 +107,6 @@ export const WalletView: React.FC = () => {
     } catch {
       setDepMsg({ type: 'error', text: 'Database error. Please try again.' });
     }
-  };
-
-  // Start checkout simulation portal for Auto Instant Deposit
-  const handleStartAutoDeposit = () => {
-    setGatewayError(null);
-    const amount = Number(depAmount);
-    if (!amount || amount < 10) {
-      setDepMsg({ type: 'error', text: language === 'en' ? 'Minimum deposit is 10 Coins.' : 'সর্বনিম্ন ১০টি কয়েন নিতে হবে।' });
-      return;
-    }
-    setGatewayPhone(profile?.account_number || '');
-    setGatewayOtp('');
-    setGatewayPin('');
-    setAutoStep('phone');
-    setShowAutoModal(true);
-  };
-
-  const handleGatewayProceedPhone = () => {
-    if (!gatewayPhone || gatewayPhone.length < 11) {
-      setGatewayError(language === 'en' ? 'Please enter a valid 11-digit wallet number' : 'সঠিক ১১-ডিজিটের মোবাইল ব্যাংকিং নাম্বার দিন');
-      return;
-    }
-    setGatewayError(null);
-    setAutoStep('otp');
-  };
-
-  const handleGatewayProceedOtp = () => {
-    if (!gatewayOtp || gatewayOtp.length < 4) {
-      setGatewayError(language === 'en' ? 'Please enter the verification code' : 'ভেরিফিকেশন ওটিপি কোডটি লিখুন');
-      return;
-    }
-    setGatewayError(null);
-    setAutoStep('pin');
-  };
-
-  const handleGatewayConfirmPin = async () => {
-    if (!gatewayPin || gatewayPin.length < 4) {
-      setGatewayError(language === 'en' ? 'Please enter your secure 5-digit PIN' : 'আপনার গোপন পিন নাম্বার দিন');
-      return;
-    }
-    setGatewayError(null);
-    setAutoStep('processing');
-
-    setTimeout(async () => {
-      try {
-        const amount = Number(depAmount);
-        const txId = 'tx_auto_' + Date.now();
-        const autoTxId = 'AUTO_' + Math.random().toString(36).substring(3, 10).toUpperCase();
-
-        const newTx: CoinTransaction = {
-          transaction_id: txId,
-          userId: profile?.uid || 'unknown',
-          userName: profile?.name || 'User',
-          type: 'deposit',
-          amount: amount,
-          payment_method: (selectedMethod === 'Rocket' ? 'Rocket' : selectedMethod) + ' (Auto Gateway)',
-          account_number: gatewayPhone,
-          tx_id: autoTxId,
-          status: 'approved',
-          timestamp: new Date().toISOString()
-        };
-
-        if (isGuest && guestUser) {
-          addCoins(amount, 'coins');
-        } else if (profile?.uid) {
-          // Direct real-time updates for logged-in accounts
-          await updateDoc(doc(db, 'users', profile.uid), {
-            coins_balance: increment(amount)
-          });
-          await setDoc(doc(db, 'transactions', txId), newTx);
-        }
-
-        setAutoStep('success');
-        setDepAmount('');
-      } catch (err) {
-        setGatewayError('Gateway checkout timeout. Please try again.');
-        setAutoStep('phone');
-      }
-    }, 1800);
   };
 
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
@@ -388,35 +300,9 @@ export const WalletView: React.FC = () => {
                   </h3>
                   <p className="text-gray-400 text-xs mt-1 leading-relaxed">
                     {language === 'en' 
-                      ? 'Select deposit type and method. Choose Auto Deposit for instant automatic crediting.' 
-                      : 'আমানতের ধরণ এবং পদ্ধতি বেছে নিন। তাত্ক্ষণিক কয়েন পেতে অটোমেটিক পেমেন্ট ব্যবহার করুন।'}
+                      ? 'Choose your payment method, copy our number, send money manually, and submit your transaction ticket below.' 
+                      : 'আপনার পেমেন্ট পদ্ধতি বেছে নিন, নাম্বারটি কপি করে ম্যানুয়ালি টাকা পাঠিয়ে রশিদ সাবমিট করুন।'}
                   </p>
-                </div>
-
-                {/* Deposit Type Switcher (Auto vs Manual) */}
-                <div className="flex bg-[#0e0f17] border border-gray-850 rounded-xl p-1">
-                  <button
-                    type="button"
-                    onClick={() => setDepositMode('auto')}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                      depositMode === 'auto'
-                        ? 'bg-amber-500 text-black shadow-lg font-bold'
-                        : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <span>⚡</span> {language === 'en' ? 'Auto Deposit (Instant)' : 'ইনস্ট্যান্ট অটো পেমেন্ট'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDepositMode('manual')}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                      depositMode === 'manual'
-                        ? 'bg-amber-500 text-black shadow-lg font-bold'
-                        : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <span>📝</span> {language === 'en' ? 'Manual Sendmoney' : 'ম্যানুয়াল সেন্ডমানি'}
-                  </button>
                 </div>
 
                 {/* Local method togglers */}
@@ -467,127 +353,83 @@ export const WalletView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Dynamic Switch View */}
-                {depositMode === 'auto' ? (
-                  /* AUTO INSTANT PAYMENT INTEGRATION FORM */
-                  <div className="space-y-4 animate-fade-in">
-                    <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 space-y-2">
-                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">
-                        🛡️ {language === 'en' ? 'INSTANT GATEWAY SANDBOX' : 'ইনস্ট্যান্ট গেটওয়ে ওয়ান-ক্লিক রিচার্জ'}
+                {/* MANUAL PAYMENT DETAILS FORM */}
+                <div className="space-y-4 animate-fade-in">
+                  {/* Steps banner */}
+                  <div className="bg-[#1a1c2b]/50 border border-gray-800 rounded-2xl p-4 space-y-2">
+                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">
+                      {t('paymentInstructions')} (Personal Sender)
+                    </span>
+                    <p className="text-xs text-gray-300 leading-relaxed">
+                      {t('sendMoneyTo', { amount: depAmount || '10+', method: selectedMethod })} 
+                      <span className="block font-mono font-bold text-white text-sm tracking-wider mt-1.5 bg-black/40 px-3 py-1.5 rounded-lg border border-gray-800 inline-block copy-btn cursor-pointer">
+                        {billingNumbers[selectedMethod]}
                       </span>
-                      <p className="text-xs text-gray-300 leading-relaxed">
-                        {language === 'en' 
-                          ? 'This automatically processes payment using secure merchant API simulation. Funds credit instantly without waiting.'
-                          : 'এই গেটওয়ে সরাসরি বিকাশ ও নগদ অটোমেটিক মার্চেন্ট এপিআই অনুসরণ করে তাৎক্ষণিকভাবে ব্যালেন্স রিচার্জ সম্পন্ন করবে।'}
-                      </p>
+                    </p>
+                    <span className="block text-[10px] text-gray-400 italic">
+                      {language === 'en' ? '* 1 BDT Cash Sent = 1 Wallet Coin.' : '* ১ টাকা ম্যানুয়ালি পাঠালে ওয়ালেটে ১ কয়েন পাবেন।'}
+                    </span>
+                  </div>
+
+                  {/* Form fields */}
+                  <form onSubmit={handleDepositSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-gray-300 font-semibold">{t('walletFormAmount')} (BDT)</label>
+                        <input
+                          type="number"
+                          min="10"
+                          required
+                          value={depAmount}
+                          onChange={(e) => setDepAmount(e.target.value)}
+                          placeholder="Min 10"
+                          className="w-full bg-[#0e0f17] border border-gray-850 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition-all font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[#94a3b8] text-xs font-semibold">{t('walletFormNumber')}</label>
+                        <input
+                          type="tel"
+                          required
+                          value={depPhone}
+                          onChange={(e) => setDepPhone(e.target.value)}
+                          placeholder="e.g., 01712345678"
+                          className="w-full bg-[#0e0f17] border border-gray-850 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition-all font-mono"
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs text-gray-300 font-semibold">{t('walletFormAmount')} (BDT)</label>
+                      <label className="text-[#94a3b8] text-xs font-semibold">{t('walletFormTxId')} (ম্যানুয়াল TrxID)</label>
                       <input
-                        type="number"
-                        min="10"
+                        type="text"
                         required
-                        value={depAmount}
-                        onChange={(e) => setDepAmount(e.target.value)}
-                        placeholder="Min 10"
-                        className="w-full bg-[#0e0f17] border border-gray-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition-all font-mono"
+                        value={depTxId}
+                        onChange={(e) => setDepTxId(e.target.value)}
+                        placeholder="e.g., AH81928371X"
+                        className="w-full bg-[#0e0f17] border border-gray-850 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition-all font-mono"
                       />
                     </div>
 
                     {depMsg && (
-                      <div className="p-3 rounded-xl text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-400">
+                      <div className={`p-4 rounded-xl text-xs font-semibold ${
+                        depMsg.type === 'success' 
+                          ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' 
+                          : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
+                      }`}>
                         {depMsg.text}
                       </div>
                     )}
 
                     <button
-                      type="button"
-                      onClick={handleStartAutoDeposit}
-                      className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs tracking-wider rounded-xl transition-all shadow-md shadow-amber-500/10 flex items-center justify-center gap-1.5 cursor-pointer"
+                      type="submit"
+                      className="w-full py-3 bg-amber-500 border border-amber-500/30 text-black hover:bg-amber-400 font-extrabold text-xs tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer"
                     >
-                      ⚡ {language === 'en' ? 'Pay Automatically with' : 'ইনস্ট্যান্ট অটোমেটিক পেমেন্ট করুন -'} {selectedMethod}
+                      <Send className="h-3.5 w-3.5 leading-none" />
+                      {language === 'en' ? 'Submit Manual Deposit Ticket' : 'ম্যানুয়াল ডিপোজিট টিকেট জমা দিন'}
                     </button>
-                  </div>
-                ) : (
-                  /* MANUAL PAYMENT DETAILS FORM */
-                  <div className="space-y-4 animate-fade-in">
-                    {/* Steps banner */}
-                    <div className="bg-[#1a1c2b]/50 border border-gray-800 rounded-2xl p-4 space-y-2">
-                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">
-                        {t('paymentInstructions')} (Personal)
-                      </span>
-                      <p className="text-xs text-gray-300 leading-relaxed">
-                        {t('sendMoneyTo', { amount: depAmount || '10+', method: selectedMethod })} 
-                        <span className="block font-mono font-bold text-white text-sm tracking-wider mt-1.5 bg-black/40 px-3 py-1.5 rounded-lg border border-gray-800 inline-block copy-btn cursor-pointer">
-                          {billingNumbers[selectedMethod]}
-                        </span>
-                      </p>
-                      <span className="block text-[10px] text-gray-400 italic">
-                        {language === 'en' ? '* 1 BDT Cash Sent = 1 Wallet Coin.' : '* ১ টাকা ম্যানুয়ালি পাঠালে ওয়ালেটে ১ কয়েন পাবেন।'}
-                      </span>
-                    </div>
-
-                    {/* Form fields */}
-                    <form onSubmit={handleDepositSubmit} className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs text-gray-300 font-semibold">{t('walletFormAmount')} (BDT)</label>
-                          <input
-                            type="number"
-                            min="10"
-                            required
-                            value={depAmount}
-                            onChange={(e) => setDepAmount(e.target.value)}
-                            placeholder="Min 10"
-                            className="w-full bg-[#0e0f17] border border-gray-850 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition-all font-mono"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[#94a3b8] text-xs font-semibold">{t('walletFormNumber')}</label>
-                          <input
-                            type="tel"
-                            required
-                            value={depPhone}
-                            onChange={(e) => setDepPhone(e.target.value)}
-                            placeholder="e.g., 01712345678"
-                            className="w-full bg-[#0e0f17] border border-gray-850 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition-all font-mono"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[#94a3b8] text-xs font-semibold">{t('walletFormTxId')} (ম্যানুয়াল TrxID)</label>
-                        <input
-                          type="text"
-                          required
-                          value={depTxId}
-                          onChange={(e) => setDepTxId(e.target.value)}
-                          placeholder="e.g., AH81928371X"
-                          className="w-full bg-[#0e0f17] border border-gray-850 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition-all font-mono"
-                        />
-                      </div>
-
-                      {depMsg && (
-                        <div className={`p-4 rounded-xl text-xs font-semibold ${
-                          depMsg.type === 'success' 
-                            ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' 
-                            : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
-                        }`}>
-                          {depMsg.text}
-                        </div>
-                      )}
-
-                      <button
-                        type="submit"
-                        className="w-full py-3 bg-amber-500 border border-amber-500/30 text-black hover:bg-amber-400 font-extrabold text-xs tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <Send className="h-3.5 w-3.5 leading-none" />
-                        {language === 'en' ? 'Submit Manual Deposit Ticket' : 'ম্যানুয়াল ডিপোজিট টিকেট জমা দিন'}
-                      </button>
-                    </form>
-                  </div>
-                )}
+                  </form>
+                </div>
               </div>
             ) : (
               /* WITHDRAW FLOW */
@@ -818,7 +660,7 @@ export const WalletView: React.FC = () => {
                           </span>
                         ) : tx.status === 'approved' ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <CheckCircle className="h-3 w-3" />
+                            <Check className="h-3 w-3" />
                             {t('statusApproved')}
                           </span>
                         ) : (
@@ -858,266 +700,6 @@ export const WalletView: React.FC = () => {
           </div>
         )}
       </section>
-
-      {/* PROFESSIONAL AUTO GATEWAY SIMULATOR MODAL */}
-      {showAutoModal && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#121420] border border-gray-800 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl relative">
-            
-            {/* Header branding based on selection */}
-            {selectedMethod === 'bKash' ? (
-              <div className="bg-[#e2125d] text-white p-6 text-center space-y-2 relative">
-                <button 
-                  onClick={() => setShowAutoModal(false)}
-                  className="absolute right-4 top-4 text-white hover:text-gray-200 bg-black/20 hover:bg-black/30 w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-all cursor-pointer"
-                >
-                  ✕
-                </button>
-                <div className="font-sans font-black tracking-wider text-base uppercase flex items-center justify-center gap-1.5">
-                  <span className="text-xl">🌸</span> bKash Checkout
-                </div>
-                <div className="text-[9px] bg-black/20 py-1 px-3 rounded-md inline-block font-mono font-medium text-pink-100">
-                  Merchant: ESPORTS GLOBAL LTD
-                </div>
-                <div className="text-xl font-mono font-black mt-2">
-                  ৳{depAmount || '10'} BDT
-                </div>
-              </div>
-            ) : selectedMethod === 'Nagad' ? (
-              <div className="bg-gradient-to-r from-orange-600 to-red-500 text-white p-6 text-center space-y-2 relative">
-                <button 
-                  onClick={() => setShowAutoModal(false)}
-                  className="absolute right-4 top-4 text-white hover:text-gray-200 bg-black/20 hover:bg-black/30 w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-all cursor-pointer"
-                >
-                  ✕
-                </button>
-                <div className="font-sans font-black tracking-wider text-base uppercase flex items-center justify-center gap-1.5">
-                  <span className="text-xl">🍊</span> Nagad Gateway
-                </div>
-                <div className="text-[9px] bg-black/20 py-1 px-3 rounded-md inline-block font-mono font-medium text-orange-100">
-                  Merchant: ESPORTS GLOBAL LTD
-                </div>
-                <div className="text-xl font-mono font-black mt-2">
-                  ৳{depAmount || '10'} BDT
-                </div>
-              </div>
-            ) : (
-              <div className="bg-[#8c3494] text-white p-6 text-center space-y-2 relative">
-                <button 
-                  onClick={() => setShowAutoModal(false)}
-                  className="absolute right-4 top-4 text-white hover:text-gray-200 bg-black/20 hover:bg-black/30 w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-all cursor-pointer"
-                >
-                  ✕
-                </button>
-                <div className="font-sans font-black tracking-wider text-base uppercase flex items-center justify-center gap-1.5">
-                  <span className="text-xl">🚀</span> Rocket Checkout
-                </div>
-                <div className="text-[9px] bg-black/20 py-1 px-3 rounded-md inline-block font-mono font-medium text-purple-100">
-                  Merchant: ESPORTS GLOBAL LTD
-                </div>
-                <div className="text-xl font-mono font-black mt-2">
-                  ৳{depAmount || '10'} BDT
-                </div>
-              </div>
-            )}
-
-            {/* Error message */}
-            {gatewayError && (
-              <div className="bg-rose-500/15 border-b border-rose-500/30 px-5 py-2.5 text-xs text-rose-400 font-bold text-center">
-                ⚠️ {gatewayError}
-              </div>
-            )}
-
-            {/* Step-by-Step Forms */}
-            <div className="p-6 space-y-4">
-              {autoStep === 'phone' && (
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">
-                      {selectedMethod} Wallet Number (11-digit)
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-3.5 text-xs text-gray-500 font-bold font-mono">BD</span>
-                      <input 
-                        type="tel"
-                        value={gatewayPhone}
-                        onChange={(e) => setGatewayPhone(e.target.value)}
-                        placeholder="e.g. 017XXXXXXXX"
-                        maxLength={11}
-                        className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 font-mono font-bold"
-                      />
-                    </div>
-                    <span className="text-[10px] text-gray-500 block leading-normal mt-1">
-                      {language === 'en' 
-                        ? 'Your mobile payment account number from which coins will be debited.'
-                        : 'আপনার নিজস্ব সচল মোবাইল ওয়ালেট নাম্বার দিন যেখান থেকে টাকা কাটা হবে।'}
-                    </span>
-                  </div>
-
-                  <div className="text-[10px] text-gray-400 font-sans leading-relaxed bg-[#0a0b12] p-3.5 rounded-xl border border-gray-850">
-                    <span className="text-amber-500 font-extrabold">Instant Deposit Policy:</span> By continuing, an SSL-secured SDK gateway verifies transaction credentials instantly.
-                  </div>
-
-                  <div className="flex gap-3 pt-2">
-                    <button 
-                      type="button"
-                      onClick={() => setShowAutoModal(false)}
-                      className="flex-1 py-3 border border-gray-800 text-gray-400 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={handleGatewayProceedPhone}
-                      className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-extrabold transition-all cursor-pointer"
-                    >
-                      Proceed
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {autoStep === 'otp' && (
-                <div className="space-y-4 text-center">
-                  <div className="space-y-2">
-                    <label className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest block">
-                      VERIFICATION CODE (OTP)
-                    </label>
-                    <p className="text-xs text-gray-400 leading-normal">
-                      We sent a mock SMS verification OTP to <span className="text-white font-bold font-mono">{gatewayPhone}</span>
-                    </p>
-                    <input 
-                      type="text"
-                      value={gatewayOtp}
-                      onChange={(e) => setGatewayOtp(e.target.value)}
-                      placeholder="Use default passcode: 1234"
-                      maxLength={6}
-                      className="w-48 mx-auto text-center bg-[#0a0b12] border border-gray-805 rounded-xl py-2.5 text-lg font-mono font-extrabold tracking-widest text-[#a78bfa] focus:outline-none focus:border-amber-500"
-                    />
-                    <span className="text-[10px] text-indigo-400 block font-semibold animate-pulse">
-                      * Enter &apos;1234&apos; to pass verification instantly
-                    </span>
-                  </div>
-
-                  <div className="flex gap-3 pt-2">
-                    <button 
-                      type="button"
-                      onClick={() => setAutoStep('phone')}
-                      className="flex-1 py-3 border border-gray-850 text-gray-400 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
-                    >
-                      Back
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={handleGatewayProceedOtp}
-                      className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-extrabold transition-all cursor-pointer"
-                    >
-                      Verify Code
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {autoStep === 'pin' && (
-                <div className="space-y-4 text-center">
-                  <div className="space-y-2">
-                    <label className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest block">
-                      ENTER SECURE FIVE-DIGIT PIN
-                    </label>
-                    <p className="text-[11px] text-gray-500 px-2 leading-relaxed">
-                      Confirm transfer from <span className="text-white font-bold font-mono">{gatewayPhone}</span>. Enter simulated wallet pin (e.g. 12345) to authorize coins clearance.
-                    </p>
-                    
-                    <div className="relative max-w-[170px] mx-auto">
-                      <input 
-                        type="password"
-                        value={gatewayPin}
-                        onChange={(e) => setGatewayPin(e.target.value)}
-                        placeholder="•••••"
-                        maxLength={5}
-                        className="w-full text-center bg-[#0a0b12] border border-gray-800 rounded-xl py-2.5 text-xl font-mono tracking-widest text-white focus:outline-none focus:border-amber-500"
-                      />
-                    </div>
-                    <span className="text-[9px] text-slate-500 mt-1 block">
-                      🔒 Highly-secured merchant end-to-end sandbox.
-                    </span>
-                  </div>
-
-                  <div className="flex gap-3 pt-2">
-                    <button 
-                      type="button"
-                      onClick={() => setAutoStep('otp')}
-                      className="flex-1 py-3 border border-gray-800 text-gray-400 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
-                    >
-                      Back
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={handleGatewayConfirmPin}
-                      className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-extrabold transition-all cursor-pointer"
-                    >
-                      Confirm Payment
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {autoStep === 'processing' && (
-                <div className="py-8 text-center space-y-4">
-                  <div className="relative flex justify-center items-center">
-                    <div className="animate-spin rounded-full h-14 w-14 border-4 border-amber-500/20 border-t-amber-500"></div>
-                    <div className="absolute font-mono text-[9px] text-white uppercase font-black">
-                      BDT
-                    </div>
-                  </div>
-                  <div className="space-y-1 px-4 text-center">
-                    <p className="text-white font-extrabold text-xs">Authorizing Bank API Ledger...</p>
-                    <p className="text-gray-500 text-[10px] leading-relaxed">Connecting secure payment gateway for ৳{depAmount}. Do not close this panel or slide back.</p>
-                  </div>
-                </div>
-              )}
-
-              {autoStep === 'success' && (
-                <div className="py-6 text-center space-y-4">
-                  <div className="w-14 h-14 bg-emerald-500/10 border-2 border-emerald-500/50 rounded-full flex items-center justify-center mx-auto text-emerald-400">
-                    <Check className="h-7 w-7 animate-bounce" />
-                  </div>
-                  <div className="space-y-1.5 px-4 text-center">
-                    <p className="text-emerald-400 font-extrabold text-sm sm:text-base">PAYMENT SUCCESSFUL!</p>
-                    <p className="text-gray-300 text-xs">
-                      Instant charge of <span className="text-white font-mono font-bold">৳{depAmount} BDT</span> processed.
-                    </p>
-                    <div className="bg-[#0a0b12] rounded-xl p-3 border border-gray-850 space-y-1 text-left font-mono text-[10px] text-gray-400">
-                      <div><span className="text-gray-600">TrxID:</span> <span className="text-slate-200">AUTO_{Math.random().toString(36).substring(4, 10).toUpperCase()}</span></div>
-                      <div><span className="text-gray-600">Amount:</span> <span className="text-amber-400">+{depAmount} COINS</span></div>
-                      <div><span className="text-gray-600">Status:</span> <span className="text-emerald-400">INSTANT CREDIT APPROVED</span></div>
-                      <div><span className="text-gray-600">Gate:</span> <span className="text-indigo-400">{selectedMethod} Instant v2 API</span></div>
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        setShowAutoModal(false);
-                      }}
-                      className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-xs font-black transition-all cursor-pointer"
-                    >
-                      Great, Close Panel!
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Footer encryption standards */}
-            <div className="bg-[#0a0b12] py-3.5 px-6 border-t border-gray-850 flex items-center justify-between text-[9px] text-gray-500 font-mono">
-              <span>PCI-DSS COMPLIANT</span>
-              <span>SSL 256-BIT ENCRYPTION</span>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
