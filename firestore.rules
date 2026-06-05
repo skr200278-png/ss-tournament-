@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Allow read & write on all collections for seamless sandbox testing
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    match /tournaments/{matchId} {
+      allow read, write: if true;
+    }
+
+    match /transactions/{transactionId} {
+      allow read, write: if true;
+    }
+
+    match /settings/{settingId} {
+      allow read, write: if true;
+    }
+
+    match /admins/{adminId} {
+      allow read, write: if true;
+    }
+
+    match /proof_submissions/{submissionId} {
+      allow read, write: if true;
+    }
+  }
+}

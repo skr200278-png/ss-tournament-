@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Tournament Web Application",
+  "description": "A responsive Tournament Web Application for esports matches with an in-app Coin wallet, local deposit/withdrawal instructions \u0026 Dual Language (English and Bengali) support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

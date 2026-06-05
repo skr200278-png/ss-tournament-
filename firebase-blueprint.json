@@ -1,0 +1,111 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User account information, balances, and meta.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The Firebase Auth user ID." },
+        "name": { "type": "string", "description": "The display name of the user." },
+        "email": { "type": "string", "description": "The email of the user." },
+        "coins_balance": { "type": "number", "description": "The balance of standard user coins." },
+        "winning_balance": { "type": "number", "description": "The balance of winning coins eligible for withdrawal." }
+      },
+      "required": ["uid", "name", "email", "coins_balance", "winning_balance"]
+    },
+    "Tournament": {
+      "title": "Tournament",
+      "description": "Details about a specific game tournament match.",
+      "type": "object",
+      "properties": {
+        "match_id": { "type": "string", "description": "Unique identifier of the match." },
+        "game_category": { "type": "string", "description": "The category of the game." },
+        "title": { "type": "string", "description": "The title of the tournament." },
+        "entry_fee": { "type": "number", "description": "Entry fee in coins." },
+        "prize_pool": { "type": "number", "description": "Total prize pool in coins." },
+        "per_kill": { "type": "number", "description": "Per kill coins bonus reward." },
+        "time": { "type": "string", "description": "ISO timestamp for when the match starts." },
+        "room_id": { "type": "string", "description": "Room ID of the hosted game match." },
+        "room_password": { "type": "string", "description": "Password or code for the game lobby." },
+        "joined_count": { "type": "number", "description": "The current number of seats filled." },
+        "total_slots": { "type": "number", "description": "The maximum capacity of the tournament." },
+        "joined_players_uids": { "type": "array", "description": "Uids of users that registered for this match." }
+      },
+      "required": [
+        "match_id",
+        "game_category",
+        "title",
+        "entry_fee",
+        "prize_pool",
+        "per_kill",
+        "time",
+        "room_id",
+        "room_password",
+        "joined_count",
+        "total_slots",
+        "joined_players_uids"
+      ]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial or coin balance request or registration log.",
+      "type": "object",
+      "properties": {
+        "transaction_id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["deposit", "withdraw", "join_fee"] },
+        "amount": { "type": "number" },
+        "payment_method": { "type": "string", "enum": ["bKash", "Nagad", "Rocket"] },
+        "account_number": { "type": "string" },
+        "tx_id": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["transaction_id", "userId", "type", "amount", "status", "timestamp"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "General settings including pay numbers and notice banner details.",
+      "type": "object",
+      "properties": {
+        "bKash_number": { "type": "string" },
+        "Nagad_number": { "type": "string" },
+        "Rocket_number": { "type": "string" },
+        "notice": { "type": "string" },
+        "banner_url": { "type": "string" }
+      },
+      "required": ["bKash_number", "Nagad_number", "Rocket_number", "notice", "banner_url"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Admin declarations by user UID.",
+      "type": "object",
+      "properties": {
+        "active": { "type": "boolean" }
+      },
+      "required": ["active"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User documents mapping to user IDs."
+    },
+    "/tournaments/{matchId}": {
+      "schema": "Tournament",
+      "description": "Collection of tournament matches."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Collection of coin transactions and requests."
+    },
+    "/settings/{settingId}": {
+      "schema": "Settings",
+      "description": "System general configurations document."
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Registered app managers."
+    }
+  }
+}

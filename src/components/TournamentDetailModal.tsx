@@ -1,0 +1,481 @@
+import React, { useState } from 'react';
+import { Tournament } from '../types';
+import { useApp } from './AppContext';
+import { X, Trophy, Coins, Target, MapPin, Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
+
+interface TournamentDetailModalProps {
+  tournament: Tournament;
+  onClose: () => void;
+}
+
+export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ tournament, onClose }) => {
+  const { profile, joinTournament, t, language, setCurrentView } = useApp();
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  // Form states based on game format (Solo, Duo, Squad, 1v1, 4-Player, etc.)
+  const fmt = tournament.format?.toLowerCase() || 'solo';
+  const isSolo = fmt === 'solo' || fmt === '1v1' || fmt === 'solo match' || fmt === '1v1 showdown' || fmt === 'single' || fmt === 'high score challenge';
+  const isDuo = fmt === 'duo' || fmt === 'duo match';
+  const isSquad = fmt === 'squad' || fmt === '4-player' || fmt === 'clan war' || fmt === '5v5' || fmt === '3v3' || fmt === 'squad war' || fmt === '4-player classic' || fmt === 'clan war friendly' || fmt === '5v5 custom' || fmt === '3v3 brawl' || fmt === 'clash squad';
+
+  const [teamName, setTeamName] = useState('');
+  
+  // Players name and in-game ID inputs
+  const [p1Name, setP1Name] = useState('');
+  const [p1Id, setP1Id] = useState('');
+
+  const [p2Name, setP2Name] = useState('');
+  const [p2Id, setP2Id] = useState('');
+
+  const [p3Name, setP3Name] = useState('');
+  const [p3Id, setP3Id] = useState('');
+
+  const [p4Name, setP4Name] = useState('');
+  const [p4Id, setP4Id] = useState('');
+
+  // Dynamic Label & Placeholder Helpers based on Game Category
+  const getNameLabel = () => {
+    switch (tournament.game_category) {
+      case 'Ludo':
+        return language === 'en' ? 'Ludo Player Name' : 'লুডো প্লেয়ার নাম';
+      case 'DLS':
+        return language === 'en' ? 'DLS Profile Name' : 'DLS প্লেয়ার নাম';
+      case 'COC':
+        return language === 'en' ? 'Village Name / Tag' : 'ভিলেজ নাম / ট্যাগ';
+      case 'Subway Surfers':
+        return language === 'en' ? 'Subway Surfers Name' : 'তাবওয়ে সার্ফার্স নাম';
+      default:
+        return language === 'en' ? 'In-Game Character Name' : 'ইন-গেম ক্যারেক্টার নাম';
+    }
+  };
+
+  const getIdLabel = () => {
+    switch (tournament.game_category) {
+      case 'Ludo':
+        return language === 'en' ? 'Ludo King ID' : 'লুডো কিং আইডি';
+      case 'DLS':
+        return language === 'en' ? 'DLS Profile Code' : 'DLS প্রোফাইল কোড';
+      case 'COC':
+        return language === 'en' ? 'Player Tag (e.g. #Y28U)' : 'প্লেয়ার ট্যাগ (যেমনঃ #Y28U)';
+      case 'Subway Surfers':
+        return language === 'en' ? 'Play Store / Facebook ID' : 'গুগল প্লে / ফেসবুক আইডি';
+      default:
+        return language === 'en' ? 'Character UID / ID' : 'ক্যারেক্টার আইডি';
+    }
+  };
+
+  const getPlaceholderName = () => {
+    switch (tournament.game_category) {
+      case 'Ludo': return 'e.g. Ludo_Boss';
+      case 'DLS': return 'e.g. Messi_FC';
+      case 'COC': return 'e.g. Clan_Champion';
+      case 'Subway Surfers': return 'e.g. Speed_Runner';
+      default: return 'e.g. BD_HERO';
+    }
+  };
+
+  const getPlaceholderId = () => {
+    switch (tournament.game_category) {
+      case 'Ludo': return 'e.g. 192837482';
+      case 'DLS': return 'e.g. DLS_5B2A';
+      case 'COC': return 'e.g. #Y28UP28';
+      case 'Subway Surfers': return 'e.g. surfers_tag';
+      default: return 'e.g. 1729381';
+    }
+  };
+
+  // Validate balance
+  const userCoins = profile?.coins_balance ?? 0;
+  const isInsufficient = userCoins < tournament.entry_fee;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    if (!profile) {
+      setErrorMsg(t('notLoggedIn'));
+      return;
+    }
+
+    if (isInsufficient) {
+      setErrorMsg(t('insufficientBalance'));
+      return;
+    }
+
+    let finalInGameStr = '';
+
+    if (isSolo) {
+      if (!p1Name.trim() || !p1Id.trim()) {
+        setErrorMsg(language === 'en' ? `Both ${getNameLabel()} and ${getIdLabel()} are required!` : `${getNameLabel()} এবং ${getIdLabel()} দুটোই পূরণ করা আবশ্যক!`);
+        return;
+      }
+      finalInGameStr = `${getNameLabel()}: ${p1Name.trim()} (${getIdLabel()}: ${p1Id.trim()})`;
+    } else if (isDuo) {
+      if (!teamName.trim() || !p1Name.trim() || !p1Id.trim() || !p2Name.trim() || !p2Id.trim()) {
+        setErrorMsg(language === 'en' ? 'All Duo Team Fields (Team Name, 2 Players) are required!' : 'ডুয়ো টিমের সকল তথ্য (টিম নাম, ২ জনের নাম ও আইডি) পূরণ করা আবশ্যক!');
+        return;
+      }
+      finalInGameStr = `Team: ${teamName.trim()} [P1: ${p1Name.trim()} (${getIdLabel()}: ${p1Id.trim()}), P2: ${p2Name.trim()} (${getIdLabel()}: ${p2Id.trim()})]`;
+    } else if (isSquad) {
+      if (!teamName.trim() || !p1Name.trim() || !p1Id.trim() || !p2Name.trim() || !p2Id.trim() || !p3Name.trim() || !p3Id.trim() || !p4Name.trim() || !p4Id.trim()) {
+        setErrorMsg(language === 'en' ? 'All Squad Team Fields (Team Name, 4 Players) are required!' : 'স্কোয়াডের সকল তথ্য (টিম নাম, ৪ জনের নাম ও আইডি) পূরণ করা আবশ্যক!');
+        return;
+      }
+      finalInGameStr = `Team: ${teamName.trim()} [P1: ${p1Name.trim()} (${getIdLabel()}: ${p1Id.trim()}), P2: ${p2Name.trim()} (${getIdLabel()}: ${p2Id.trim()}), P3: ${p3Name.trim()} (${getIdLabel()}: ${p3Id.trim()}), P4: ${p4Name.trim()} (${getIdLabel()}: ${p4Id.trim()})]`;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await joinTournament(tournament, finalInGameStr);
+      if (response.success) {
+        setSuccess(true);
+        setTimeout(() => {
+          onClose();
+          // Take them to Joined section to see details immediately
+          setCurrentView('joined');
+        }, 1500);
+      } else {
+        setErrorMsg(response.message);
+      }
+    } catch (err) {
+      setErrorMsg("An unexpected transaction error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+      <div className="bg-[#121420] border border-gray-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative">
+        
+        {/* Header decoration */}
+        <div className="bg-[#1a1c2b] p-5 border-b border-gray-800/80 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-amber-500 font-bold font-mono">
+              {t('confirmJoin')}
+            </div>
+            <h3 className="text-base sm:text-lg font-extrabold text-white leading-none mt-1">
+              {tournament.title}
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg bg-gray-800/60 hover:bg-gray-800 text-gray-400 hover:text-white transition-all"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {success ? (
+            <div className="text-center py-6 space-y-3">
+              <CheckCircle className="h-14 w-14 text-emerald-500 mx-auto animate-bounce" />
+              <h4 className="text-lg font-bold text-white">{t('joiningSuccess')}</h4>
+              <p className="text-gray-400 text-xs">
+                {language === 'en' ? 'Redirecting to your matches schedule...' : 'আপনার নিবন্ধিত ম্যাচের পাতায় নিয়ে যাওয়া হচ্ছে...'}
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              
+              {/* Ticket Recap Card */}
+              <div className="bg-[#1a1c2b]/50 border border-gray-800/60 rounded-2xl p-4 grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <Coins className="h-5 w-5 text-amber-400" />
+                  <div>
+                    <span className="block text-[10px] text-gray-400 uppercase leading-none">{t('entryFee')}</span>
+                    <span className="text-sm font-mono font-bold text-white mt-1 block">
+                      {tournament.entry_fee} {t('coins')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-emerald-400" />
+                  <div>
+                    <span className="block text-[10px] text-gray-400 uppercase leading-none">{t('prizePool')}</span>
+                    <span className="text-sm font-mono font-bold text-white mt-1 block">
+                      {tournament.prize_pool} {t('coins')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-rose-400" />
+                  <div>
+                    <span className="block text-[10px] text-gray-400 uppercase leading-none">
+                      {['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(tournament.game_category) 
+                        ? t('perKill') 
+                        : language === 'en' ? 'Kill Reward' : 'কিল পুরস্কার'}
+                    </span>
+                    <span className={`text-sm font-mono font-bold mt-1 block ${['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(tournament.game_category) ? 'text-white' : 'text-gray-500'}`}>
+                      {['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(tournament.game_category) 
+                        ? `${tournament.per_kill || '0'} ${t('coins')}` 
+                        : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-blue-400" />
+                  <div>
+                    <span className="block text-[10px] text-gray-400 uppercase leading-none">
+                      {(() => {
+                        switch (tournament.game_category) {
+                          case 'Ludo': return language === 'en' ? 'Board Mode' : 'বোর্ড মোড';
+                          case 'DLS': return language === 'en' ? 'Rules / Time' : 'নিয়ম / সময়';
+                          case 'COC': return language === 'en' ? 'Arena / TownHall' : 'টাউনহল লেভেল';
+                          case 'Subway Surfers': return language === 'en' ? 'Score Target' : 'টার্গেট স্কোর';
+                          case 'Mobile Legends': return language === 'en' ? 'Map Arena' : 'রঙ্গভূমি ম্যাপ';
+                          default: return t('map');
+                        }
+                      })()}
+                    </span>
+                    <span className="text-sm font-bold text-white mt-1 block truncate font-sans">
+                      {tournament.map_name || (() => {
+                        switch (tournament.game_category) {
+                          case 'Ludo': return 'Classic Board';
+                          case 'DLS': return '6 Mins (Any Team)';
+                          case 'COC': return 'TownHall 12+';
+                          case 'Subway Surfers': return '10 Lakh Target';
+                          case 'Mobile Legends': return 'Land of Dawn';
+                          case 'PUBG/BGMI': return 'Erangel';
+                          case 'Call of Duty': return 'Crash';
+                          default: return 'Bermuda';
+                        }
+                      })()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Wallet Matchup Error message or prompt / Add coins button shortcut */}
+              {isInsufficient ? (
+                <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 flex gap-3">
+                  <AlertTriangle className="h-5 w-5 text-rose-400 shrink-0" />
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-rose-300 leading-tight">
+                      {t('insufficientBalance')}
+                    </p>
+                    <p className="text-[11px] text-rose-400">
+                      {language === 'en' 
+                        ? `You need ${tournament.entry_fee - userCoins} more coins to register for this match.`
+                        : `এই খেলায় অংশ নিতে আপনার আরও ${tournament.entry_fee - userCoins}টি কয়েন প্রয়োজন।`}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        setCurrentView('wallet');
+                      }}
+                      className="text-xs bg-rose-500 hover:bg-rose-600 text-white font-bold px-3 py-1.5 rounded-lg transition-all"
+                    >
+                      {t('buyCoins')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-3 flex justify-between items-center text-xs">
+                  <span className="text-gray-400">{language === 'en' ? 'Your Balance:' : 'আপনার ব্যালেন্স:'}</span>
+                  <span className="font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg">
+                    {userCoins} {t('coins')}
+                  </span>
+                </div>
+              )}
+
+              {/* Dynamic Game ID / Teammate Form Fields based on Format */}
+              <div className="space-y-4 pt-1 max-h-[320px] overflow-y-auto pr-1">
+                
+                {/* Team Name required for Duo / Squad matches */}
+                {(isDuo || isSquad) && (
+                  <div className="space-y-1.5 animate-slide-up">
+                    <label className="block text-xs font-bold text-gray-305 uppercase tracking-wider">
+                      {language === 'en' ? 'Squad / Duo Team Name' : 'স্কোয়াড ও ডুয়ো টিম নাম'} <span className="text-[#f59e0b] font-extrabold">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={teamName}
+                      onChange={(e) => setTeamName(e.target.value)}
+                      placeholder={language === 'en' ? "e.g., BD ELITES" : "যেমনঃ বিডি এলিট টিম"}
+                      disabled={isInsufficient || isSubmitting}
+                      className="w-full bg-gray-900 border border-gray-800 focus:border-amber-500/75 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-650 focus:outline-none transition-all"
+                    />
+                  </div>
+                )}
+
+                {/* Player 1 Entry */}
+                <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3">
+                  <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
+                    {isSolo ? (language === 'en' ? 'Player Profile Details' : 'আপনার প্লেয়ার তথ্য') : (language === 'en' ? 'Player 1 (Team Leader)' : 'প্লেয়ার ১ (টিম লিডার - আপনি)')}
+                  </span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-medium">{getNameLabel()} <span className="text-red-500">*</span></span>
+                      <input
+                        type="text"
+                        required
+                        value={p1Name}
+                        onChange={(e) => setP1Name(e.target.value)}
+                        placeholder={getPlaceholderName()}
+                        disabled={isInsufficient || isSubmitting}
+                        className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-sans"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-medium">{getIdLabel()} <span className="text-red-500">*</span></span>
+                      <input
+                        type="text"
+                        required
+                        value={p1Id}
+                        onChange={(e) => setP1Id(e.target.value)}
+                        placeholder={getPlaceholderId()}
+                        disabled={isInsufficient || isSubmitting}
+                        className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Player 2 Entry (Duo / Squad only) */}
+                {(isDuo || isSquad) && (
+                  <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3 animate-slide-up">
+                    <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
+                      {language === 'en' ? 'Player 2 (Teammate)' : 'প্লেয়ার ২ (টিমমেট)'}
+                    </span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-gray-400 font-medium">{getNameLabel()} <span className="text-red-500">*</span></span>
+                        <input
+                          type="text"
+                          required
+                          value={p2Name}
+                          onChange={(e) => setP2Name(e.target.value)}
+                          placeholder={getPlaceholderName()}
+                          disabled={isInsufficient || isSubmitting}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-gray-400 font-medium">{getIdLabel()} <span className="text-red-500">*</span></span>
+                        <input
+                          type="text"
+                          required
+                          value={p2Id}
+                          onChange={(e) => setP2Id(e.target.value)}
+                          placeholder={getPlaceholderId()}
+                          disabled={isInsufficient || isSubmitting}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Player 3 & 4 Entry (Squad only) */}
+                {isSquad && (
+                  <>
+                    <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3 animate-slide-up">
+                      <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
+                        {language === 'en' ? 'Player 3 (Teammate)' : 'প্লেয়ার ৩ (টিমমেট)'}
+                      </span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-gray-400 font-medium">{getNameLabel()} <span className="text-red-500">*</span></span>
+                          <input
+                            type="text"
+                            required
+                            value={p3Name}
+                            onChange={(e) => setP3Name(e.target.value)}
+                            placeholder={getPlaceholderName()}
+                            disabled={isInsufficient || isSubmitting}
+                            className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-gray-400 font-medium">{getIdLabel()} <span className="text-red-500">*</span></span>
+                          <input
+                            type="text"
+                            required
+                            value={p3Id}
+                            onChange={(e) => setP3Id(e.target.value)}
+                            placeholder={getPlaceholderId()}
+                            disabled={isInsufficient || isSubmitting}
+                            className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3 animate-slide-up">
+                      <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
+                        {language === 'en' ? 'Player 4 (Teammate)' : 'প্লেয়ার ৪ (টিমমেট)'}
+                      </span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-gray-400 font-medium">{getNameLabel()} <span className="text-red-500">*</span></span>
+                          <input
+                            type="text"
+                            required
+                            value={p4Name}
+                            onChange={(e) => setP4Name(e.target.value)}
+                            placeholder={getPlaceholderName()}
+                            disabled={isInsufficient || isSubmitting}
+                            className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-gray-400 font-medium">{getIdLabel()} <span className="text-red-500">*</span></span>
+                          <input
+                            type="text"
+                            required
+                            value={p4Id}
+                            onChange={(e) => setP4Id(e.target.value)}
+                            placeholder={getPlaceholderId()}
+                            disabled={isInsufficient || isSubmitting}
+                            className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* General Feedback notices */}
+              {errorMsg && (
+                <div className="text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-400 p-3 rounded-xl">
+                  {errorMsg}
+                </div>
+              )}
+
+              {/* Form Controls */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 py-3 border border-gray-800 text-gray-400 hover:text-white rounded-xl font-bold text-xs hover:bg-gray-800/40 transition-all cursor-pointer"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isInsufficient || isSubmitting}
+                  className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 font-extrabold text-[#000] rounded-xl text-xs hover:from-amber-400 hover:to-orange-500 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin text-black" />}
+                  {isSubmitting ? t('joiningInProgress') : t('confirmJoin')}
+                </button>
+              </div>
+
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+export default TournamentDetailModal;
