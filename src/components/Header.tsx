@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from './AppContext';
-import { Trophy, Wallet, Gamepad2, Calendar, Languages, LogIn, LogOut, Menu, X, Coins, Shield } from 'lucide-react';
+import { Trophy, Wallet, Gamepad2, Calendar, Languages, LogIn, LogOut, Menu, X, Coins, Shield, User } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { 
     profile, 
     login, 
-    loginAsGuest, 
     logout, 
     language, 
     setLanguage, 
@@ -31,6 +30,7 @@ export const Header: React.FC = () => {
     { view: 'joined' as const, label: t('myMatches'), icon: Calendar },
     { view: 'results' as const, label: language === 'en' ? 'Winners' : 'ফলাফল / বিজয়ী', icon: Trophy },
     { view: 'wallet' as const, label: t('balance'), icon: Wallet },
+    { view: 'profile' as const, label: language === 'en' ? 'Support' : 'সাপোর্ট', icon: User },
   ];
 
   return (

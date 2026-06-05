@@ -7,6 +7,8 @@ import { WalletView } from './components/WalletView';
 import { MyMatchesList } from './components/MyMatchesList';
 import { AdminDashboard } from './components/AdminDashboard';
 import { WinnersList } from './components/WinnersList';
+import { LoginPortal } from './components/LoginPortal';
+import { ProfileSettingsView } from './components/ProfileSettingsView';
 import { 
   Trophy, 
   HelpCircle, 
@@ -19,11 +21,12 @@ import {
   Calendar,
   Wallet,
   Settings,
-  Shield
+  Shield,
+  User
 } from 'lucide-react';
 
 const AppContent: React.FC = () => {
-  const { currentView, setCurrentView, profile, t, language, loginAsGuest, showAdminSecret } = useApp();
+  const { currentView, setCurrentView, profile, t, language, showAdminSecret } = useApp();
   const hasAdminAccess = showAdminSecret || (profile && profile.email === 'skr200278@gmail.com');
 
   // Test client connection on initialization
@@ -32,6 +35,10 @@ const AppContent: React.FC = () => {
   }, []);
 
   const renderView = () => {
+    if (!profile) {
+      return <LoginPortal />;
+    }
+
     switch (currentView) {
       case 'home':
         return <Dashboard />;
@@ -41,6 +48,8 @@ const AppContent: React.FC = () => {
         return <MyMatchesList />;
       case 'results':
         return <WinnersList />;
+      case 'profile':
+        return <ProfileSettingsView />;
       case 'admin':
         return <AdminDashboard />;
       default:
@@ -57,32 +66,6 @@ const AppContent: React.FC = () => {
       {/* Main Body Grid Container */}
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 pb-24 md:pb-8">
         
-        {/* Sub login Banner if not logged in */}
-        {!profile && (
-          <div className="bg-[#121420] border border-dashed border-gray-800 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 text-center sm:text-left flex-col sm:flex-row">
-              <span className="text-3xl">🎮</span>
-              <div>
-                <h4 className="font-exrabold text-sm text-white">
-                  {language === 'en' ? 'Get 150 Welcome Coins instantly!' : 'লগইন করে ফ্রিতেই ১৫০ কয়েন পান!'}
-                </h4>
-                <p className="text-gray-400 text-xs">
-                  {language === 'en' 
-                    ? 'Register free and play-test our matches. Instant zero-waiting wallet.' 
-                    : 'আমাদের গেমগুলোতে অংশ নিয়ে কয়েন দিয়ে ক্যাশ প্রাইজ জেতার সুযোগ তৈরি করুন।'}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={loginAsGuest}
-              className="py-2.5 px-6 font-bold bg-amber-500 text-black hover:bg-amber-400 rounded-2xl text-xs transition-all flex items-center gap-1.5 cursor-pointer select-none"
-            >
-              {language === 'en' ? 'Explore in Guest Mode' : 'মোবাইল গেস্ট প্রবেশ'}
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
         {/* Dynamic Route views */}
         <div className="py-2">
           {renderView()}
@@ -126,7 +109,7 @@ const AppContent: React.FC = () => {
 
       {/* Mobile Bottom Navigation Bar (Phone-style persistent layout) */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f111a] border-t border-gray-800/80 backdrop-blur-lg bg-opacity-95 shadow-[0_-8px_30px_rgb(0,0,0,0.8)] pb-safe">
-        <div className={`grid ${hasAdminAccess ? 'grid-cols-5' : 'grid-cols-4'} h-16 items-center`}>
+        <div className="grid grid-cols-5 h-16 items-center">
           <button
             onClick={() => {
               setCurrentView('home');
@@ -166,7 +149,7 @@ const AppContent: React.FC = () => {
               currentView === 'results' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Trophy className="h-5 w-5 text-amber-500" />
+            <Trophy className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-bold">
               {language === 'en' ? 'Winners' : 'বিজয়ী'}
             </span>
@@ -187,22 +170,20 @@ const AppContent: React.FC = () => {
             </span>
           </button>
 
-          {hasAdminAccess && (
-            <button
-              onClick={() => {
-                setCurrentView('admin');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className={`flex flex-col items-center justify-center h-full transition-all ${
-                currentView === 'admin' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Shield className="h-5 w-5 text-amber-500" />
-              <span className="text-[10px] mt-1 font-bold">
-                {language === 'en' ? 'Admin' : 'এডমিন'}
-              </span>
-            </button>
-          )}
+          <button
+            onClick={() => {
+              setCurrentView('profile');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex flex-col items-center justify-center h-full transition-all ${
+              currentView === 'profile' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <User className="h-5 w-5" />
+            <span className="text-[10px] mt-1 font-bold">
+              {language === 'en' ? 'Support' : 'সাপোর্ট'}
+            </span>
+          </button>
         </div>
       </div>
 

@@ -26,7 +26,26 @@ const WinnerCelebrationBanner: React.FC<{ match: Tournament }> = ({ match }) => 
   if (!match.winner_name) return null;
 
   const theme = match.winner_banner_theme || 'classic_gold';
-  const customImg = match.winner_banner_image;
+  let customImg = match.winner_banner_image;
+
+  // Supply high-quality themed fallback if customImg is empty or invalid
+  if (!customImg || !customImg.trim().startsWith('http')) {
+    switch (theme) {
+      case 'cyber_neon':
+        customImg = "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800";
+        break;
+      case 'royal_champion':
+        customImg = "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=800";
+        break;
+      case 'gaming_dark':
+        customImg = "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&q=80&w=800";
+        break;
+      case 'classic_gold':
+      default:
+        customImg = "https://images.unsplash.com/photo-1578269174936-2709b5a5e003?auto=format&fit=crop&q=80&w=800";
+        break;
+    }
+  }
 
   // Presets configurations
   let bgClass = "bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-amber-500/10";
@@ -55,91 +74,47 @@ const WinnerCelebrationBanner: React.FC<{ match: Tournament }> = ({ match }) => 
     iconColor = "text-indigo-400";
   }
 
-  // Render full size custom banner card with frosted stats overlays if we have a Custom Image
-  if (customImg && customImg.trim().startsWith('http')) {
-    return (
-      <div className="relative rounded-2xl overflow-hidden border border-gray-800 bg-[#0a0b12] group transition-all duration-300 hover:border-amber-500/40">
-        {/* Banner Image */}
-        <div className="h-44 sm:h-52 w-full overflow-hidden relative">
-          <img 
-            src={customImg} 
-            alt="Tournament Winner Banner" 
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            referrerPolicy="no-referrer"
-          />
-          {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0b12] via-[#0a0b12]/40 to-transparent" />
-          
-          {/* Top-left Badges */}
-          <div className="absolute top-4 left-4 flex gap-1.5 flex-wrap">
-            <span className="bg-amber-500 text-black text-[9px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg">
-              🥇 VICTORY BANNER
-            </span>
-            <span className="bg-[#0f111a]/80 backdrop-blur-md text-white border border-gray-700 text-[9px] font-mono px-2 py-0.5 rounded-full">
-              {match.game_category}
-            </span>
-          </div>
-        </div>
-
-        {/* glass summary stats panel */}
-        <div className="p-4 bg-[#0d0f1b] border-t border-gray-800/80 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
-          <div className="space-y-0.5">
-            <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider block">Winner Player Name</span>
-            <span className="text-white font-extrabold text-sm sm:text-base tracking-wide flex items-center gap-1 truncate">
-              {match.winner_name} 🛡️
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 sm:col-span-2">
-            <div className="bg-[#121422] border border-gray-800/60 rounded-xl px-3 py-1.5 text-center sm:text-left">
-              <span className="text-[8px] text-gray-500 uppercase tracking-wider font-bold block">Prize Reward</span>
-              <span className="text-amber-400 font-extrabold text-xs sm:text-sm font-mono">{match.winner_prize || match.prize_pool} Coins</span>
-            </div>
-            <div className="bg-[#121422] border border-gray-800/60 rounded-xl px-3 py-1.5 text-center sm:text-left">
-              <span className="text-[8px] text-gray-500 uppercase tracking-wider font-bold block">Player Kills</span>
-              <span className="text-white font-extrabold text-xs sm:text-sm font-mono">{match.winner_kills || 0} Kills</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Dynamic vector layout
   return (
-    <div className={`relative rounded-3xl p-5 border ${borderClass} ${bgClass} overflow-hidden shadow-2xl flex flex-col sm:flex-row justify-between items-center gap-4 transition-all duration-300`}>
-      {/* Background vector asset */}
-      <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 opacity-5 pointer-events-none">
-        <Trophy className="h-32 w-32" />
-      </div>
-
-      <div className="flex flex-col sm:flex-row items-center gap-3.5 text-center sm:text-left z-10 w-full sm:w-auto">
-        <div className={`p-3.5 rounded-2xl ${accentBg} flex items-center justify-center relative shrink-0`}>
-          <Trophy className={`h-6 w-6 ${iconColor}`} />
-        </div>
-
-        <div className="space-y-0.5 truncate w-full max-w-[280px]">
-          <span className="text-[9px] font-extrabold tracking-widest uppercase block text-amber-500">
-            {badgeLabel}
+    <div className="relative rounded-2xl overflow-hidden border border-gray-800 bg-[#0a0b12] group transition-all duration-300 hover:border-amber-500/40">
+      {/* Banner Image */}
+      <div className="h-44 sm:h-52 w-full overflow-hidden relative">
+        <img 
+          src={customImg} 
+          alt="Tournament Winner Banner" 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          referrerPolicy="no-referrer"
+        />
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0b12] via-[#0a0b12]/40 to-transparent" />
+        
+        {/* Top-left Badges */}
+        <div className="absolute top-4 left-4 flex gap-1.5 flex-wrap">
+          <span className="bg-amber-500 text-black text-[9px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg">
+            🥇 VICTORY BANNER
           </span>
-          <h4 className="text-white text-sm sm:text-base font-extrabold tracking-wide truncate">
-            {match.winner_name}
-          </h4>
-          <p className="text-[10px] text-gray-400 flex flex-wrap items-center justify-center sm:justify-start gap-x-1.5 font-mono">
-            <span>Room ID: <span className="text-slate-200 font-bold">{match.room_id || 'PRO_MATCH'}</span></span>
-            <span className="text-gray-700">|</span>
-            <span>Category: <span className="text-indigo-300 font-bold">{match.game_category}</span></span>
-          </p>
+          <span className="bg-[#0f111a]/80 backdrop-blur-md text-white border border-gray-700 text-[9px] font-mono px-2 py-0.5 rounded-full">
+            {match.game_category}
+          </span>
         </div>
       </div>
 
-      <div className="flex gap-2 w-full sm:w-auto text-xs font-mono z-10 shrink-0">
-        <div className="flex-1 sm:flex-initial bg-black/40 border border-gray-800 rounded-xl px-3 py-1.5 text-center min-w-[70px]">
-          <span className="text-[7px] text-gray-500 uppercase font-bold block mb-0.5">Kills</span>
-          <span className="text-white font-bold text-xs">{match.winner_kills || 0}</span>
+      {/* glass summary stats panel */}
+      <div className="p-4 bg-[#0d0f1b] border-t border-gray-800/80 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+        <div className="space-y-0.5">
+          <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider block">Winner Player Name</span>
+          <span className="text-white font-extrabold text-sm sm:text-base tracking-wide flex items-center gap-1 truncate">
+            {match.winner_name} 🛡️
+          </span>
         </div>
-        <div className="flex-1 sm:flex-initial bg-amber-500/5 border border-amber-500/20 rounded-xl px-3 py-1.5 text-center min-w-[70px]">
-          <span className="text-[7px] text-amber-500 uppercase font-bold block mb-0.5">Prize Won</span>
-          <span className="text-amber-400 font-bold text-xs">{match.winner_prize || match.prize_pool} C</span>
+        <div className="grid grid-cols-2 gap-2 sm:col-span-2">
+          <div className="bg-[#121422] border border-gray-800/60 rounded-xl px-3 py-1.5 text-center sm:text-left">
+            <span className="text-[8px] text-gray-500 uppercase tracking-wider font-bold block">Prize Reward</span>
+            <span className="text-amber-400 font-extrabold text-xs sm:text-sm font-mono">{match.winner_prize || match.prize_pool} Coins</span>
+          </div>
+          <div className="bg-[#121422] border border-gray-800/60 rounded-xl px-3 py-1.5 text-center sm:text-left">
+            <span className="text-[8px] text-gray-500 uppercase tracking-wider font-bold block">Player Kills</span>
+            <span className="text-white font-extrabold text-xs sm:text-sm font-mono">{match.winner_kills || 0} Kills</span>
+          </div>
         </div>
       </div>
     </div>

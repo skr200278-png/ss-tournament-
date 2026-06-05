@@ -4,7 +4,10 @@ import {
   signInWithPopup, 
   GoogleAuthProvider, 
   signOut, 
-  User as FirebaseUser 
+  User as FirebaseUser,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile
 } from 'firebase/auth';
 import { 
   doc, 
@@ -30,8 +33,8 @@ interface AppContextType {
   isGuest: boolean;
   language: Language;
   setLanguage: (lang: Language) => void;
-  currentView: 'home' | 'wallet' | 'joined' | 'admin' | 'results';
-  setCurrentView: (view: 'home' | 'wallet' | 'joined' | 'admin' | 'results') => void;
+  currentView: 'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile';
+  setCurrentView: (view: 'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile') => void;
   selectedCategory: string; // "All" or a game name
   setSelectedCategory: (cat: string) => void;
   tournaments: Tournament[];
@@ -40,6 +43,8 @@ interface AppContextType {
   t: any; // Translation function
   login: () => Promise<void>;
   loginAsGuest: () => void;
+  loginWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  registerWithEmail: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   addCoins: (amount: number, type: 'coins' | 'winning') => Promise<void>;
   joinTournament: (tournament: Tournament, inGameId: string) => Promise<{ success: boolean; message: string }>;
@@ -67,7 +72,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [guestUser, setGuestUser] = useState<UserProfile | null>(null);
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [language, setLanguage] = useState<Language>('en');
-  const [currentView, setCurrentView] = useState<'home' | 'wallet' | 'joined' | 'admin' | 'results'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
@@ -288,6 +293,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error("Popup interaction was either blocked or cancelled:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loginWithEmail = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setLoading(false);
+      return { success: true };
+    } catch (error: any) {
+      setLoading(false);
+      let errorMsg = language === 'en' ? 'Invalid email or password' : 'ভুল ইমেইল বা পাসওয়ার্ড';
+      if (error && error.code) {
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+          errorMsg = language === 'en' ? 'No account found or invalid credentials' : 'অ্যাকাউন্ট পাওয়া যায়নি বা ভুল পাসওয়ার্ড';
+        } else if (error.code === 'auth/wrong-password') {
+          errorMsg = language === 'en' ? 'Incorrect password' : 'পাসওয়ার্ডটি সঠিক নয়';
+        } else if (error.code === 'auth/invalid-email') {
+          errorMsg = language === 'en' ? 'Invalid email format' : 'ইমেইল ফরম্যাট সঠিক নয়';
+        }
+      }
+      return { success: false, error: errorMsg };
+    }
+  };
+
+  const registerWithEmail = async (name: string, email: string, password: string) => {
+    setLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+      
+      // Update display name
+      await updateProfile(firebaseUser, { displayName: name });
+      
+      // Explicitly create firestore path immediately to prevent race conditions
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const newProfile: UserProfile = {
+        uid: firebaseUser.uid,
+        name: name,
+        email: email,
+        coins_balance: 2000, // Pre-seeded 2000 welcome coins!
+        winning_balance: 0,
+        createdAt: new Date().toISOString()
+      };
+      await setDoc(userDocRef, newProfile);
+      setProfile(newProfile);
+      setIsGuest(false);
+      setGuestUser(null);
+      
+      setLoading(false);
+      return { success: true };
+    } catch (error: any) {
+      setLoading(false);
+      let errorMsg = language === 'en' ? 'Registration failed. Try again.' : 'অ্যাকাউন্ট তৈরি করা যায়নি, আবার চেষ্টা করুন।';
+      if (error && error.code) {
+        if (error.code === 'auth/email-already-in-use') {
+          errorMsg = language === 'en' ? 'Email is already registered' : 'এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হয়েছে';
+        } else if (error.code === 'auth/weak-password') {
+          errorMsg = language === 'en' ? 'Password should be at least 6 characters' : 'পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে';
+        } else if (error.code === 'auth/invalid-email') {
+          errorMsg = language === 'en' ? 'Invalid email address' : 'ভুল ইমেইল এড্রেস';
+        }
+      }
+      return { success: false, error: errorMsg };
     }
   };
 
@@ -720,6 +789,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       t,
       login,
       loginAsGuest,
+      loginWithEmail,
+      registerWithEmail,
       logout,
       addCoins,
       joinTournament,
