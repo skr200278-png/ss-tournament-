@@ -746,7 +746,7 @@ export const AdminDashboard: React.FC = () => {
                 type="password"
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
-                placeholder="e.g., admin2026"
+                placeholder={language === 'en' ? "••••••••" : "••••••••"}
                 className="w-full bg-[#0a0b12] border border-gray-800 rounded-2xl px-4 py-3 text-sm text-white text-center focus:outline-none focus:border-amber-500 font-mono tracking-widest font-extrabold"
               />
             </div>
