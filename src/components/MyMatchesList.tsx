@@ -228,12 +228,34 @@ export const MyMatchesList: React.FC = () => {
         prize: match.winner_prize || match.prize_pool
       });
     }
-    // Prepend or append simulated rows
-    list.push(
-      { rank: match.winner_name ? 2 : 1, name: "SABBIR_YT (BD)", kills: 12, prize: 120 },
-      { rank: match.winner_name ? 3 : 2, name: profile.name + " (YOU)", kills: 6, prize: match.winner_name ? 20 : 60 },
-      { rank: match.winner_name ? 4 : 3, name: "LUDO_MASTER_77", kills: 4, prize: 40 }
-    );
+
+    // Only append simulated/mock rows if it is one of the initial hardcoded pre-seeded demo matches
+    const isSamplePreseeded = match.match_id === 'match_ff_1' || 
+                              match.match_id === 'match_ff_2' || 
+                              match.match_id === 'match_pubg_1' || 
+                              match.match_id === 'match_ludo_1' || 
+                              match.match_id === 'match_cod_1' || 
+                              match.match_id === 'match_ml_1' || 
+                              match.match_id === 'match_dls_1' ||
+                              match.match_id.includes('past');
+
+    if (isSamplePreseeded) {
+      if (!match.winner_name) {
+        // Mock preseeded past match format
+        list.push(
+          { rank: 1, name: "SABBIR_YT (BD)", kills: 12, prize: 120 },
+          { rank: 2, name: profile.name + " (YOU)", kills: 6, prize: 60 },
+          { rank: 3, name: "LUDO_MASTER_77", kills: 4, prize: 40 }
+        );
+      } else {
+        // Preseeded match with winner declared, sequential ranking
+        list.push(
+          { rank: 2, name: "SABBIR_YT (BD)", kills: 12, prize: 120 },
+          { rank: 3, name: profile.name + " (YOU)", kills: 6, prize: 20 },
+          { rank: 4, name: "LUDO_MASTER_77", kills: 4, prize: 10 }
+        );
+      }
+    }
     return list;
   };
 
@@ -455,38 +477,46 @@ export const MyMatchesList: React.FC = () => {
                   )}
 
                   <div className="bg-[#181a26]/70 rounded-2xl p-3 sm:p-4 border border-gray-800/80">
-                    <span className="text-xs font-bold text-gray-300 block mb-3">
+                    <span className="text-xs font-bold text-gray-300 block mb-3 font-sans">
                       {t('leaderboard')}
                     </span>
 
-                    <table className="w-full text-left font-sans">
-                      <thead>
-                        <tr className="border-b border-gray-800 text-[10px] text-gray-500 uppercase tracking-wider font-bold">
-                          <th className="pb-2">{t('rank')}</th>
-                          <th className="pb-2">{t('player')}</th>
-                          <th className="pb-2 text-center">{t('kills')}</th>
-                          <th className="pb-2 text-right">{t('prizesWon')}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-800/60 text-xs text-gray-300">
-                        {leaderboard.map((row) => (
-                          <tr key={row.rank} className="hover:bg-slate-900/10">
-                            <td className="py-2">
-                              {row.rank === 1 ? '🥇 1st' : row.rank === 2 ? '🥈 2nd' : row.rank === 3 ? '🥉 3rd' : `${row.rank}th`}
-                            </td>
-                            <td className="py-2 font-semibold">
-                              {row.name}
-                            </td>
-                            <td className="py-2 text-center font-mono font-medium">
-                              {row.kills}
-                            </td>
-                            <td className="py-2 text-right font-mono font-bold text-amber-400">
-                              {row.prize} C
-                            </td>
+                    {leaderboard.length === 0 ? (
+                      <div className="text-center py-5 text-gray-500 font-sans text-xs italic">
+                        {language === 'en' 
+                          ? '🕒 Live game completed. Results will be published by Admin shortly.' 
+                          : '🕒 ম্যাচ যাচাইকরণ চলছে। এডমিন শীঘ্রই বিজয়ী তালিকা প্রকাশ করবেন।'}
+                      </div>
+                    ) : (
+                      <table className="w-full text-left font-sans">
+                        <thead>
+                          <tr className="border-b border-gray-800 text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+                            <th className="pb-2">{t('rank')}</th>
+                            <th className="pb-2">{t('player')}</th>
+                            <th className="pb-2 text-center">{t('kills')}</th>
+                            <th className="pb-2 text-right">{t('prizesWon')}</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800/60 text-xs text-gray-300">
+                          {leaderboard.map((row) => (
+                            <tr key={row.rank} className="hover:bg-slate-900/10">
+                              <td className="py-2">
+                                {row.rank === 1 ? '🥇 1st' : row.rank === 2 ? '🥈 2nd' : row.rank === 3 ? '🥉 3rd' : `${row.rank}th`}
+                              </td>
+                              <td className="py-2 font-semibold">
+                                {row.name}
+                              </td>
+                              <td className="py-2 text-center font-mono font-medium">
+                                {row.kills}
+                              </td>
+                              <td className="py-2 text-right font-mono font-bold text-amber-400">
+                                {row.prize} C
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
                   </div>
 
                 </div>
