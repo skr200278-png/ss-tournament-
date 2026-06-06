@@ -190,14 +190,12 @@ export const MyMatchesList: React.FC = () => {
 
   // Divide tournaments into joined upcoming, or past results
   const upcomingJoined = tournaments.filter((tournament) => {
-    const matchTime = new Date(tournament.time);
-    return uidsMatchFilter(tournament) && matchTime.getTime() > currentTime.getTime();
+    return uidsMatchFilter(tournament) && !tournament.winner_name;
   });
 
-  // Past results (includes matches older than current time or specific leaderboard template)
+  // Past results (includes matches where winner is declared or is a static preseeded past match)
   const pastMatches = tournaments.filter((tournament) => {
-    const matchTime = new Date(tournament.time);
-    return matchTime.getTime() <= currentTime.getTime() || tournament.match_id.includes('past');
+    return !!tournament.winner_name || tournament.match_id.includes('past');
   });
 
   const handleCopyText = (text: string, id: string) => {

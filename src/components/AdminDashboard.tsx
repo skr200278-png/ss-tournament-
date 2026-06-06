@@ -1139,7 +1139,59 @@ export const AdminDashboard: React.FC = () => {
             <div className="lg:col-span-2 bg-[#121420] border border-gray-800/90 rounded-3xl p-6 space-y-4">
               <h3 className="font-extrabold text-white text-base">Active & Upcoming Match Lobbies ({tournaments.length})</h3>
 
-              <div className="overflow-x-auto">
+              {/* Mobile responsive cards layout */}
+              <div className="block sm:hidden space-y-4">
+                {tournaments.length === 0 ? (
+                  <p className="py-6 text-center text-gray-500">No active matches seeded in Firestore.</p>
+                ) : (
+                  tournaments.map((t) => (
+                    <div key={t.match_id} className="bg-[#0a0b12] border border-gray-800 rounded-2xl p-4 space-y-3">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 py-0.5 px-2.5 rounded-full font-bold">
+                          {t.game_category}
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-mono">{new Date(t.time).toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-sm">{t.title}</h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-400 bg-[#171a26]/50 p-2.5 rounded-xl">
+                        <div>
+                          <span className="text-[9px] block text-gray-500">JOINED STATUS</span>
+                          <strong className="text-indigo-300 font-mono">{t.joined_count} Players</strong>
+                        </div>
+                        <div>
+                          <span className="text-[9px] block text-gray-500">ENTRY / PRIZE</span>
+                          <strong className="text-gray-200 font-mono">{t.entry_fee} C</strong> / <strong className="text-emerald-400 font-mono">{t.prize_pool} C</strong>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 pt-1 font-sans">
+                        <button
+                          onClick={() => openRoomModal(t)}
+                          className="flex-1 py-2 bg-amber-500 text-black text-xs rounded-xl font-bold hover:bg-amber-400"
+                        >
+                          Manage Room
+                        </button>
+                        <button
+                          onClick={() => selectEditMatch(t)}
+                          className="py-2 px-3.5 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 rounded-xl text-xs font-bold"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMatch(t.match_id)}
+                          className="py-2 px-3.5 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 rounded-xl text-xs font-bold"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop view table layout */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-left text-xs min-w-[500px]">
                   <thead>
                     <tr className="border-b border-gray-800 text-[10px] text-gray-400 uppercase tracking-wider font-mono">
@@ -1360,8 +1412,20 @@ export const AdminDashboard: React.FC = () => {
                   </div>
 
                   {resultMatch && (
-                    <div className="bg-[#1a1c2b]/50 p-4 border border-gray-800 rounded-xl space-y-2">
-                      <span className="block font-bold text-amber-400">Players Joined inside App:</span>
+                    <div className="bg-[#1a1c2b]/50 p-4 border border-gray-800 rounded-xl space-y-3">
+                      <div className="flex justify-between items-center pb-2 border-b border-gray-800/60">
+                        <span className="block font-bold text-amber-400">Players Joined inside App:</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleDeleteMatch(resultMatch.match_id);
+                            setResultMatch(null);
+                          }}
+                          className="py-1 px-3 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-300 border border-rose-500/30 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5"
+                        >
+                          🗑️ Delete Selected Match
+                        </button>
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {resultMatch.joined_players_uids?.length === 0 ? (
                           <span className="text-gray-400 italic">No direct players joined through registration interface in sandbox mode.</span>
