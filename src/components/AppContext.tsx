@@ -81,7 +81,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Hidden admin activation feature (clicks logo 5 times to reveal)
   const [logoClicks, setLogoClicks] = useState<number>(0);
   const [showAdminSecret, setShowAdminSecret] = useState<boolean>(() => {
-    return localStorage.getItem('show_admin_secret') === 'true';
+    try {
+      return localStorage.getItem('show_admin_secret') === 'true';
+    } catch {
+      return false;
+    }
   });
 
   const registerLogoClick = () => {
@@ -90,7 +94,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (nextClicks >= 5) {
         const nextSecretState = !showAdminSecret;
         setShowAdminSecret(nextSecretState);
-        localStorage.setItem('show_admin_secret', String(nextSecretState));
+        try {
+          localStorage.setItem('show_admin_secret', String(nextSecretState));
+        } catch (e) {
+          console.warn("Storage blocked: ", e);
+        }
         return 0; // reset counter
       }
       return nextClicks;
@@ -760,11 +768,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setTournaments([]);
       setTransactions([]);
     } else {
-      // We can reset tournaments state to empty
-      // Note: for safety, we clear standard test-seeded elements
+      // Clear standard test-seeded elements and also fully remove any winner fields
       await Promise.all(tournaments.map(async (t) => {
         const docRef = doc(db, 'tournaments', t.match_id);
-        return setDoc(docRef, { ...t, joined_count: 0, joined_players_uids: [], joined_players_details: {} });
+        const {
+          winner_name,
+          winner_uid,
+          winner_prize,
+          winner_kills,
+          winner_banner_image,
+          winner_banner_theme,
+          ...cleanMatch
+        } = t;
+        return setDoc(docRef, { 
+          ...cleanMatch, 
+          joined_count: 0, 
+          joined_players_uids: [], 
+          joined_players_details: {} 
+        });
       }));
     }
   };

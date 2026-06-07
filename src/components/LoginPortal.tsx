@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from './AppContext';
-import { Trophy, Mail, Lock, User, LogIn, Sparkles, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Trophy, Mail, Lock, User, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export const LoginPortal: React.FC = () => {
   const { 
@@ -8,7 +8,7 @@ export const LoginPortal: React.FC = () => {
     loginWithEmail, 
     registerWithEmail, 
     language, 
-    setLanguage 
+    setLanguage
   } = useApp();
 
   const [isSignUp, setIsSignUp] = useState(false);
@@ -232,31 +232,33 @@ export const LoginPortal: React.FC = () => {
         </div>
 
         {/* Google Authentication Section */}
-        <button
-          type="button"
-          onClick={login}
-          className="w-full py-3 px-4 bg-[#0a0b12] hover:bg-[#111222] border border-gray-800 text-white font-bold rounded-2xl text-xs transition-all flex items-center justify-center gap-2.5 cursor-pointer select-none"
-        >
-          <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
-            <path
-              fill="#EA4335"
-              d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.48 14.98 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.86 3C6.27 7.57 8.92 5.04 12 5.04z"
-            />
-            <path
-              fill="#4285F4"
-              d="M23.49 12.27c0-.81-.07-1.59-.2-2.34H12v4.44h6.46c-.28 1.46-1.1 2.69-2.34 3.51l3.63 2.82c2.13-1.97 3.74-4.86 3.74-8.43z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.36 14.5c-.24-.71-.38-1.47-.38-2.5s.14-1.79.38-2.5L1.5 6.5C.54 8.42 0 10.51 0 12s.54 3.58 1.5 5.5l3.86-3z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.63-2.82c-1.01.68-2.31 1.09-3.96 1.09-3.08 0-5.73-2.53-6.64-5.46L1.87 15.9C3.77 19.75 7.72 23 12 23z"
-            />
-          </svg>
-          {language === 'en' ? 'Continue with Google Account' : 'গুগল একাউন্ট দিয়ে সরাসরি প্রবেশ'}
-        </button>
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={login}
+            className="w-full py-3 px-4 bg-[#0a0b12] hover:bg-[#111222] border border-gray-800 text-white font-bold rounded-2xl text-xs transition-all flex items-center justify-center gap-2.5 cursor-pointer select-none"
+          >
+            <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
+              <path
+                fill="#EA4335"
+                d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.48 14.98 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.86 3C6.27 7.57 8.92 5.04 12 5.04z"
+              />
+              <path
+                fill="#4285F4"
+                d="M23.49 12.27c0-.81-.07-1.59-.2-2.34H12v4.44h6.46c-.28 1.46-1.1 2.69-2.34 3.51l3.63 2.82c2.13-1.97 3.74-4.86 3.74-8.43z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.36 14.5c-.24-.71-.38-1.47-.38-2.5s.14-1.79.38-2.5L1.5 6.5C.54 8.42 0 10.51 0 12s.54 3.58 1.5 5.5l3.86-3z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.63-2.82c-1.01.68-2.31 1.09-3.96 1.09-3.08 0-5.73-2.53-6.64-5.46L1.87 15.9C3.77 19.75 7.72 23 12 23z"
+              />
+            </svg>
+            {language === 'en' ? 'Continue with Google Account' : 'গুগল একাউন্ট দিয়ে সরাসরি প্রবেশ'}
+          </button>
+        </div>
       </div>
     </div>
   );
