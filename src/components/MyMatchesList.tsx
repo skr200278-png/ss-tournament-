@@ -193,9 +193,9 @@ export const MyMatchesList: React.FC = () => {
     return uidsMatchFilter(tournament) && !tournament.winner_name;
   });
 
-  // Past results (includes matches where winner is declared or is a static preseeded past match)
+  // Past results (strictly includes matches where winner is explicitly declared by Admin)
   const pastMatches = tournaments.filter((tournament) => {
-    return !!tournament.winner_name || tournament.match_id.includes('past');
+    return !!tournament.winner_name;
   });
 
   const handleCopyText = (text: string, id: string) => {
@@ -217,7 +217,7 @@ export const MyMatchesList: React.FC = () => {
     return mins <= 15;
   };
 
-  // Realistic sample leaderboard generator
+  // Real leaderboard generator (strictly from admin-declared entries)
   const getLeaderboard = (match: Tournament) => {
     const list = [];
     if (match.winner_name) {
@@ -227,34 +227,6 @@ export const MyMatchesList: React.FC = () => {
         kills: match.winner_kills || 0,
         prize: match.winner_prize || match.prize_pool
       });
-    }
-
-    // Only append simulated/mock rows if it is one of the initial hardcoded pre-seeded demo matches
-    const isSamplePreseeded = match.match_id === 'match_ff_1' || 
-                              match.match_id === 'match_ff_2' || 
-                              match.match_id === 'match_pubg_1' || 
-                              match.match_id === 'match_ludo_1' || 
-                              match.match_id === 'match_cod_1' || 
-                              match.match_id === 'match_ml_1' || 
-                              match.match_id === 'match_dls_1' ||
-                              match.match_id.includes('past');
-
-    if (isSamplePreseeded) {
-      if (!match.winner_name) {
-        // Mock preseeded past match format
-        list.push(
-          { rank: 1, name: "SABBIR_YT (BD)", kills: 12, prize: 120 },
-          { rank: 2, name: profile.name + " (YOU)", kills: 6, prize: 60 },
-          { rank: 3, name: "LUDO_MASTER_77", kills: 4, prize: 40 }
-        );
-      } else {
-        // Preseeded match with winner declared, sequential ranking
-        list.push(
-          { rank: 2, name: "SABBIR_YT (BD)", kills: 12, prize: 120 },
-          { rank: 3, name: profile.name + " (YOU)", kills: 6, prize: 20 },
-          { rank: 4, name: "LUDO_MASTER_77", kills: 4, prize: 10 }
-        );
-      }
     }
     return list;
   };
