@@ -56,6 +56,9 @@ interface AppContextType {
     Rocket_number: string;
     notice: string;
     banner_url: string;
+    payment_mode?: 'manual' | 'auto';
+    gateway_type?: 'sms_forwarder' | 'third_party_api_sim';
+    third_party_api_key?: string;
   };
   updateSettings: (newSettings: any) => Promise<void>;
   showAdminSecret: boolean;
@@ -111,7 +114,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     Nagad_number: "01948110394",
     Rocket_number: "01827491024",
     notice: "🔥 Welcome to ProTournament BD! Free Fire, PUBG & Ludo cash prize matches are online. Deposit is instant with personal Cash Out services.",
-    banner_url: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1200"
+    banner_url: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1200",
+    payment_mode: "manual" as "manual" | "auto",
+    gateway_type: "sms_forwarder" as "sms_forwarder" | "third_party_api_sim",
+    third_party_api_key: ""
   });
 
   // Translation Helper
@@ -269,7 +275,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           Nagad_number: data.Nagad_number || "01948110394",
           Rocket_number: data.Rocket_number || "01827491024",
           notice: data.notice || "🔥 Welcome to ProTournament BD! Free Fire, PUBG & Ludo cash prize matches are online.",
-          banner_url: data.banner_url || "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1200"
+          banner_url: data.banner_url || "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1200",
+          payment_mode: data.payment_mode || "manual",
+          gateway_type: data.gateway_type || "sms_forwarder",
+          third_party_api_key: data.third_party_api_key || ""
         });
       }
     }, (error) => {

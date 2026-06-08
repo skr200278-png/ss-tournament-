@@ -16,7 +16,7 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
-import { doc, setDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, increment, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export const WalletView: React.FC = () => {
@@ -99,9 +99,12 @@ export const WalletView: React.FC = () => {
       setVerifyStep(3);
     }, 2200);
 
-    // Step 4: Approved & Credited
+    // Step 4: Submit safely to database as a PENDING deposit ticket for manually validating
     setTimeout(async () => {
       try {
+        const inputtedTxId = depTxId.trim().toUpperCase();
+
+        // MANUAL MODE QUEUE SUBMISSION
         const txId = 'tx_' + Date.now();
         const newTx: CoinTransaction = {
           transaction_id: txId,
@@ -111,19 +114,15 @@ export const WalletView: React.FC = () => {
           amount: amount,
           payment_method: selectedMethod,
           account_number: depPhone,
-          tx_id: depTxId.trim().toUpperCase(),
-          status: 'approved', // Auto-approved and verified instantly!
+          tx_id: inputtedTxId,
+          status: 'pending',
           timestamp: new Date().toISOString()
         };
 
         if (isGuest) {
           setTransactions(prev => [newTx, ...prev]);
-          await addCoins(amount, 'coins');
         } else {
-          // Store approved transaction directly
           await setDoc(doc(db, 'transactions', txId), newTx);
-          // Auto add coins directly to wallet!
-          await addCoins(amount, 'coins');
         }
 
         setVerifyStep(4);
@@ -445,12 +444,12 @@ export const WalletView: React.FC = () => {
 
                           <div className="space-y-2">
                             <h4 className="font-extrabold text-white text-lg tracking-tight">
-                              {language === 'en' ? 'Instant Deposit Successful!' : 'ডিপোজিট সফলভাবে সম্পূর্ণ!'}
+                              {language === 'en' ? 'Deposit Ticket Submitted!' : 'রিসিট টিকিট সফলভাবে জমা হয়েছে!'}
                             </h4>
-                            <p className="text-white/90 text-xs leading-relaxed max-w-xs mx-auto">
+                            <p className="text-white/95 text-xs leading-relaxed max-w-sm mx-auto">
                               {language === 'en'
-                                ? 'Your transaction ID has been verified. Coins have been credited directly to your main balance.'
-                                : 'আপনার ট্রানজেকশন আইডিটি সফলভাবে যাচাই করা হয়েছে। কয়েন সরাসরি আপনার মেইন ব্যালেন্সে যুক্ত করা হয়েছে।'}
+                                ? 'Your transaction ticket is now pending. Admin will verify your payment against the bank ledger and approve the coins within 5-30 minutes. If you are testing, you can approve it yourself via the Admin Panel!'
+                                : 'আপনার ট্রানজেকশন টিকিটটি পেন্ডিং অবস্থায় সিস্টেমে সাবমিট হয়েছে! এডমিন প্যানেল bKash/Nagad/Rocket হিস্ট্রি চেক করে ৫ থেকে ৩০ মিনিটের মধ্যে কয়েন ব্যালেন্সে যুক্ত করে দেবে। (আপনি নিজেও ডেমো এডমিন প্যানেল থেকে এটি ইনস্ট্যান্ট অ্যাপ্রুভ করতে পারবেন!)'}
                             </p>
                           </div>
 

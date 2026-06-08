@@ -26,5 +26,9 @@ service cloud.firestore {
     match /proof_submissions/{submissionId} {
       allow read, write: if true;
     }
+
+    match /received_sms_payments/{paymentId} {
+      allow read, write: if true;
+    }
   }
 }

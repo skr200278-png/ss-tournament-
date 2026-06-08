@@ -40,7 +40,9 @@ import {
   Search,
   CheckCircle2,
   Award,
-  Filter
+  Filter,
+  Clock,
+  ShieldCheck
 } from 'lucide-react';
 
 interface ProofSubmission {
@@ -122,6 +124,92 @@ export const AdminDashboard: React.FC = () => {
   const [rocketNum, setRocketNum] = useState<string>(settings.Rocket_number);
   const [noticeText, setNoticeText] = useState<string>(settings.notice);
   const [bannerUrl, setBannerUrl] = useState<string>(settings.banner_url);
+  const [paymentMode, setPaymentMode] = useState<'manual' | 'auto'>(settings.payment_mode || 'manual');
+  const [gatewayType, setGatewayType] = useState<'sms_forwarder' | 'third_party_api_sim'>(settings.gateway_type || 'sms_forwarder');
+  const [thirdPartyApiKey, setThirdPartyApiKey] = useState<string>(settings.third_party_api_key || '');
+
+  // FOR THE AUTOMATED BANKING SMS LEDGER SIMULATOR
+  const [simMethod, setSimMethod] = useState<'bKash' | 'Nagad' | 'Rocket'>('bKash');
+  const [simSender, setSimSender] = useState<string>('01726591002');
+  const [simAmount, setSimAmount] = useState<string>('100');
+  const [simTxId, setSimTxId] = useState<string>('');
+  const [simList, setSimList] = useState<any[]>([]);
+
+  // Listen to the live SMS Ledger collection to display records to the admin
+  useEffect(() => {
+    if (!isAdminAuthenticated) return;
+    if (isGuest) {
+      setSimList([
+        { id: 'sim1', tx_id: 'DEMO100', amount: 100, sender_number: '01899223344', payment_method: 'bKash', status: 'unused', timestamp: new Date().toISOString() },
+        { id: 'sim2', tx_id: 'BKA12345', amount: 50, sender_number: '01711223344', payment_method: 'bKash', status: 'used', timestamp: new Date().toISOString() }
+      ]);
+      return;
+    }
+    const ledgerRef = collection(db, 'received_sms_payments');
+    const unsubscribe = onSnapshot(ledgerRef, (snapshot) => {
+      const list: any[] = [];
+      snapshot.forEach((doc) => {
+        list.push({ id: doc.id, ...doc.data() });
+      });
+      // Sort latest first
+      list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setSimList(list.slice(0, 10)); // keep last 10 entries for presentation
+    }, (err) => {
+      console.warn("Ledger tracking subscription warning:", err);
+    });
+    return () => unsubscribe();
+  }, [isAdminAuthenticated, isGuest]);
+
+  const handleSimulatePaymentSMS = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanTxId = simTxId.trim().toUpperCase();
+    const cleanAmount = Number(simAmount);
+
+    if (!cleanTxId || cleanTxId.length < 6) {
+      alert("Please enter a valid Transaction ID (minimum 6 characters).");
+      return;
+    }
+    if (!cleanAmount || cleanAmount <= 0) {
+      alert("Please enter a valid simulated amount.");
+      return;
+    }
+
+    try {
+      const generatedDocId = 'sim_ledger_' + Date.now();
+      const newLedgerDoc = {
+        id: generatedDocId,
+        tx_id: cleanTxId,
+        amount: cleanAmount,
+        sender_number: simSender,
+        payment_method: simMethod,
+        status: 'unused',
+        timestamp: new Date().toISOString()
+      };
+
+      if (isGuest) {
+        setSimList(prev => [newLedgerDoc, ...prev]);
+        alert(`[Demo Mode] Simulated bank ledger entry created! Method: ${simMethod}, TxID: "${cleanTxId}", Amount: ${cleanAmount} BDT. Now try depositing this TxID in user wallet!`);
+      } else {
+        await setDoc(doc(db, 'received_sms_payments', generatedDocId), newLedgerDoc);
+        alert(`[Real Firestore Database Added] Simulated bank payment receipt added under 'received_sms_payments'! TxID: "${cleanTxId}", Amount: ${cleanAmount} BDT.`);
+      }
+      setSimTxId('');
+    } catch (err: any) {
+      alert("Simulator issue writing to database: " + err.message);
+    }
+  };
+
+  const handleDeleteLedgerItem = async (id: string) => {
+    if (isGuest) {
+      setSimList(prev => prev.filter(item => item.id !== id));
+      return;
+    }
+    try {
+      await deleteDoc(doc(db, 'received_sms_payments', id));
+    } catch (err: any) {
+      alert("Could not delete ledger record: " + err.message);
+    }
+  };
 
   // Today's stats counters
   const [stats, setStats] = useState({
@@ -145,6 +233,9 @@ export const AdminDashboard: React.FC = () => {
     setRocketNum(settings.Rocket_number);
     setNoticeText(settings.notice);
     setBannerUrl(settings.banner_url);
+    setPaymentMode(settings.payment_mode || 'manual');
+    setGatewayType(settings.gateway_type || 'sms_forwarder');
+    setThirdPartyApiKey(settings.third_party_api_key || '');
   }, [settings]);
 
   // 1. Listen or fetch All Users
@@ -528,7 +619,10 @@ export const AdminDashboard: React.FC = () => {
         Nagad_number: nagadNum,
         Rocket_number: rocketNum,
         notice: noticeText,
-        banner_url: bannerUrl
+        banner_url: bannerUrl,
+        payment_mode: paymentMode,
+        gateway_type: gatewayType,
+        third_party_api_key: thirdPartyApiKey
       });
       alert("App utility setting parameters saved successfully!");
     } catch (err) {
