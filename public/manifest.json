@@ -1,0 +1,25 @@
+{
+  "name": "ProTournament BD (প্রো-টুর্নামেন্ট বিডি)",
+  "short_name": "ProTournament",
+  "name_bn": "প্রো-টুর্নামেন্ট বিডি",
+  "description": "Unleash Your Gaming Skills & Strike Real Glory. Free Fire, PUBG & Ludo Cash Prize Matches.",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0a0b12",
+  "theme_color": "#f59e0b",
+  "display": "standalone",
+  "orientation": "portrait"
+}

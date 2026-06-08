@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from './AppContext';
-import { Trophy, Wallet, Gamepad2, Calendar, Languages, LogIn, LogOut, Menu, X, Coins, Shield, User } from 'lucide-react';
+import { Trophy, Wallet, Gamepad2, Calendar, Languages, LogIn, LogOut, Menu, X, Coins, Shield, User, Download, Info } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { 
@@ -20,6 +20,47 @@ export const Header: React.FC = () => {
   const hasAdminAccess = showAdminSecret || (profile && profile.email === 'skr200278@gmail.com');
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showIOSHint, setShowIOSHint] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    // Detect iOS devices for manual install tips
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIphoneOrIpad = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(isIphoneOrIpad);
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the PWA install prompt');
+      } else {
+        console.log('User dismissed the PWA install prompt');
+      }
+      setDeferredPrompt(null);
+    } else if (isIOS) {
+      setShowIOSHint(true);
+    } else {
+      // General fall-back info
+      alert(language === 'en' 
+        ? "To install, tap the three dots (More options) at the top-right of your Chrome/browser screen, then click 'Add to Home Screen' or 'Install App'." 
+        : "অ্যাপটি মোবাইলে সরাসরি ডাউনলোড করতে আপনার ব্রাউজারের উপরে ডানদিকের তিনটি ফোঁটা (৩ ডট মেনু) ক্লিক করুন এবং 'Add to Home screen' বা 'Install App' বোতামটি চাপুন।"
+      );
+    }
+  };
 
   const toggleLang = () => {
     setLanguage(language === 'en' ? 'bn' : 'en');
@@ -142,6 +183,19 @@ export const Header: React.FC = () => {
               <span className="hidden leading-none font-semibold sm:inline">{language === 'en' ? 'বাং' : 'EN'}</span>
             </button>
 
+            {/* Install App Button */}
+            <button
+              id="pwa-install-header-btn"
+              onClick={handleInstallApp}
+              className="px-3 py-2 text-amber-400 hover:text-amber-300 hover:bg-gradient-to-r hover:from-amber-500/20 hover:to-orange-500/20 rounded-xl border border-amber-500/30 bg-amber-500/10 transition-all flex items-center justify-center gap-1.5 text-xs font-sans font-extrabold animate-pulse"
+              title="Install App directly on Home Screen as Mobile App"
+            >
+              <Download className="h-3.5 w-3.5 shrink-0" />
+              <span>
+                {language === 'en' ? 'Install' : 'ইনস্টল অ্যাপ'}
+              </span>
+            </button>
+
             {/* Auth Buttons */}
             {profile ? (
               <button
@@ -219,6 +273,19 @@ export const Header: React.FC = () => {
           )}
           
           <div className="pt-3 border-t border-gray-800/80 my-3 flex flex-col gap-2">
+            {/* Mobile PWA Install option */}
+            <button
+              id="mobile-pwa-install-btn"
+              onClick={() => {
+                handleInstallApp();
+                setMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border border-amber-500/30 bg-amber-500/10 text-amber-400 rounded-xl font-extrabold text-xs"
+            >
+              <Download className="h-3.5 w-3.5" />
+              {language === 'en' ? 'Add App to Home Screen' : 'মোবাইলে ইনস্টল করুন'}
+            </button>
+
             {profile ? (
               <div className="px-4 py-2 bg-gray-900/60 rounded-xl flex items-center justify-between text-xs text-slate-400">
                 <span className="truncate">{profile.email}</span>
@@ -230,7 +297,7 @@ export const Header: React.FC = () => {
 
             {profile ? (
               <button
-                _id="mobile-signout"
+                id="mobile-signout"
                 onClick={() => {
                   logout();
                   setMobileMenuOpen(false);
@@ -243,6 +310,7 @@ export const Header: React.FC = () => {
             ) : (
               <div className="flex flex-col gap-2">
                 <button
+                  id="mobile-google-login-btn"
                   onClick={() => {
                     login();
                     setMobileMenuOpen(false);
@@ -254,6 +322,42 @@ export const Header: React.FC = () => {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* iOS Safari Share Sheet Guidelines */}
+      {showIOSHint && (
+        <div id="ios-pwa-hint-modal" className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-[#131520] border border-gray-800 rounded-2xl p-5 space-y-4">
+            <div className="flex justify-between items-start">
+              <h3 className="font-extrabold text-amber-400 text-sm flex items-center gap-2">
+                <Info className="h-4 w-4 text-amber-400" />
+                iOS (iPhone / iPad) এ ইনস্টল করুন
+              </h3>
+              <button 
+                onClick={() => setShowIOSHint(false)}
+                className="text-gray-400 hover:text-white p-1 rounded-lg bg-gray-900 border border-gray-800 cursor-pointer"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="text-gray-300 text-xs leading-relaxed space-y-3 font-sans">
+              <p>আইফোনের জন্য নিচের সহজ পদক্ষেপগুলো অনুসরন করুন:</p>
+              <div className="space-y-2 text-[11px] text-gray-400 bg-black/30 p-3 rounded-xl border border-gray-800/80">
+                <p>১. সাফারী (Safari) ব্রাউজারের নিচে থাকা <span className="text-amber-400 font-bold font-mono">"Share" (শেয়ার)</span> আইকনটিতে চাপুন।</p>
+                <p>২. শেয়ার অপশনগুলোর মধ্য থেকে একটু নিচে গিয়ে <span className="text-amber-400 font-bold">"Add to Home Screen" (হোম স্ক্রিনে যোগ করুন)</span> অপশনটি সিলেক্ট করুন।</p>
+                <p>৩. এরপর উপরে ডানদিকের কোণা থেকে <span className="text-amber-400 font-bold">"Add"</span> বাটনে চাপ দিলেই অ্যাপটি মোবাইলের হোম স্ক্রিনে আইকনসহ চলে আসবে!</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowIOSHint(false)}
+              className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl cursor-pointer select-none"
+            >
+              বুঝতে পেরেছি
+            </button>
           </div>
         </div>
       )}
