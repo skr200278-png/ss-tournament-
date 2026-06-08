@@ -8,6 +8,7 @@ const app = initializeApp(firebaseConfig);
 // This prevents WebChannel streaming connection listen stream errors when run behind proxies or sandboxed dev webservers.
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
+  experimentalAutoDetectLongPolling: false,
 }, firebaseConfig.firestoreDatabaseId); /* CRITICAL: The app will break without this line */
 export const auth = getAuth(app);
 

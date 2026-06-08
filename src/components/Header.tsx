@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from './AppContext';
-import { Trophy, Wallet, Gamepad2, Calendar, Languages, LogIn, LogOut, Menu, X, Coins, Shield, User, Download, Info } from 'lucide-react';
+import { Trophy, Wallet, Gamepad2, Calendar, Languages, LogIn, LogOut, Menu, X, Coins, Shield, User, Download, Info, Copy, Check } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { 
@@ -21,8 +21,9 @@ export const Header: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showIOSHint, setShowIOSHint] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     // Detect iOS devices for manual install tips
@@ -43,23 +44,35 @@ export const Header: React.FC = () => {
 
   const handleInstallApp = async () => {
     if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the PWA install prompt');
-      } else {
-        console.log('User dismissed the PWA install prompt');
+      try {
+        deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the PWA install prompt');
+          setDeferredPrompt(null);
+        } else {
+          console.log('User dismissed the PWA install prompt');
+        }
+      } catch (err) {
+        console.warn('PWA prompt failed, showing beautiful interactive guide:', err);
+        setShowInstallGuide(true);
       }
-      setDeferredPrompt(null);
-    } else if (isIOS) {
-      setShowIOSHint(true);
     } else {
-      // General fall-back info
-      alert(language === 'en' 
-        ? "To install, tap the three dots (More options) at the top-right of your Chrome/browser screen, then click 'Add to Home Screen' or 'Install App'." 
-        : "অ্যাপটি মোবাইলে সরাসরি ডাউনলোড করতে আপনার ব্রাউজারের উপরে ডানদিকের তিনটি ফোঁটা (৩ ডট মেনু) ক্লিক করুন এবং 'Add to Home screen' বা 'Install App' বোতামটি চাপুন।"
-      );
+      // Show the complete beautiful guide/modal instead of simple alert
+      setShowInstallGuide(true);
     }
+  };
+
+  const handleCopyLink = () => {
+    const appUrl = "https://ais-pre-wznxdkmdziisf7jrspbwnk-204082368003.asia-east1.run.app";
+    navigator.clipboard.writeText(appUrl)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {
+        alert(language === 'en' ? "Failed to copy. Please manually share the URL." : "লিঙ্ক কপি করা যায়নি। অনুগ্রহ করে ব্রাউজার থেকে সরাসরি কপি করুন।");
+      });
   };
 
   const toggleLang = () => {
@@ -326,37 +339,115 @@ export const Header: React.FC = () => {
         </div>
       )}
 
-      {/* iOS Safari Share Sheet Guidelines */}
-      {showIOSHint && (
-        <div id="ios-pwa-hint-modal" className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-[#131520] border border-gray-800 rounded-2xl p-5 space-y-4">
+      {/* Dynamic PWA Interactive Guide Modal */}
+      {showInstallGuide && (
+        <div id="pwa-unified-install-modal" className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+          <div className="w-full max-w-md bg-[#131520] border border-gray-800/70 rounded-2xl p-5 space-y-4 my-8 relative">
             <div className="flex justify-between items-start">
-              <h3 className="font-extrabold text-amber-400 text-sm flex items-center gap-2">
-                <Info className="h-4 w-4 text-amber-400" />
-                iOS (iPhone / iPad) এ ইনস্টল করুন
-              </h3>
+              <div>
+                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest block mb-0.5 font-sans">App Installation Guide</span>
+                <h3 className="font-extrabold text-white text-sm">
+                  📱 {language === 'en' ? 'Get Mobile Launcher App' : 'মোবাইলে ইনস্টল করুন'}
+                </h3>
+              </div>
               <button 
-                onClick={() => setShowIOSHint(false)}
-                className="text-gray-400 hover:text-white p-1 rounded-lg bg-gray-900 border border-gray-800 cursor-pointer"
+                onClick={() => setShowInstallGuide(false)}
+                className="text-gray-400 hover:text-white p-1.5 rounded-xl bg-gray-950 border border-gray-800 cursor-pointer transition-all"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="text-gray-300 text-xs leading-relaxed space-y-3 font-sans">
-              <p>আইফোনের জন্য নিচের সহজ পদক্ষেপগুলো অনুসরন করুন:</p>
-              <div className="space-y-2 text-[11px] text-gray-400 bg-black/30 p-3 rounded-xl border border-gray-800/80">
-                <p>১. সাফারী (Safari) ব্রাউজারের নিচে থাকা <span className="text-amber-400 font-bold font-mono">"Share" (শেয়ার)</span> আইকনটিতে চাপুন।</p>
-                <p>২. শেয়ার অপশনগুলোর মধ্য থেকে একটু নিচে গিয়ে <span className="text-amber-400 font-bold">"Add to Home Screen" (হোম স্ক্রিনে যোগ করুন)</span> অপশনটি সিলেক্ট করুন।</p>
-                <p>৩. এরপর উপরে ডানদিকের কোণা থেকে <span className="text-amber-400 font-bold">"Add"</span> বাটনে চাপ দিলেই অ্যাপটি মোবাইলের হোম স্ক্রিনে আইকনসহ চলে আসবে!</p>
+            {/* Application Logo & Badge */}
+            <div className="flex items-center gap-3.5 bg-gray-950/45 p-3 rounded-xl border border-gray-800/60">
+              <img 
+                src="/icon-512.png" 
+                alt="ProTournament BD" 
+                className="w-12 h-12 rounded-xl object-cover shadow-lg border border-amber-500/20"
+                referrerPolicy="no-referrer"
+              />
+              <div className="space-y-0.5">
+                <span className="font-extrabold text-xs text-white block">ProTournament BD</span>
+                <span className="text-[10px] text-gray-500 font-mono tracking-wide block">PWA Standard Web App v2.4</span>
+                <span className="inline-block bg-emerald-500/15 text-emerald-400 text-[8px] px-1.5 py-0.5 rounded font-extrabold">
+                  LIGHTWEIGHT INSTANT SHORTCUT
+                </span>
               </div>
             </div>
 
+            {/* Core PWA Info */}
+            <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+              {language === 'en' 
+                ? "This next-generation web app installs directly onto your phone screen. It acts as a lightweight launcher (takes only 1MB), bypasses Play Store limits, and lets you play tournaments smoothly." 
+                : "এটি একটি লাইটওয়েট আধুনিক ওয়েব অ্যাপ (PWA), যা গুগল প্লে-স্টোরে না গিয়েও সরাসরি আপনার এন্ড্রয়েড বা আইফোন স্ক্রিনে ইনস্টল হয়ে যায়। এতে কোন অতিরিক্ত র্যাম বা স্টোরেজ খরচ হয় না এবং সাধারণ অ্যাপের মতই ফুলস্ক্রিন ওপেন হয়!"
+              }
+            </p>
+
+            {/* In-App Webview Warning Trigger */}
+            <div className="p-3.5 bg-rose-500/5 border border-rose-500/10 rounded-2xl space-y-2">
+              <span className="text-[10px] font-bold text-rose-450 uppercase block font-sans">
+                ⚠️ {language === 'en' ? 'Special: Facebook / Messenger / In-app Users' : 'ফেসবুক/মেসেঞ্জার বা হোয়াটসঅ্যাপ ইউজারদের জন্য জরুরি নির্দেশনা:'}
+              </span>
+              <p className="text-[10.5px] text-slate-400 leading-relaxed font-sans">
+                {language === 'en'
+                  ? "If you opened this link from inside Facebook/Messenger or WhatsApp, the instant browser menu is blocked by security limits. Please copy the link below and open it directly inside your Google Chrome or Safari browser!"
+                  : "আপনি যদি ফেসবুক, মেসেঞ্জার বা হোয়াটসঅ্যাপের ভেতরের ব্রাউজার থেকে এই লিংকটি খুলে থাকেন, তবে ব্রাউজারের সীমাবদ্ধতার কারণে সরাসরি ইনস্টল কাজ করবে না। নিচে থাকা বাটন চেপে লিংকটি কপি করে সরাসরি গুগল ক্রোম (Chrome) বা সাফারী ব্রাউজারে পেস্ট করুন!"
+                }
+              </p>
+              
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className={`w-full mt-2 py-2 px-3 rounded-lg font-bold text-[11px] font-sans transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  copied 
+                    ? 'bg-emerald-500 text-black' 
+                    : 'bg-gray-950 border border-amber-500/20 text-amber-400 hover:border-amber-400'
+                }`}
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 stroke-[3]" />
+                    <span>{language === 'en' ? 'Link Copied completed!' : 'লিঙ্ক কপি সম্পন্ন হয়েছে!'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5" />
+                    <span>{language === 'en' ? 'Copy Live App Link to Clipboard' : 'লিংকটি কপি করুন'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Step-by-Step guides */}
+            <div className="space-y-3 pt-1">
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block font-sans">
+                {language === 'en' ? 'How to Install Manually:' : 'কিভাবে ইনস্টল করবেন:'}
+              </span>
+
+              {isIOS ? (
+                /* iOS Safari instructions */
+                <div className="space-y-2 text-[11px] text-gray-300 bg-black/25 p-3.5 rounded-xl border border-gray-800 font-sans">
+                  <span className="text-amber-400 font-extrabold text-[12px] block">🍎 Safari (iPhone / iPad)</span>
+                  <p>১. আইফোনের সাফারী (Safari) ব্রাউজারের নিচের দিকে থাকা <span className="text-amber-400 font-extrabold">"Share" (শেয়ার/তীর চিহ্ন)</span> বোতামে ক্লিক করুন।</p>
+                  <p>২. শেয়ার অপশনগুলোর মধ্য থেকে একটু নিচে স্ক্রল করে <span className="text-amber-400 font-extrabold">"Add to Home Screen" (হোম স্ক্রিনে যোগ করুন)</span> অপশনটি চাপুন।</p>
+                  <p>৩. এরপর উপরে ডানদিকের কোণা থেকে <span className="text-amber-400 font-extrabold">"Add"</span> বাটনে চাপ দিলেই এটি ফোনের হোম স্ক্রিনে গোল্ডেন লোগোসহ ইনস্টল হয়ে যাবে!</p>
+                </div>
+              ) : (
+                /* Android Chrome instructions */
+                <div className="space-y-2 text-[11px] text-gray-300 bg-black/25 p-3.5 rounded-xl border border-gray-800 font-sans">
+                  <span className="text-amber-400 font-extrabold text-[12px] block font-sans">🤖 Android (Google Chrome)</span>
+                  <p>১. আপনার ক্রোম ব্রাউজারের উপরে ডানদিকের কোণাগুছানো <span className="text-amber-400 font-extrabold">৩টি ডট (Menu)</span> চিহ্নে চাপুন।</p>
+                  <p>২. অপশনগুলো থেকে একটু নিচে গিয়ে <span className="text-amber-450 font-extrabold">"Add to Home Screen" (হোম স্ক্রিনে যোগ করুন)</span> বা <span className="text-amber-450 font-extrabold">"Install App"</span> অপশনটি সিলেক্ট করুন।</p>
+                  <p>৩. এরপর <span className="text-amber-400 font-extrabold">"Add"</span> বা <span className="text-amber-400 font-bold">"Install"</span> বাটনে চাপ দিন। আপনার লোগোসহ ১ সেকেন্ডের মধ্যে ফোনে শর্টকাট চলে আসবে!</p>
+                </div>
+              )}
+            </div>
+
             <button
-              onClick={() => setShowIOSHint(false)}
-              className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl cursor-pointer select-none"
+              onClick={() => setShowInstallGuide(false)}
+              className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl cursor-pointer select-none transition-all shadow-md font-sans"
             >
-              বুঝতে পেরেছি
+              {language === 'en' ? 'Close & Play' : 'আমি বুঝেছি, বন্ধ করুন'}
             </button>
           </div>
         </div>
