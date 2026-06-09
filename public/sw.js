@@ -36,14 +36,28 @@ self.addEventListener('fetch', (event) => {
   // Only intercept simple GET requests
   if (event.request.method !== 'GET') return;
 
+  // Only handle http/https requests (ignore extensions, third-party non-web schemes)
+  if (!event.request.url.startsWith('http')) return;
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).catch(() => {
-        // Fallback or let browser handle standard failure
-      });
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        // If we get a valid resource from the network, update the cache
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        // If network request fails (offline), look in the cache
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+        });
+      })
   );
 });
