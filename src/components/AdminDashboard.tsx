@@ -90,9 +90,9 @@ export const AdminDashboard: React.FC = () => {
   const [matchId, setMatchId] = useState<string>('');
   const [gameCategory, setGameCategory] = useState<string>('Free Fire');
   const [title, setTitle] = useState<string>('');
-  const [entryFee, setEntryFee] = useState<number>(20);
-  const [prizePool, setPrizePool] = useState<number>(100);
-  const [perKill, setPerKill] = useState<number>(5);
+  const [entryFee, setEntryFee] = useState<number | string>(20);
+  const [prizePool, setPrizePool] = useState<number | string>(100);
+  const [perKill, setPerKill] = useState<number | string>(5);
   const [matchDate, setMatchDate] = useState<string>('');
   const [mapName, setMapName] = useState<string>('Bermuda');
   const [formatType, setFormatType] = useState<string>('Solo');
@@ -1141,7 +1141,15 @@ export const AdminDashboard: React.FC = () => {
                     <input
                       type="number"
                       value={entryFee}
-                      onChange={(e) => setEntryFee(Number(e.target.value))}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setEntryFee('');
+                        } else {
+                          const num = Number(val);
+                          setEntryFee(isNaN(num) ? '' : num);
+                        }
+                      }}
                       className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white font-mono"
                     />
                   </div>
@@ -1150,19 +1158,35 @@ export const AdminDashboard: React.FC = () => {
                     <input
                       type="number"
                       value={prizePool}
-                      onChange={(e) => setPrizePool(Number(e.target.value))}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setPrizePool('');
+                        } else {
+                          const num = Number(val);
+                          setPrizePool(isNaN(num) ? '' : num);
+                        }
+                      }}
                       className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white font-mono"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-gray-450 font-bold uppercase tracking-wider block">
+                    <label className="text-[10px] text-gray-455 font-bold uppercase tracking-wider block">
                       {['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(gameCategory) ? 'Per Kill(C)' : 'Per Kill (N/A)'}
                     </label>
                     <input
                       type="number"
                       value={perKill}
                       disabled={!['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(gameCategory)}
-                      onChange={(e) => setPerKill(Number(e.target.value))}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setPerKill('');
+                        } else {
+                          const num = Number(val);
+                          setPerKill(isNaN(num) ? '' : num);
+                        }
+                      }}
                       className={`w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white font-mono ${
                         !['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(gameCategory) ? 'opacity-40 cursor-not-allowed' : ''
                       }`}

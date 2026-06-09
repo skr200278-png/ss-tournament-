@@ -16,9 +16,25 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
 
   // Form states based on game format (Solo, Duo, Squad, 1v1, 4-Player, etc.)
   const fmt = tournament.format?.toLowerCase() || 'solo';
-  const isSolo = fmt === 'solo' || fmt === '1v1' || fmt === 'solo match' || fmt === '1v1 showdown' || fmt === 'single' || fmt === 'high score challenge';
-  const isDuo = fmt === 'duo' || fmt === 'duo match';
-  const isSquad = fmt === 'squad' || fmt === '4-player' || fmt === 'clan war' || fmt === '5v5' || fmt === '3v3' || fmt === 'squad war' || fmt === '4-player classic' || fmt === 'clan war friendly' || fmt === '5v5 custom' || fmt === '3v3 brawl' || fmt === 'clash squad';
+  
+  // Decide exact player count based on format string
+  let playerCount = 1;
+  if (fmt.includes('solo') || fmt.includes('1v1') || fmt === 'single' || fmt.includes('showdown')) {
+    playerCount = 1;
+  } else if (fmt.includes('duo')) {
+    playerCount = 2;
+  } else if (fmt.includes('3v3')) {
+    playerCount = 3;
+  } else if (fmt.includes('5v5')) {
+    playerCount = 5;
+  } else if (fmt.includes('squad') || fmt.includes('4-player') || fmt.includes('clan war') || fmt.includes('clash squad')) {
+    playerCount = 4;
+  } else {
+    // Fallback based on typical format
+    playerCount = 4; // Default to squad size for other team matches
+  }
+
+  const isSolo = playerCount === 1;
 
   const [teamName, setTeamName] = useState('');
   
@@ -34,6 +50,9 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
 
   const [p4Name, setP4Name] = useState('');
   const [p4Id, setP4Id] = useState('');
+
+  const [p5Name, setP5Name] = useState('');
+  const [p5Id, setP5Id] = useState('');
 
   // Dynamic Label & Placeholder Helpers based on Game Category
   const getNameLabel = () => {
@@ -106,24 +125,56 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
 
     let finalInGameStr = '';
 
-    if (isSolo) {
+    if (playerCount === 1) {
       if (!p1Name.trim() || !p1Id.trim()) {
         setErrorMsg(language === 'en' ? `Both ${getNameLabel()} and ${getIdLabel()} are required!` : `${getNameLabel()} এবং ${getIdLabel()} দুটোই পূরণ করা আবশ্যক!`);
         return;
       }
       finalInGameStr = `${getNameLabel()}: ${p1Name.trim()} (${getIdLabel()}: ${p1Id.trim()})`;
-    } else if (isDuo) {
-      if (!teamName.trim() || !p1Name.trim() || !p1Id.trim() || !p2Name.trim() || !p2Id.trim()) {
-        setErrorMsg(language === 'en' ? 'All Duo Team Fields (Team Name, 2 Players) are required!' : 'ডুয়ো টিমের সকল তথ্য (টিম নাম, ২ জনের নাম ও আইডি) পূরণ করা আবশ্যক!');
+    } else {
+      if (!teamName.trim()) {
+        setErrorMsg(language === 'en' ? 'Squad / Duo Team Name is required!' : 'স্কোয়াড ও ডুয়ো টিম নাম আবশ্যক!');
         return;
       }
-      finalInGameStr = `Team: ${teamName.trim()} [P1: ${p1Name.trim()} (${getIdLabel()}: ${p1Id.trim()}), P2: ${p2Name.trim()} (${getIdLabel()}: ${p2Id.trim()})]`;
-    } else if (isSquad) {
-      if (!teamName.trim() || !p1Name.trim() || !p1Id.trim() || !p2Name.trim() || !p2Id.trim() || !p3Name.trim() || !p3Id.trim() || !p4Name.trim() || !p4Id.trim()) {
-        setErrorMsg(language === 'en' ? 'All Squad Team Fields (Team Name, 4 Players) are required!' : 'স্কোয়াডের সকল তথ্য (টিম নাম, ৪ জনের নাম ও আইডি) পূরণ করা আবশ্যক!');
-        return;
+      
+      const players = [];
+      if (playerCount >= 1) {
+        if (!p1Name.trim() || !p1Id.trim()) {
+          setErrorMsg(language === 'en' ? 'Player 1 (Team Leader) Name and ID are required!' : 'প্লেয়ার ১ (টিম লিডার) এর নাম ও আইডি পূরণ করুন!');
+          return;
+        }
+        players.push(`P1: ${p1Name.trim()} (${p1Id.trim()})`);
       }
-      finalInGameStr = `Team: ${teamName.trim()} [P1: ${p1Name.trim()} (${getIdLabel()}: ${p1Id.trim()}), P2: ${p2Name.trim()} (${getIdLabel()}: ${p2Id.trim()}), P3: ${p3Name.trim()} (${getIdLabel()}: ${p3Id.trim()}), P4: ${p4Name.trim()} (${getIdLabel()}: ${p4Id.trim()})]`;
+      if (playerCount >= 2) {
+        if (!p2Name.trim() || !p2Id.trim()) {
+          setErrorMsg(language === 'en' ? 'Player 2 Name and ID are required!' : 'প্লেয়ার ২ এর নাম ও আইডি পূরণ করুন!');
+          return;
+        }
+        players.push(`P2: ${p2Name.trim()} (${p2Id.trim()})`);
+      }
+      if (playerCount >= 3) {
+        if (!p3Name.trim() || !p3Id.trim()) {
+          setErrorMsg(language === 'en' ? 'Player 3 Name and ID are required!' : 'প্লেয়ার ৩ এর নাম ও আইডি পূরণ করুন!');
+          return;
+        }
+        players.push(`P3: ${p3Name.trim()} (${p3Id.trim()})`);
+      }
+      if (playerCount >= 4) {
+        if (!p4Name.trim() || !p4Id.trim()) {
+          setErrorMsg(language === 'en' ? 'Player 4 Name and ID are required!' : 'প্লেয়ার ৪ এর নাম ও আইডি পূরণ করুন!');
+          return;
+        }
+        players.push(`P4: ${p4Name.trim()} (${p4Id.trim()})`);
+      }
+      if (playerCount >= 5) {
+        if (!p5Name.trim() || !p5Id.trim()) {
+          setErrorMsg(language === 'en' ? 'Player 5 Name and ID are required!' : 'প্লেয়ার ৫ এর নাম ও আইডি পূরণ করুন!');
+          return;
+        }
+        players.push(`P5: ${p5Name.trim()} (${p5Id.trim()})`);
+      }
+
+      finalInGameStr = `Team: ${teamName.trim()} [${players.join(', ')}]`;
     }
 
     setIsSubmitting(true);
@@ -289,8 +340,8 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
               {/* Dynamic Game ID / Teammate Form Fields based on Format */}
               <div className="space-y-4 pt-1 max-h-[320px] overflow-y-auto pr-1">
                 
-                {/* Team Name required for Duo / Squad matches */}
-                {(isDuo || isSquad) && (
+                {/* Team Name required for Duo / Squad / team matches */}
+                {playerCount > 1 && (
                   <div className="space-y-1.5 animate-slide-up">
                     <label className="block text-xs font-bold text-gray-305 uppercase tracking-wider">
                       {language === 'en' ? 'Squad / Duo Team Name' : 'স্কোয়াড ও ডুয়ো টিম নাম'} <span className="text-[#f59e0b] font-extrabold">*</span>
@@ -308,40 +359,42 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
                 )}
 
                 {/* Player 1 Entry */}
-                <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3">
-                  <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
-                    {isSolo ? (language === 'en' ? 'Player Profile Details' : 'আপনার প্লেয়ার তথ্য') : (language === 'en' ? 'Player 1 (Team Leader)' : 'প্লেয়ার ১ (টিম লিডার - আপনি)')}
-                  </span>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-gray-400 font-medium">{getNameLabel()} <span className="text-red-500">*</span></span>
-                      <input
-                        type="text"
-                        required
-                        value={p1Name}
-                        onChange={(e) => setP1Name(e.target.value)}
-                        placeholder={getPlaceholderName()}
-                        disabled={isInsufficient || isSubmitting}
-                        className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-sans"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-gray-400 font-medium">{getIdLabel()} <span className="text-red-500">*</span></span>
-                      <input
-                        type="text"
-                        required
-                        value={p1Id}
-                        onChange={(e) => setP1Id(e.target.value)}
-                        placeholder={getPlaceholderId()}
-                        disabled={isInsufficient || isSubmitting}
-                        className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
-                      />
+                {playerCount >= 1 && (
+                  <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3">
+                    <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
+                      {isSolo ? (language === 'en' ? 'Player Profile Details' : 'আপনার প্লেয়ার তথ্য') : (language === 'en' ? 'Player 1 (Team Leader)' : 'প্লেয়ার ১ (টিম লিডার - আপনি)')}
+                    </span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-gray-400 font-medium">{getNameLabel()} <span className="text-red-500">*</span></span>
+                        <input
+                          type="text"
+                          required
+                          value={p1Name}
+                          onChange={(e) => setP1Name(e.target.value)}
+                          placeholder={getPlaceholderName()}
+                          disabled={isInsufficient || isSubmitting}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-sans"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-gray-400 font-medium">{getIdLabel()} <span className="text-red-500">*</span></span>
+                        <input
+                          type="text"
+                          required
+                          value={p1Id}
+                          onChange={(e) => setP1Id(e.target.value)}
+                          placeholder={getPlaceholderId()}
+                          disabled={isInsufficient || isSubmitting}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                {/* Player 2 Entry (Duo / Squad only) */}
-                {(isDuo || isSquad) && (
+                {/* Player 2 Entry */}
+                {playerCount >= 2 && (
                   <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3 animate-slide-up">
                     <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
                       {language === 'en' ? 'Player 2 (Teammate)' : 'প্লেয়ার ২ (টিমমেট)'}
@@ -375,73 +428,109 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
                   </div>
                 )}
 
-                {/* Player 3 & 4 Entry (Squad only) */}
-                {isSquad && (
-                  <>
-                    <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3 animate-slide-up">
-                      <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
-                        {language === 'en' ? 'Player 3 (Teammate)' : 'প্লেয়ার ৩ (টিমমেট)'}
-                      </span>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <span className="text-[10px] text-gray-400 font-medium">{getNameLabel()} <span className="text-red-500">*</span></span>
-                          <input
-                            type="text"
-                            required
-                            value={p3Name}
-                            onChange={(e) => setP3Name(e.target.value)}
-                            placeholder={getPlaceholderName()}
-                            disabled={isInsufficient || isSubmitting}
-                            className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-[10px] text-gray-400 font-medium">{getIdLabel()} <span className="text-red-500">*</span></span>
-                          <input
-                            type="text"
-                            required
-                            value={p3Id}
-                            onChange={(e) => setP3Id(e.target.value)}
-                            placeholder={getPlaceholderId()}
-                            disabled={isInsufficient || isSubmitting}
-                            className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
-                          />
-                        </div>
+                {/* Player 3 Entry */}
+                {playerCount >= 3 && (
+                  <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3 animate-slide-up">
+                    <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
+                      {language === 'en' ? 'Player 3 (Teammate)' : 'প্লেয়ার ৩ (টিমমেট)'}
+                    </span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-gray-400 font-medium">{getNameLabel()} <span className="text-red-500">*</span></span>
+                        <input
+                          type="text"
+                          required
+                          value={p3Name}
+                          onChange={(e) => setP3Name(e.target.value)}
+                          placeholder={getPlaceholderName()}
+                          disabled={isInsufficient || isSubmitting}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-gray-400 font-medium">{getIdLabel()} <span className="text-red-500">*</span></span>
+                        <input
+                          type="text"
+                          required
+                          value={p3Id}
+                          onChange={(e) => setP3Id(e.target.value)}
+                          placeholder={getPlaceholderId()}
+                          disabled={isInsufficient || isSubmitting}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                        />
                       </div>
                     </div>
+                  </div>
+                )}
 
-                    <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3 animate-slide-up">
-                      <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
-                        {language === 'en' ? 'Player 4 (Teammate)' : 'প্লেয়ার ৪ (টিমমেট)'}
-                      </span>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <span className="text-[10px] text-gray-400 font-medium">{getNameLabel()} <span className="text-red-500">*</span></span>
-                          <input
-                            type="text"
-                            required
-                            value={p4Name}
-                            onChange={(e) => setP4Name(e.target.value)}
-                            placeholder={getPlaceholderName()}
-                            disabled={isInsufficient || isSubmitting}
-                            className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-[10px] text-gray-400 font-medium">{getIdLabel()} <span className="text-red-500">*</span></span>
-                          <input
-                            type="text"
-                            required
-                            value={p4Id}
-                            onChange={(e) => setP4Id(e.target.value)}
-                            placeholder={getPlaceholderId()}
-                            disabled={isInsufficient || isSubmitting}
-                            className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
-                          />
-                        </div>
+                {/* Player 4 Entry */}
+                {playerCount >= 4 && (
+                  <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3 animate-slide-up">
+                    <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
+                      {language === 'en' ? 'Player 4 (Teammate)' : 'প্লেয়ার ৪ (টিমমেট)'}
+                    </span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-gray-400 font-medium">{getNameLabel()} <span className="text-red-500">*</span></span>
+                        <input
+                          type="text"
+                          required
+                          value={p4Name}
+                          onChange={(e) => setP4Name(e.target.value)}
+                          placeholder={getPlaceholderName()}
+                          disabled={isInsufficient || isSubmitting}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-gray-400 font-medium">{getIdLabel()} <span className="text-red-500">*</span></span>
+                        <input
+                          type="text"
+                          required
+                          value={p4Id}
+                          onChange={(e) => setP4Id(e.target.value)}
+                          placeholder={getPlaceholderId()}
+                          disabled={isInsufficient || isSubmitting}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                        />
                       </div>
                     </div>
-                  </>
+                  </div>
+                )}
+
+                {/* Player 5 Entry */}
+                {playerCount >= 5 && (
+                  <div className="border border-gray-800 bg-slate-900/10 rounded-2xl p-3.5 space-y-3 animate-slide-up">
+                    <span className="block text-[10px] font-bold text-amber-500 tracking-wider uppercase border-b border-gray-800/80 pb-1">
+                      {language === 'en' ? 'Player 5 (Teammate)' : 'প্লেয়ার ৫ (টিমমেট)'}
+                    </span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-gray-400 font-medium">{getNameLabel()} <span className="text-red-500">*</span></span>
+                        <input
+                          type="text"
+                          required
+                          value={p5Name}
+                          onChange={(e) => setP5Name(e.target.value)}
+                          placeholder={getPlaceholderName()}
+                          disabled={isInsufficient || isSubmitting}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-gray-400 font-medium">{getIdLabel()} <span className="text-red-500">*</span></span>
+                        <input
+                          type="text"
+                          required
+                          value={p5Id}
+                          onChange={(e) => setP5Id(e.target.value)}
+                          placeholder={getPlaceholderId()}
+                          disabled={isInsufficient || isSubmitting}
+                          className="w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
 

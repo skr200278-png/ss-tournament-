@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { initializeFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { initializeFirestore, doc, getDocFromServer, setLogLevel } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
@@ -9,6 +9,14 @@ const app = initializeApp(firebaseConfig);
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
 }, firebaseConfig.firestoreDatabaseId); /* CRITICAL: The app will break without this line */
+
+// Set Firestore log level to 'error' to silence benign SDK warnings (like WebChannel stream reconnects)
+try {
+  setLogLevel('error');
+} catch (e) {
+  console.warn('Could not set Firestore log level:', e);
+}
+
 export const auth = getAuth(app);
 
 // Test Firestore Connection as required by constraints
