@@ -118,17 +118,17 @@ export const Header: React.FC = () => {
 
           {/* Centered Logo */}
           <div 
-            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 cursor-pointer select-none"
+            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2 cursor-pointer select-none"
             onClick={() => {
               setCurrentView('home');
               registerLogoClick();
             }}
           >
-            <div className="p-1.5 sm:p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg shadow-orange-500/10 shrink-0">
-              <Trophy className="h-4.5 w-4.5 sm:h-5.5 sm:w-5.5 text-black stroke-[2.5]" />
+            <div className="p-1 sm:p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg shadow-orange-500/10 shrink-0">
+              <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-black stroke-[2.5]" />
             </div>
             <div className="text-left">
-              <span className="font-sans font-extrabold text-sm sm:text-base tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-amber-400 block whitespace-nowrap">
+              <span className="font-sans font-extrabold text-xs sm:text-base tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-amber-400 block whitespace-nowrap">
                 {t('appName')}
               </span>
               <p className="hidden xs:block text-[8px] font-mono tracking-widest text-[#94a3b8] uppercase leading-none mt-0.5">
@@ -138,31 +138,31 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Wallet Header Counters & Actions */}
-          <div className="flex items-center gap-2 sm:gap-3 z-10">
+          <div className="flex items-center gap-1.5 sm:gap-3 z-10">
             {profile && (
               <div 
                 onClick={() => setCurrentView('wallet')}
-                className="flex items-center gap-3 bg-[#1e293b]/60 hover:bg-[#1e293b] border border-gray-800 rounded-2xl px-3 py-1.5 cursor-pointer max-w-[170px] sm:max-w-none transition-all"
+                className="flex items-center gap-1.5 sm:gap-3 bg-[#1e293b]/60 hover:bg-[#1e293b] border border-gray-800 rounded-2xl px-2 sm:px-3 py-1 sm:py-1.5 cursor-pointer max-w-[140px] sm:max-w-none transition-all"
               >
-                <div className="flex items-center gap-1.5 border-r border-gray-700/60 pr-2.5">
-                  <Coins className="h-4 w-4 text-amber-400" />
-                  <div className="text-right">
-                    <span className="block text-[9px] text-gray-400 font-medium leading-none">
+                <div className="flex items-center gap-1 sm:gap-1.5 border-r border-gray-700/60 pr-1.5 sm:pr-2.5">
+                  <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 shrink-0" />
+                  <div className="text-right font-sans">
+                    <span className="hidden sm:block text-[9px] text-gray-400 font-medium leading-none mb-0.5">
                       {language === 'en' ? 'COINS' : 'কয়েন'}
                     </span>
-                    <span className="text-xs font-mono font-bold text-amber-400">
+                    <span className="text-xs font-mono font-bold text-amber-400 leading-none">
                       {profile.coins_balance}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <Trophy className="h-4 w-4 text-emerald-400" />
-                  <div className="text-right max-w-[50px] sm:max-w-none truncate">
-                    <span className="block text-[9px] text-gray-400 leading-none font-medium">
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 shrink-0" />
+                  <div className="text-right font-sans">
+                    <span className="hidden sm:block text-[9px] text-gray-400 leading-none font-medium mb-0.5">
                       {language === 'en' ? 'WON' : 'উইনিং'}
                     </span>
-                    <span className="text-xs font-mono font-bold text-emerald-400">
+                    <span className="text-xs font-mono font-bold text-emerald-400 leading-none">
                       {profile.winning_balance}
                     </span>
                   </div>
@@ -177,7 +177,7 @@ export const Header: React.FC = () => {
                 onClick={() => setCurrentView('admin')}
                 className={`p-2 rounded-xl border transition-all flex items-center justify-center gap-1.5 text-xs font-sans ${
                   currentView === 'admin'
-                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/30 font-bold'
+                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
                     : 'text-gray-300 hover:text-amber-400 hover:bg-gray-800 border-gray-800'
                 }`}
                 title="Admin Dashboard Panel"
@@ -191,7 +191,7 @@ export const Header: React.FC = () => {
             <button
               id="lang-toggle-btn"
               onClick={toggleLang}
-              className="p-2 text-gray-300 hover:text-amber-400 hover:bg-gray-800 rounded-xl border border-gray-800 transition-all flex items-center justify-center gap-1 text-xs font-sans"
+              className="hidden sm:flex p-2 text-gray-300 hover:text-amber-400 hover:bg-gray-800 rounded-xl border border-gray-800 transition-all items-center justify-center gap-1 text-xs font-sans"
               title="Switch Language"
             >
               <Languages className="h-4 w-4 text-amber-500" />
@@ -202,7 +202,7 @@ export const Header: React.FC = () => {
             <button
               id="pwa-install-header-btn"
               onClick={handleInstallApp}
-              className="px-3 py-2 text-amber-400 hover:text-amber-300 hover:bg-gradient-to-r hover:from-amber-500/20 hover:to-orange-500/20 rounded-xl border border-amber-500/30 bg-amber-500/10 transition-all flex items-center justify-center gap-1.5 text-xs font-sans font-extrabold animate-pulse"
+              className="hidden sm:flex px-3 py-2 text-amber-400 hover:text-amber-300 hover:bg-gradient-to-r hover:from-amber-500/20 hover:to-orange-500/20 rounded-xl border border-amber-500/30 bg-amber-500/10 transition-all items-center justify-center gap-1.5 text-xs font-sans font-extrabold animate-pulse"
               title="Install App directly on Home Screen as Mobile App"
             >
               <Download className="h-3.5 w-3.5 shrink-0" />
@@ -286,6 +286,20 @@ export const Header: React.FC = () => {
               Admin Panel Control
             </button>
           )}
+
+          {/* Mobile Language Switcher button inside Drawer */}
+          <button
+            onClick={() => {
+              toggleLang();
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-gray-300 hover:text-white hover:bg-white/5 border border-transparent"
+          >
+            <Languages className="h-4 w-4 text-amber-500" />
+            <span>
+              {language === 'en' ? 'Switch to Bengali (বাংলা)' : 'Switch to English (ইংরেজি)'}
+            </span>
+          </button>
           
           <div className="pt-3 border-t border-gray-800/80 my-3 flex flex-col gap-2">
             {/* Mobile PWA Install option */}

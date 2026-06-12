@@ -98,7 +98,7 @@ export const translations = {
     pastMatchNote: "Match completed. Rewards have been distributed.",
   },
   bn: {
-    appName: "প্রো-টুর্নামেন্ট বিডি (ProTournament BD)",
+    appName: "প্রো-টুর্নামেন্ট বিডি",
     tagline: "আপনার গেমিং দক্ষতা দেখান এবং জিতে নিন আসল পুরস্কার",
     toggleLanguage: "English inline",
     loginWithGoogle: "গুগল দিয়ে লগইন করুন",
