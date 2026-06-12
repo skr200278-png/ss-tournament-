@@ -90,53 +90,55 @@ export const Header: React.FC = () => {
   return (
     <header className="sticky top-0 z-50 bg-[#0f111a] border-b border-gray-800 backdrop-blur-md bg-opacity-95 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+        <div className="relative flex items-center justify-between h-16">
+          {/* Desktop Navigation */}
+          <div className="flex items-center">
+            <nav className="hidden md:flex space-x-1">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentView === item.view;
+                return (
+                  <button
+                    key={item.view}
+                    id={`nav-${item.view}`}
+                    onClick={() => setCurrentView(item.view)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                      isActive 
+                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' 
+                        : 'text-gray-300 hover:text-white hover:bg-white/5 border border-transparent'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Centered Logo */}
           <div 
-            className="flex items-center gap-2 cursor-pointer select-none"
+            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 cursor-pointer select-none"
             onClick={() => {
               setCurrentView('home');
               registerLogoClick();
             }}
           >
-            <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg shadow-orange-500/10">
-              <Trophy className="h-6 w-6 text-black stroke-[2.5]" />
+            <div className="p-1.5 sm:p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg shadow-orange-500/10 shrink-0">
+              <Trophy className="h-4.5 w-4.5 sm:h-5.5 sm:w-5.5 text-black stroke-[2.5]" />
             </div>
-            <div>
-              <span className="font-sans font-extrabold text-lg sm:text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-amber-400">
+            <div className="text-left">
+              <span className="font-sans font-extrabold text-sm sm:text-base tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-amber-400 block whitespace-nowrap">
                 {t('appName')}
               </span>
-              <p className="hidden xs:block text-[9px] font-mono tracking-widest text-[#94a3b8] uppercase">
+              <p className="hidden xs:block text-[8px] font-mono tracking-widest text-[#94a3b8] uppercase leading-none mt-0.5">
                 {language === 'en' ? 'Tournament Engine' : 'টুর্নামেন্ট ইঞ্জিন'}
               </p>
             </div>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-1">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentView === item.view;
-              return (
-                <button
-                  key={item.view}
-                  id={`nav-${item.view}`}
-                  onClick={() => setCurrentView(item.view)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                    isActive 
-                      ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' 
-                      : 'text-gray-300 hover:text-white hover:bg-white/5 border border-transparent'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-
           {/* Wallet Header Counters & Actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 z-10">
             {profile && (
               <div 
                 onClick={() => setCurrentView('wallet')}
