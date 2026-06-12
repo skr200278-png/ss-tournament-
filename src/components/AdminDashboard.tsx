@@ -347,9 +347,8 @@ export const AdminDashboard: React.FC = () => {
     // Upgraded to extreme heavy duty hackerproof passcode requested by user
     const entered = passcode.trim();
     if (
-      entered === 'skr200278_FF_ADMIN_SECURE_2026#99' || 
-      entered === '58204918#FF' ||
-      entered === 'skr2040'
+      entered === 'FF_SKR_ADMIN_2026_@SECURE#_991' || 
+      entered === '8899221155#ADMIN'
     ) {
       setIsAdminAuthenticated(true);
       setAuthError(null);

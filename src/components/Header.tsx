@@ -84,7 +84,7 @@ export const Header: React.FC = () => {
     { view: 'joined' as const, label: t('myMatches'), icon: Calendar },
     { view: 'results' as const, label: language === 'en' ? 'Winners' : 'ফলাফল / বিজয়ী', icon: Trophy },
     { view: 'wallet' as const, label: t('balance'), icon: Wallet },
-    { view: 'profile' as const, label: language === 'en' ? 'Support' : 'সাপোর্ট', icon: User },
+    { view: 'profile' as const, label: language === 'en' ? 'Profile' : 'প্রোফাইল', icon: User },
   ];
 
   return (

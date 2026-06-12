@@ -181,7 +181,7 @@ const AppContent: React.FC = () => {
           >
             <User className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-bold">
-              {language === 'en' ? 'Support' : 'সাপোর্ট'}
+              {language === 'en' ? 'Profile' : 'প্রোফাইল'}
             </span>
           </button>
         </div>

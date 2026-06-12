@@ -80,7 +80,7 @@ const generateReferralCode = (name: string, uid: string): string => {
 };
 
 const generateNumericId = (): number => {
-  return Math.floor(10000000 + Math.random() * 90000000);
+  return Math.floor(100000000 + Math.random() * 900000000);
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -431,7 +431,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       email: 'm_gamer@gmail.com',
       coins_balance: 5000,
       winning_balance: 1000,
-      numericId: 58201948,
+      numericId: 582019482,
       avatar: 'ninja',
       inGameName: 'ProTester_X',
       favoriteGame: 'Free Fire',
