@@ -67,6 +67,7 @@ interface AppContextType {
   setTournaments: React.Dispatch<React.SetStateAction<Tournament[]>>;
   setTransactions: React.Dispatch<React.SetStateAction<CoinTransaction[]>>;
   applyReferralCode: (code: string) => Promise<{ success: boolean; message: string }>;
+  updateUserProfile: (updatedFields: Partial<UserProfile>) => Promise<{ success: boolean; message: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -76,6 +77,10 @@ const generateReferralCode = (name: string, uid: string): string => {
   const cleanUid = uid.substring(0, 4).toUpperCase();
   const fallback = Math.floor(1000 + Math.random() * 9000).toString();
   return `${cleanName || 'GAME'}${cleanUid || fallback}`;
+};
+
+const generateNumericId = (): number => {
+  return Math.floor(10000000 + Math.random() * 90000000);
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -158,6 +163,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             // Create user document with 2000 welcome coins so they can play-test directly!
             const pName = firebaseUser.displayName || 'Gamer-' + firebaseUser.uid.substring(0, 5);
             const rCode = generateReferralCode(pName, firebaseUser.uid);
+            const numId = generateNumericId();
             const newProfile: UserProfile = {
               uid: firebaseUser.uid,
               name: pName,
@@ -165,15 +171,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               coins_balance: 2000,
               winning_balance: 0,
               referralCode: rCode,
+              numericId: numId,
             };
             await setDoc(userDocRef, newProfile);
             setProfile(newProfile);
           } else {
             const data = userDoc.data() as UserProfile;
+            let needsUpdate = false;
+            const updatePayload: any = {};
+            
             if (!data.referralCode) {
               const code = generateReferralCode(data.name, firebaseUser.uid);
-              await updateDoc(userDocRef, { referralCode: code });
+              updatePayload.referralCode = code;
               data.referralCode = code;
+              needsUpdate = true;
+            }
+            if (!data.numericId) {
+              const numId = generateNumericId();
+              updatePayload.numericId = numId;
+              data.numericId = numId;
+              needsUpdate = true;
+            }
+            
+            if (needsUpdate) {
+              await updateDoc(userDocRef, updatePayload);
             }
             setProfile(data);
           }
@@ -365,6 +386,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Explicitly create firestore path immediately to prevent race conditions
       const userDocRef = doc(db, 'users', firebaseUser.uid);
       const rCode = generateReferralCode(name, firebaseUser.uid);
+      const numId = generateNumericId();
       const newProfile: UserProfile = {
         uid: firebaseUser.uid,
         name: name,
@@ -373,6 +395,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         winning_balance: 0,
         createdAt: new Date().toISOString(),
         referralCode: rCode,
+        numericId: numId,
       };
       await setDoc(userDocRef, newProfile);
       setProfile(newProfile);
@@ -408,6 +431,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       email: 'm_gamer@gmail.com',
       coins_balance: 5000,
       winning_balance: 1000,
+      numericId: 58201948,
+      avatar: 'ninja',
+      inGameName: 'ProTester_X',
+      favoriteGame: 'Free Fire',
+      devicePlatform: 'Mobile',
+      statusBio: 'Spectator Agent & Pro Lobbyist!',
     };
     setGuestUser(mockGuest);
     setProfile(mockGuest);
@@ -546,6 +575,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (err) {
         handleFirestoreError(err, OperationType.WRITE, `users/${activeUid}`);
       }
+    }
+  };
+
+  // Update User Profile Custom Fields Logic (for custom Game Profile settings)
+  const updateUserProfile = async (updatedFields: Partial<UserProfile>): Promise<{ success: boolean; message: string }> => {
+    try {
+      const activeUid = isGuest ? guestUser?.uid : user?.uid;
+      if (!activeUid || !profile) {
+        return { success: false, message: language === 'en' ? 'User not authenticated' : 'ব্যবহারকারী অথেনটিকেটেড নয়' };
+      }
+
+      if (isGuest) {
+        const updated = { ...profile, ...updatedFields } as UserProfile;
+        setProfile(updated);
+        setGuestUser(updated);
+        return { 
+          success: true, 
+          message: language === 'en' ? 'Gaming profile updated successfully!' : 'গেমিং প্রোফাইল সফলভাবে আপডেট করা হয়েছে!' 
+        };
+      } else {
+        const userDocRef = doc(db, 'users', activeUid);
+        await updateDoc(userDocRef, updatedFields);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setProfile(userDoc.data() as UserProfile);
+        }
+        return { 
+          success: true, 
+          message: language === 'en' ? 'Gaming profile updated successfully!' : 'গেমিং প্রোফাইল সফলভাবে আপডেট করা হয়েছে!' 
+        };
+      }
+    } catch (err) {
+      console.error("Profile update error: ", err);
+      return { 
+        success: false, 
+        message: language === 'en' ? 'Database update failed.' : 'ডাটাবেজ আপডেট করতে ব্যর্থ হয়েছে।' 
+      };
     }
   };
 
@@ -996,7 +1062,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateSettings,
       setTournaments,
       setTransactions,
-      applyReferralCode
+      applyReferralCode,
+      updateUserProfile
     }}>
       {children}
     </AppContext.Provider>

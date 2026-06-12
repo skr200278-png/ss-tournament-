@@ -21,15 +21,66 @@ import {
 } from 'lucide-react';
 
 export const ProfileSettingsView: React.FC = () => {
-  const { profile, language, t, setCurrentView, applyReferralCode } = useApp();
+  const { profile, language, t, setCurrentView, applyReferralCode, updateUserProfile } = useApp();
   const [copiedUid, setCopiedUid] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [enteredCode, setEnteredCode] = useState('');
   const [submittingClaim, setSubmittingClaim] = useState(false);
   const [claimError, setClaimError] = useState('');
   const [claimSuccess, setClaimSuccess] = useState('');
-  const [activeTab, setActiveTab] = useState<'policy' | 'support' | 'referral'>('support');
+  const [activeTab, setActiveTab] = useState<'profile' | 'support' | 'referral' | 'policy'>('profile');
   const [activePolicy, setActivePolicy] = useState<'privacy' | 'terms' | 'refund'>('privacy');
+
+  // Profile Edit states
+  const [inGameName, setInGameName] = useState(profile?.inGameName || '');
+  const [phone, setPhone] = useState(profile?.phone || '');
+  const [favoriteGame, setFavoriteGame] = useState(profile?.favoriteGame || 'Free Fire');
+  const [devicePlatform, setDevicePlatform] = useState(profile?.devicePlatform || 'Mobile');
+  const [statusBio, setStatusBio] = useState(profile?.statusBio || '');
+  const [selectedAvatar, setSelectedAvatar] = useState(profile?.avatar || '🥷');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [profileError, setProfileError] = useState('');
+
+  // Keep state in sync with updated profile context
+  React.useEffect(() => {
+    if (profile) {
+      setInGameName(profile.inGameName || '');
+      setPhone(profile.phone || '');
+      setFavoriteGame(profile.favoriteGame || 'Free Fire');
+      setDevicePlatform(profile.devicePlatform || 'Mobile');
+      setStatusBio(profile.statusBio || '');
+      setSelectedAvatar(profile.avatar || '🥷');
+    }
+  }, [profile]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileSuccess('');
+    setProfileError('');
+    setSavingProfile(true);
+
+    try {
+      const result = await updateUserProfile({
+        inGameName: inGameName.trim(),
+        phone: phone.trim(),
+        favoriteGame,
+        devicePlatform,
+        statusBio: statusBio.trim(),
+        avatar: selectedAvatar
+      });
+
+      if (result.success) {
+        setProfileSuccess(result.message);
+      } else {
+        setProfileError(result.message);
+      }
+    } catch (err) {
+      setProfileError(language === 'en' ? 'An unexpected error occurred.' : 'প্রোফাইল আপডেট করতে সমস্যা হয়েছে।');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const handleClaimReferral = async () => {
     setClaimError('');
@@ -94,24 +145,45 @@ export const ProfileSettingsView: React.FC = () => {
             <div className="absolute -top-12 -left-12 w-28 h-28 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
             
             {/* Avatar Shield */}
-            <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/10 mb-4 border border-amber-400/20">
-              <User className="h-10 w-10 text-black stroke-[2.5]" />
+            <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/10 mb-4 border border-amber-400/20 text-3xl select-none">
+              {profile.avatar ? (
+                <span>{profile.avatar}</span>
+              ) : (
+                <User className="h-10 w-10 text-black stroke-[2.5]" />
+              )}
             </div>
 
             <h3 className="text-white font-extrabold text-lg truncate max-w-full">
               {profile.name}
             </h3>
-            <span className="text-[10px] bg-amber-500/15 border border-amber-500/20 text-amber-400 font-bold px-2.5 py-1 rounded-full uppercase tracking-wider block mt-1">
-              🎖️ Elite Gamer Lobbyist
-            </span>
+            {profile.inGameName && (
+              <p className="text-amber-400 text-xs font-mono font-bold leading-normal mt-0.5">
+                IGN: {profile.inGameName}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-1 justify-center mt-2 w-full">
+              <span className="text-[8px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider block">
+                🎖️ {profile.devicePlatform || "Mobile"} Gamer
+              </span>
+              <span className="text-[8px] bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider block">
+                🎮 {profile.favoriteGame || "Free Fire"}
+              </span>
+            </div>
+
+            {profile.statusBio && (
+              <p className="text-gray-400 text-[11px] italic mt-3.5 w-full px-2 break-words leading-relaxed border-t border-gray-800/55 pt-3.5 font-sans">
+                "{profile.statusBio}"
+              </p>
+            )}
 
             {/* Email */}
-            <p className="text-gray-400 text-xs mt-3 select-all font-sans font-medium">
+            <p className="text-gray-500 text-[10px] mt-2.5 select-all font-sans font-medium">
               {profile.email || "No email available"}
             </p>
 
             {/* Balances summary */}
-            <div className="w-full mt-6 grid grid-cols-2 gap-2 text-xs">
+            <div className="w-full mt-5 grid grid-cols-2 gap-2 text-xs">
               <div 
                 onClick={() => setCurrentView('wallet')}
                 className="bg-[#181a26]/70 border border-gray-800 rounded-2xl p-3 text-center cursor-pointer hover:border-amber-500/30 transition-all"
@@ -132,17 +204,41 @@ export const ProfileSettingsView: React.FC = () => {
             </div>
 
             {/* UID Copy action */}
-            <div className="w-full mt-6 pt-6 border-t border-gray-800/80 space-y-2 text-left">
-              <label className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Unique Account UID</label>
-              <div className="bg-[#0a0b12] rounded-xl px-3 py-2 border border-gray-800 flex justify-between items-center overflow-hidden">
-                <span className="text-[11px] font-mono text-gray-300 truncate tracking-wide max-w-[150px]">{profile.uid}</span>
-                <button
-                  onClick={handleCopyUid}
-                  className="p-1 text-gray-400 hover:text-white shrink-0 transition-colors"
-                  title="Copy UID"
-                >
-                  {copiedUid ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
-                </button>
+            <div className="w-full mt-5 pt-4 border-t border-gray-800/80 space-y-3.5 text-left">
+              {profile.numericId && (
+                <div className="space-y-1">
+                  <label className="text-[9px] text-amber-400 uppercase tracking-wider font-extrabold block">
+                    🕹️ {language === 'en' ? 'Player Game ID (UID)' : 'প্লেয়ার গেম আইডি (UID)'}
+                  </label>
+                  <div className="bg-[#0a0b12] rounded-xl px-3 py-2 border border-amber-500/30 flex justify-between items-center overflow-hidden">
+                    <span className="text-xs font-black font-mono text-amber-400 tracking-widest">{profile.numericId}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(String(profile.numericId));
+                        setCopiedUid(true);
+                        setTimeout(() => setCopiedUid(false), 2000);
+                      }}
+                      className="p-1 text-amber-400 hover:text-white shrink-0 transition-colors cursor-pointer"
+                      title="Copy Player ID"
+                    >
+                      {copiedUid ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1 pt-0.5">
+                <label className="text-[9px] text-gray-500 uppercase tracking-wider font-bold block">Unique Account UID</label>
+                <div className="bg-[#0a0b12] rounded-xl px-3 py-1.5 border border-gray-800 flex justify-between items-center overflow-hidden">
+                  <span className="text-[10px] font-mono text-gray-400 truncate tracking-wide max-w-[140px]">{profile.uid}</span>
+                  <button
+                    onClick={handleCopyUid}
+                    className="p-1 text-gray-500 hover:text-white shrink-0 transition-colors cursor-pointer"
+                    title="Copy System UID"
+                  >
+                    {copiedUid ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -153,10 +249,21 @@ export const ProfileSettingsView: React.FC = () => {
         <div className="md:col-span-2 space-y-6">
           
           {/* Navigation Tab links */}
-          <div className="flex border-b border-gray-800 bg-[#0c0d14]/40 rounded-t-2xl p-1">
+          <div className="flex flex-wrap border-b border-gray-800 bg-[#0c0d14]/40 rounded-t-2xl p-1 gap-1">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`flex-1 min-w-[100px] py-3 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                activeTab === 'profile'
+                  ? 'bg-amber-500 text-black shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <User className="h-4 w-4" />
+              {language === 'en' ? 'My Profile' : 'আমার প্রোফাইল'}
+            </button>
             <button
               onClick={() => setActiveTab('support')}
-              className={`flex-1 py-3 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 min-w-[100px] py-3 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'support'
                   ? 'bg-amber-500 text-black shadow-md'
                   : 'text-gray-400 hover:text-white'
@@ -167,7 +274,7 @@ export const ProfileSettingsView: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('referral')}
-              className={`flex-1 py-3 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 min-w-[100px] py-3 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'referral'
                   ? 'bg-amber-500 text-black shadow-md'
                   : 'text-gray-400 hover:text-white'
@@ -178,7 +285,7 @@ export const ProfileSettingsView: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('policy')}
-              className={`flex-1 py-3 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 min-w-[100px] py-3 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeTab === 'policy'
                   ? 'bg-amber-500 text-black shadow-md'
                   : 'text-gray-400 hover:text-white'
@@ -188,6 +295,167 @@ export const ProfileSettingsView: React.FC = () => {
               {language === 'en' ? 'Policies' : 'নীতিমালা'}
             </button>
           </div>
+
+          {/* MY PROFILE EDITING PANEL CONTENT */}
+          {activeTab === 'profile' && (
+            <div className="bg-[#121420] border border-gray-800 rounded-3xl p-6 sm:p-8 space-y-6 animate-fade-in text-sans">
+              <div className="space-y-1">
+                <h3 className="text-white text-lg font-extrabold tracking-tight">
+                  {language === 'en' ? 'Edit Gaming Profile' : 'গেমিং প্রোফাইল সাজান'}
+                </h3>
+                <p className="text-gray-400 text-xs leading-relaxed">
+                  {language === 'en'
+                    ? 'Customize your gamer identity, select esports avatars, and connect contact details.'
+                    : 'আপনার গেমিং প্রোফাইলের তথ্য, কাস্টম এভারটার, ইন-গেম নিকনেম এবং পার্সোনাল মোবাইল নম্বরটি আপডেট করুন।'}
+                </p>
+              </div>
+
+              {profileSuccess && (
+                <div className="bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 px-4 py-3 rounded-2xl text-xs font-bold">
+                  ✓ {profileSuccess}
+                </div>
+              )}
+
+              {profileError && (
+                <div className="bg-rose-500/10 border border-rose-500/25 text-rose-400 px-4 py-3 rounded-2xl text-xs font-bold">
+                  ⚠️ {profileError}
+                </div>
+              )}
+
+              <form onSubmit={handleSaveProfile} className="space-y-5">
+                {/* 1. Choose Avatar Grid */}
+                <div className="space-y-2.5">
+                  <label className="text-xs text-white/95 font-bold block">
+                    {language === 'en' ? 'Select Gamer Avatar' : 'গেমিং এভাটার নির্বাচন করুন'}
+                  </label>
+                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
+                    {[
+                      { emoji: '🥷', label: 'Shadow Ninja' },
+                      { emoji: '⚔️', label: 'FF Fighter' },
+                      { emoji: '🔫', label: 'Pro Sniper' },
+                      { emoji: '👑', label: 'Lobby King' },
+                      { emoji: '🐯', label: 'Tiger Esports' },
+                      { emoji: '🔥', label: 'Fiery Gamer' },
+                      { emoji: '🦖', label: 'Dino Squad' },
+                      { emoji: '👾', label: 'Cyber Alien' }
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => setSelectedAvatar(preset.emoji)}
+                        className={`aspect-square rounded-2xl flex flex-col items-center justify-center text-2xl p-1 transition-all relative cursor-pointer ${
+                          selectedAvatar === preset.emoji
+                            ? 'bg-amber-500 text-black scale-105 shadow-md shadow-amber-500/20 border-2 border-white'
+                            : 'bg-black/40 text-stone-300 hover:bg-black/60 border border-gray-800'
+                        }`}
+                        title={preset.label}
+                      >
+                        <span>{preset.emoji}</span>
+                        <span className="text-[7px] max-w-full truncate absolute bottom-1 block opacity-80 scale-90">
+                          {preset.label.split(' ')[1] || preset.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. In-Game Name and Phone Number Side by Side */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-white/90 font-bold block">
+                      {language === 'en' ? 'In-Game Name (IGN)' : 'ইন-গেম নেম (যেমন: Viper_YT)'}
+                    </label>
+                    <input
+                      type="text"
+                      value={inGameName}
+                      onChange={(e) => setInGameName(e.target.value)}
+                      placeholder="e.g. Viper_FF_BD"
+                      className="w-full bg-black/40 border border-gray-800 rounded-2xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition-all font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-white/90 font-bold block">
+                      {language === 'en' ? 'Personal Mobile Number' : 'পার্সোনাল মোবাইল নম্বর'}
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="e.g. 017XXXXXXXX"
+                      className="w-full bg-black/40 border border-gray-800 rounded-2xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition-all font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* 3. Favorite Game and Device Platform Side by Side */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-white/90 font-bold block">
+                      {language === 'en' ? 'Favorite Game' : 'আপনার প্রিয় গেম'}
+                    </label>
+                    <select
+                      value={favoriteGame}
+                      onChange={(e) => setFavoriteGame(e.target.value)}
+                      className="w-full bg-[#181a26] border border-gray-800 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition-all"
+                    >
+                      <option value="Free Fire">Free Fire</option>
+                      <option value="Ludo King">Ludo King</option>
+                      <option value="PUBG Mobile">PUBG Mobile</option>
+                      <option value="Dream League Soccer">Dream League Soccer</option>
+                      <option value="CODM">Call of Duty Mobile</option>
+                      <option value="Clash of Clans">Clash of Clans</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-white/90 font-bold block">
+                      {language === 'en' ? 'Device Platform' : 'ডিভাইস প্ল্যাটফর্ম'}
+                    </label>
+                    <select
+                      value={devicePlatform}
+                      onChange={(e) => setDevicePlatform(e.target.value)}
+                      className="w-full bg-[#181a26] border border-gray-800 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition-all"
+                    >
+                      <option value="Mobile">Mobile (মোবাইল)</option>
+                      <option value="PC / Emulator">PC / Emulator (পিসি)</option>
+                      <option value="Tablet / iPad">Tablet / iPad (ট্যাব)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* 4. Bio Status Quote */}
+                <div className="space-y-1.5">
+                  <label className="text-xs text-white/90 font-bold block">
+                    {language === 'en' ? 'Esports Gamer Bio' : 'এস্পোর্টস প্রোফাইল স্ট্যাটাস / বায়ো'}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={statusBio}
+                    onChange={(e) => setStatusBio(e.target.value)}
+                    placeholder={language === 'en' ? "e.g. Always rush, no fear of death!" : "যেমন: রাশ গেমপ্লে ভালোবাসেন..."}
+                    className="w-full bg-black/40 border border-gray-800 rounded-2xl px-4 py-3 text-xs sm:text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition-all font-sans leading-relaxed resize-none"
+                  />
+                </div>
+
+                {/* 5. Submit Button */}
+                <button
+                  type="submit"
+                  disabled={savingProfile}
+                  className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 disabled:from-gray-700 disabled:to-gray-800 text-black font-black text-sm uppercase rounded-2xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
+                >
+                  {savingProfile ? (
+                    <span>{language === 'en' ? 'Saving...' : 'সেভ করা হচ্ছে...'}</span>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4 stroke-[3]" />
+                      <span>{language === 'en' ? 'Save Profile' : 'প্রোফাইল সেভ করুন'}</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
 
           {/* SUPPORT PAGE PANEL CONTENT */}
           {activeTab === 'support' && (

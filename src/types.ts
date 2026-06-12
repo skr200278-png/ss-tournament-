@@ -8,6 +8,13 @@ export interface UserProfile {
   referralCode?: string;
   referredBy?: string;
   referrals_count?: number;
+  numericId?: number; // Free Fire style numeric UID e.g. 58204918
+  avatar?: string; // selected preset avatar key/url
+  phone?: string; // custom contact number
+  inGameName?: string; // active Free Fire/pubg gamer tag
+  favoriteGame?: string; // e.g. Free Fire, Ludo, PUBG
+  devicePlatform?: string; // Mobile, PC, Tablet
+  statusBio?: string; // custom status / bio
 }
 
 export interface Tournament {
