@@ -85,6 +85,8 @@ export const AdminDashboard: React.FC = () => {
   const [allTransactions, setAllTransactions] = useState<CoinTransaction[]>([]);
   const [proofs, setProofs] = useState<ProofSubmission[]>([]);
   const [userSearch, setUserSearch] = useState<string>('');
+  const [depositSearch, setDepositSearch] = useState<string>('');
+  const [withdrawSearch, setWithdrawSearch] = useState<string>('');
 
   // Forms states
   const [matchId, setMatchId] = useState<string>('');
@@ -818,8 +820,23 @@ export const AdminDashboard: React.FC = () => {
     u.uid.includes(userSearch)
   );
 
-  const pendingDeposits = allTransactions.filter(tx => tx.type === 'deposit' && tx.status === 'pending');
-  const pendingWithdraws = allTransactions.filter(tx => tx.type === 'withdraw' && tx.status === 'pending');
+  const totalPendingDeposits = allTransactions.filter(tx => tx.type === 'deposit' && tx.status === 'pending');
+  const totalPendingWithdraws = allTransactions.filter(tx => tx.type === 'withdraw' && tx.status === 'pending');
+
+  const pendingDeposits = totalPendingDeposits.filter(tx => 
+    depositSearch === '' ||
+    tx.userName.toLowerCase().includes(depositSearch.toLowerCase()) ||
+    tx.userId.includes(depositSearch) ||
+    (tx.tx_id && tx.tx_id.toLowerCase().includes(depositSearch.toLowerCase())) ||
+    (tx.account_number && tx.account_number.includes(depositSearch))
+  );
+
+  const pendingWithdraws = totalPendingWithdraws.filter(tx => 
+    withdrawSearch === '' ||
+    tx.userName.toLowerCase().includes(withdrawSearch.toLowerCase()) ||
+    tx.userId.includes(withdrawSearch) ||
+    (tx.account_number && tx.account_number.includes(withdrawSearch))
+  );
 
   if (!isAdminAuthenticated) {
     return (
@@ -944,8 +961,8 @@ export const AdminDashboard: React.FC = () => {
       <div className="flex border-b border-gray-800 overflow-x-auto pb-px">
         {[
           { id: 'tournaments', label: 'Matches CRUD', badge: tournaments.length },
-          { id: 'deposits', label: 'Deposit Orders', badge: pendingDeposits.length, color: 'bg-emerald-500' },
-          { id: 'withdrawals', label: 'Cash-Outs', badge: pendingWithdraws.length, color: 'bg-rose-500' },
+          { id: 'deposits', label: 'Deposit Orders', badge: totalPendingDeposits.length, color: 'bg-emerald-500' },
+          { id: 'withdrawals', label: 'Cash-Outs', badge: totalPendingWithdraws.length, color: 'bg-rose-500' },
           { id: 'results', label: 'Rewards distribution', badge: proofs.filter(p=>p.status==='pending').length },
           { id: 'utilities', label: 'App utilities & slider' },
           { id: 'users', label: 'User accounts database' }
@@ -1379,12 +1396,30 @@ export const AdminDashboard: React.FC = () => {
         {/* TAB 2: DEPOSITS APPROVALS */}
         {activeTab === 'deposits' && (
           <div className="bg-[#121420] border border-gray-800 rounded-3xl p-6 space-y-4">
-            <h3 className="font-extrabold text-white text-base flex items-center gap-2">
-              Pending Coin Deposit Requests
-              <span className="bg-emerald-500 text-black font-extrabold px-2.5 py-0.5 rounded-full text-[10px] font-mono">
-                {pendingDeposits.length}
-              </span>
-            </h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2">
+              <h3 className="font-extrabold text-white text-base flex items-center gap-2">
+                Pending Coin Deposit Requests
+                <span className="bg-emerald-500 text-black font-extrabold px-2.5 py-0.5 rounded-full text-[10px] font-mono">
+                  {pendingDeposits.length}
+                </span>
+                {depositSearch && (
+                  <span className="text-xs text-gray-400 font-normal">
+                    (filtered from {totalPendingDeposits.length})
+                  </span>
+                )}
+              </h3>
+
+              <div className="relative w-full sm:max-w-xs">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={depositSearch}
+                  onChange={(e) => setDepositSearch(e.target.value)}
+                  placeholder="Search name, phone, TxID, or UID..."
+                  className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+            </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs min-w-[700px]">
@@ -1443,12 +1478,30 @@ export const AdminDashboard: React.FC = () => {
         {/* TAB 3: WITHDRAWAL REQUESTS */}
         {activeTab === 'withdrawals' && (
           <div className="bg-[#121420] border border-gray-800 rounded-3xl p-6 space-y-4">
-            <h3 className="font-extrabold text-white text-base flex items-center gap-2">
-              Pending Withdrawal Payout Orders
-              <span className="bg-rose-500 text-black font-extrabold px-2.5 py-0.5 rounded-full text-[10px] font-mono">
-                {pendingWithdraws.length}
-              </span>
-            </h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2">
+              <h3 className="font-extrabold text-white text-base flex items-center gap-2">
+                Pending Withdrawal Payout Orders
+                <span className="bg-rose-500 text-black font-extrabold px-2.5 py-0.5 rounded-full text-[10px] font-mono">
+                  {pendingWithdraws.length}
+                </span>
+                {withdrawSearch && (
+                  <span className="text-xs text-gray-400 font-normal">
+                    (filtered from {totalPendingWithdraws.length})
+                  </span>
+                )}
+              </h3>
+
+              <div className="relative w-full sm:max-w-xs">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={withdrawSearch}
+                  onChange={(e) => setWithdrawSearch(e.target.value)}
+                  placeholder="Search name, phone, or UID..."
+                  className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+            </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs min-w-[650px]">

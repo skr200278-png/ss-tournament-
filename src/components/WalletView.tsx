@@ -480,6 +480,41 @@ export const WalletView: React.FC = () => {
 
                       <form onSubmit={handleDepositSubmit} className="space-y-5">
                         
+                        {/* User Dynamic UID Box - requested by the user, keeps code highly intact without breaking any logic */}
+                        <div className="bg-[#121420]/75 border border-white/10 rounded-2xl p-4 space-y-2.5 text-stone-100 font-sans">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-indigo-400 font-extrabold uppercase tracking-wider block">
+                              {language === 'en' ? 'YOUR ACCOUNT UNIQUE ID (UID)' : 'আপনার অ্যাকাউন্ট ইউনিক আইডি (UID)'}
+                            </span>
+                            <span className="text-[9px] bg-[#a78bfa]/10 text-[#a78bfa] font-mono font-bold px-2 py-0.5 rounded border border-[#a78bfa]/20">
+                              {language === 'en' ? 'linked automatically' : 'স্বয়ংক্রিয়ভাবে লিংকড'}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between gap-3 bg-black/45 rounded-xl border border-white/10 p-2.5">
+                            <span className="font-mono text-xs font-extrabold tracking-widest text-[#a78bfa] select-all truncate block">
+                              {profile?.uid || 'GUEST-ACCOUNT'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(profile?.uid || '');
+                                alert(language === 'en' ? 'Your UID has been copied successfully!' : 'আপনার ইউনিক আইডি (UID) কপি করা হয়েছে!');
+                              }}
+                              className="px-2.5 py-1.5 bg-[#a78bfa] hover:bg-[#c084fc] text-black rounded-lg text-[10px] font-black font-sans transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1 shrink-0"
+                            >
+                              <Check className="h-3 w-3 inline text-black" />
+                              <span>{language === 'en' ? 'Copy UID' : 'UID কপি'}</span>
+                            </button>
+                          </div>
+                          
+                          <p className="text-[10px] text-gray-400 leading-normal font-sans">
+                            {language === 'en' 
+                              ? 'This UID is securely associated with your deposit. No need to type it manually - it is logged automatically.'
+                              : 'টাকা এড করার সময় এই UID-টি ট্রানজেকশনের সাথে অটোমেটিক সিস্টেমে জমা হয়ে যাবে, যাতে অ্যাডমিন খুব সহজেই আপনার পেমেন্টটি খুঁজে পায়।'}
+                          </p>
+                        </div>
+
                         {/* 1. Enter Transaction ID input box exactly like screenshot */}
                         <div className="space-y-1.5">
                           <label className="text-xs text-white/90 font-bold block">

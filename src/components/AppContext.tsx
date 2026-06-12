@@ -12,6 +12,7 @@ import {
 import { 
   doc, 
   getDoc, 
+  getDocs,
   setDoc, 
   onSnapshot, 
   collection, 
@@ -65,9 +66,17 @@ interface AppContextType {
   registerLogoClick: () => void;
   setTournaments: React.Dispatch<React.SetStateAction<Tournament[]>>;
   setTransactions: React.Dispatch<React.SetStateAction<CoinTransaction[]>>;
+  applyReferralCode: (code: string) => Promise<{ success: boolean; message: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const generateReferralCode = (name: string, uid: string): string => {
+  const cleanName = name.replace(/[^A-Z0-9]/ig, "").toUpperCase().substring(0, 4);
+  const cleanUid = uid.substring(0, 4).toUpperCase();
+  const fallback = Math.floor(1000 + Math.random() * 9000).toString();
+  return `${cleanName || 'GAME'}${cleanUid || fallback}`;
+};
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -147,17 +156,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const userDoc = await getDoc(userDocRef);
           if (!userDoc.exists()) {
             // Create user document with 2000 welcome coins so they can play-test directly!
+            const pName = firebaseUser.displayName || 'Gamer-' + firebaseUser.uid.substring(0, 5);
+            const rCode = generateReferralCode(pName, firebaseUser.uid);
             const newProfile: UserProfile = {
               uid: firebaseUser.uid,
-              name: firebaseUser.displayName || 'Gamer-' + firebaseUser.uid.substring(0, 5),
+              name: pName,
               email: firebaseUser.email || '',
               coins_balance: 2000,
               winning_balance: 0,
+              referralCode: rCode,
             };
             await setDoc(userDocRef, newProfile);
             setProfile(newProfile);
           } else {
-            setProfile(userDoc.data() as UserProfile);
+            const data = userDoc.data() as UserProfile;
+            if (!data.referralCode) {
+              const code = generateReferralCode(data.name, firebaseUser.uid);
+              await updateDoc(userDocRef, { referralCode: code });
+              data.referralCode = code;
+            }
+            setProfile(data);
           }
         } catch (error) {
           console.error("Auth Document Sync Error:", error);
@@ -346,13 +364,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       // Explicitly create firestore path immediately to prevent race conditions
       const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const rCode = generateReferralCode(name, firebaseUser.uid);
       const newProfile: UserProfile = {
         uid: firebaseUser.uid,
         name: name,
         email: email,
         coins_balance: 2000, // Pre-seeded 2000 welcome coins!
         winning_balance: 0,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        referralCode: rCode,
       };
       await setDoc(userDocRef, newProfile);
       setProfile(newProfile);
@@ -526,6 +546,152 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (err) {
         handleFirestoreError(err, OperationType.WRITE, `users/${activeUid}`);
       }
+    }
+  };
+
+  // Apply Referral Code Logic
+  const applyReferralCode = async (code: string): Promise<{ success: boolean; message: string }> => {
+    const activeProfile = profile;
+    const activeUid = isGuest ? guestUser?.uid : user?.uid;
+    if (!activeUid || !activeProfile) {
+      return { success: false, message: language === 'en' ? 'Please log in first' : 'দয়া করে আগে লগইন করুন' };
+    }
+
+    if (activeProfile.referredBy) {
+      return { 
+        success: false, 
+        message: language === 'en' ? 'You have already used a referral code!' : 'আপনি ইতিমধ্যে একটি রেফার কোড ব্যবহার করেছেন!' 
+      };
+    }
+
+    const cleanCode = code.trim().toUpperCase();
+    if (!cleanCode) {
+      return { success: false, message: language === 'en' ? 'Enter a valid code.' : 'সঠিক কোড প্রবেশ করান।' };
+    }
+
+    if (activeProfile.referralCode === cleanCode) {
+      return { 
+        success: false, 
+        message: language === 'en' ? 'You cannot refer yourself!' : 'আপনি নিজের কোড নিজেই ব্যবহার করতে পারবেন না!' 
+      };
+    }
+
+    if (isGuest) {
+      // Simulate guest mode referral application
+      const updatedProfile = {
+        ...activeProfile,
+        referredBy: 'SimulatedReferrer',
+        coins_balance: activeProfile.coins_balance + 20,
+      };
+      if (isGuest && guestUser) {
+        setGuestUser(updatedProfile);
+      }
+      setProfile(updatedProfile);
+
+      // Add dummy transaction log to help user preview/visualize immediately
+      const newTx: CoinTransaction = {
+        transaction_id: 'tx_ref_' + Date.now(),
+        userId: activeUid,
+        userName: activeProfile.name,
+        type: 'deposit',
+        amount: 20,
+        payment_method: 'Referral Code Applied',
+        account_number: 'N/A',
+        tx_id: 'REF_' + Math.random().toString(36).substring(4, 10).toUpperCase(),
+        status: 'approved',
+        timestamp: new Date().toISOString()
+      };
+      setTransactions(prev => [newTx, ...prev]);
+
+      return { 
+        success: true, 
+        message: language === 'en' 
+          ? 'Referral applied! You received 20 coins successfully.' 
+          : 'রেফার কোড সফলভাবে যুক্ত হয়েছে! আপনি ২০ কয়েন পেয়েছেন।' 
+      };
+    }
+
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('referralCode', '==', cleanCode));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        return { 
+          success: false, 
+          message: language === 'en' ? 'Invalid referral code. Please check again!' : 'ভুল রেফার কোড। দয়া করে আবার চেক করুন!' 
+        };
+      }
+
+      // Found the referrer!
+      const referrerDoc = querySnapshot.docs[0];
+      const referrerData = referrerDoc.data();
+      const referrerUid = referrerDoc.id;
+
+      if (referrerUid === activeUid) {
+        return { 
+          success: false, 
+          message: language === 'en' ? 'You cannot refer yourself!' : 'আপনি নিজের কোড নিজেই ব্যবহার করতে পারবেন না!' 
+        };
+      }
+
+      // 1. Reward the referrer: +50 coins, update referrals_count
+      const referrerRef = doc(db, 'users', referrerUid);
+      await updateDoc(referrerRef, {
+        coins_balance: increment(50),
+        referrals_count: increment(1)
+      });
+
+      // Log transaction for referrer
+      const referrerTxRef = doc(collection(db, 'transactions'));
+      await setDoc(referrerTxRef, {
+        transaction_id: referrerTxRef.id,
+        userId: referrerUid,
+        userName: referrerData.name || 'Referrer',
+        type: 'deposit',
+        amount: 50,
+        payment_method: 'Referral Bonus',
+        account_number: 'N/A',
+        tx_id: 'REF_EARN_' + Math.random().toString(36).substring(4, 10).toUpperCase(),
+        status: 'approved',
+        timestamp: new Date().toISOString()
+      });
+
+      // 2. Reward the active user (referee): +20 coins, update referredBy
+      const userRef = doc(db, 'users', activeUid);
+      await updateDoc(userRef, {
+        coins_balance: increment(20),
+        referredBy: referrerUid
+      });
+
+      // Log transaction for active user (referee)
+      const userTxRef = doc(collection(db, 'transactions'));
+      await setDoc(userTxRef, {
+        transaction_id: userTxRef.id,
+        userId: activeUid,
+        userName: activeProfile.name,
+        type: 'deposit',
+        amount: 20,
+        payment_method: 'Referral Code Entered',
+        account_number: 'N/A',
+        tx_id: 'REF_CLAIM_' + Math.random().toString(36).substring(4, 10).toUpperCase(),
+        status: 'approved',
+        timestamp: new Date().toISOString()
+      });
+
+      return { 
+        success: true, 
+        message: language === 'en' 
+          ? 'Referral applied successfully! You got 20 coins, and your referrer earned 50 coins.' 
+          : 'রেফার কোড সফল হয়েছে! আপনার একাউন্টে ২০ কয়েন এবং সফল রেফারকারীকে ৫০ কয়েন প্রদান করা হয়েছে।' 
+      };
+
+    } catch (error) {
+      console.error("Referral application error:", error);
+      return { 
+        success: false, 
+        message: language === 'en' ? 'Database/Network error. Try again.' : 'সার্ভার ত্রুটি। দয়া করে আবার চেষ্টা করুন।' 
+      };
     }
   };
 
@@ -829,7 +995,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       settings,
       updateSettings,
       setTournaments,
-      setTransactions
+      setTransactions,
+      applyReferralCode
     }}>
       {children}
     </AppContext.Provider>

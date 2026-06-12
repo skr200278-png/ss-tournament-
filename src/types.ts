@@ -5,6 +5,9 @@ export interface UserProfile {
   coins_balance: number;
   winning_balance: number;
   createdAt?: any;
+  referralCode?: string;
+  referredBy?: string;
+  referrals_count?: number;
 }
 
 export interface Tournament {

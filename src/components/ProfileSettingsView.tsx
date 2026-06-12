@@ -15,14 +15,44 @@ import {
   AlertTriangle, 
   HelpCircle,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Users,
+  Share2
 } from 'lucide-react';
 
 export const ProfileSettingsView: React.FC = () => {
-  const { profile, language, t, setCurrentView } = useApp();
+  const { profile, language, t, setCurrentView, applyReferralCode } = useApp();
   const [copiedUid, setCopiedUid] = useState(false);
-  const [activeTab, setActiveTab] = useState<'policy' | 'support'>('support');
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [enteredCode, setEnteredCode] = useState('');
+  const [submittingClaim, setSubmittingClaim] = useState(false);
+  const [claimError, setClaimError] = useState('');
+  const [claimSuccess, setClaimSuccess] = useState('');
+  const [activeTab, setActiveTab] = useState<'policy' | 'support' | 'referral'>('support');
   const [activePolicy, setActivePolicy] = useState<'privacy' | 'terms' | 'refund'>('privacy');
+
+  const handleClaimReferral = async () => {
+    setClaimError('');
+    setClaimSuccess('');
+    if (!enteredCode.trim()) {
+      setClaimError(language === 'en' ? 'Please enter a referral code first.' : 'দয়া করে আগে একটি রেফার কোড লিখুন।');
+      return;
+    }
+    setSubmittingClaim(true);
+    try {
+      const response = await applyReferralCode(enteredCode);
+      if (response.success) {
+        setClaimSuccess(response.message);
+        setEnteredCode('');
+      } else {
+        setClaimError(response.message);
+      }
+    } catch (err) {
+      setClaimError(language === 'en' ? 'Something went wrong.' : 'কিছু ভুল হয়েছে, আবার চেষ্টা করুন।');
+    } finally {
+      setSubmittingClaim(false);
+    }
+  };
 
   if (!profile) return null;
 
@@ -133,7 +163,18 @@ export const ProfileSettingsView: React.FC = () => {
               }`}
             >
               <PhoneCall className="h-4 w-4" />
-              {language === 'en' ? 'Direct Developer Support' : 'ডেভেলপার ও এডমিন সাপোর্ট'}
+              {language === 'en' ? 'Support' : 'সাপোর্ট'}
+            </button>
+            <button
+              onClick={() => setActiveTab('referral')}
+              className={`flex-1 py-3 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
+                activeTab === 'referral'
+                  ? 'bg-amber-500 text-black shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              {language === 'en' ? 'Refer & Earn' : 'রেফার করুন'}
             </button>
             <button
               onClick={() => setActiveTab('policy')}
@@ -144,7 +185,7 @@ export const ProfileSettingsView: React.FC = () => {
               }`}
             >
               <ShieldCheck className="h-4 w-4" />
-              {language === 'en' ? 'Official Policies' : 'অফিসিয়াল নীতিমালাসমুহ'}
+              {language === 'en' ? 'Policies' : 'নীতিমালা'}
             </button>
           </div>
 
@@ -231,6 +272,132 @@ export const ProfileSettingsView: React.FC = () => {
                       : 'অন্য কোন ফায়ারবেস বা এপিকে থার্ড পার্টি হ্যাক ব্যবহার করলে অ্যাকাউন্ট চিরতরে নিষিদ্ধ হবে। কোনো হ্যাকার বিজয়ী হলে তার প্রাইজমানি বাতিল হয়ে দ্বিতীয় স্থানাধিকারীকে প্রদান করা হবে।'}
                   </p>
                 </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* REFERRAL SYSTEM PANEL CONTENT */}
+          {activeTab === 'referral' && (
+            <div className="bg-[#121420] border border-gray-800 rounded-3xl p-6 sm:p-8 space-y-6 animate-fade-in relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full pointer-events-none" />
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] uppercase font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full font-bold">
+                  🤝 Viral Referral Program
+                </div>
+                <h3 className="text-white text-lg font-extrabold tracking-tight">
+                  {language === 'en' ? 'Invite Friends & Earn Real Coins' : 'বন্ধুদের ইনভাইট করুন এবং আনলিমিটেড কয়েন ইনকাম করুন!'}
+                </h3>
+                <p className="text-gray-400 text-xs leading-relaxed">
+                  {language === 'en'
+                    ? 'Help ProTournament BD expand! When a new gamer registers and applies your custom invite code, they instantly get 20 Coins, and you get 50 Coins credited directly to your principal balance.'
+                    : 'প্রো-টুর্নামেন্ট বিডি অ্যাপটি বন্ধুদের সাথে শেয়ার করে গেমার সংখ্যা বাড়াতে সাহায্য করুন! আপনার রেফার কোড ব্যবহার করে কেউ জয়েন করলে সে সাথে সাথে পাবে ২০ কয়েন ফ্রী এবং আপনি পাবেন ৫০ কয়েন সরাসরি মূল ব্যালেন্সে।'}
+                </p>
+              </div>
+
+              {/* Stats Box */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                {/* Referral Code Box */}
+                <div className="bg-[#181a26]/80 border border-gray-800 rounded-2xl p-5 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+                      {language === 'en' ? 'Your Referral Invite Code' : 'আপনার রেফার ইনভাইট কোড'}
+                    </span>
+                    <div className="mt-2 text-white font-extrabold text-2xl tracking-widest font-mono bg-black/40 px-4 py-2 bg-gradient-to-r from-amber-500/5 to-transparent rounded-xl border border-gray-800 flex items-center justify-between">
+                      <span>{profile.referralCode || "GETTING_CODE..."}</span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(profile.referralCode || "");
+                          setCopiedCode(true);
+                          setTimeout(() => setCopiedCode(false), 2000);
+                        }}
+                        className="p-1.5 bg-gray-900 rounded-lg text-amber-400 hover:text-white hover:bg-gray-800 transition-all cursor-pointer shrink-0"
+                        title="Copy Code"
+                      >
+                        {copiedCode ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-gray-500 text-[10px] mt-4">
+                    📢 {language === 'en' ? 'Click copy icon and share with friends' : 'কপি আইকনে ক্লিক করে কপি করুন এবং বন্ধুদের কাছে পাঠান।'}
+                  </p>
+                </div>
+
+                {/* Performance Box */}
+                <div className="bg-[#181a26]/80 border border-gray-800 rounded-2xl p-5 flex flex-col justify-between">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+                      {language === 'en' ? 'Your Invitations Performance' : 'আপনার মোট রেফারেল পারফরম্যান্স'}
+                    </span>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div className="bg-black/20 p-2.5 rounded-xl border border-gray-800 text-center">
+                        <span className="block text-[9px] text-gray-500 font-bold uppercase">{language === 'en' ? 'TOTAL JOINED' : 'মোট সফল জয়েন'}</span>
+                        <span className="text-white font-extrabold text-lg mt-0.5 block font-mono">{profile.referrals_count || 0}</span>
+                      </div>
+                      <div className="bg-black/20 p-2.5 rounded-xl border border-gray-800 text-center">
+                        <span className="block text-[9px] text-emerald-500 font-bold uppercase">{language === 'en' ? 'COINS EARNED' : 'মোট প্রাইজ কয়েন'}</span>
+                        <span className="text-emerald-400 font-extrabold text-lg mt-0.5 block font-mono">{(profile.referrals_count || 0) * 50}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-gray-400 text-[10px] mt-3">
+                    💰 {language === 'en' ? 'Earn 50 coins / successful registration!' : 'প্রতিটি সফল রেফারে ৫০ কয়েন অটোমেটিক যুক্ত হয়!'}
+                  </p>
+                </div>
+
+              </div>
+
+              {/* Claim Reference Area */}
+              <div className="bg-[#181a26]/40 p-5 rounded-2xl border border-gray-800/80">
+                <h4 className="text-white font-bold text-sm mb-2 flex items-center gap-1.5">
+                  🎁 {language === 'en' ? 'Unlock Entering Code Reward' : 'ইনভাইট কোড দিয়ে ২০ কয়েন বুঝে নিন'}
+                </h4>
+                <p className="text-gray-400 text-[11px] leading-relaxed mb-4">
+                  {language === 'en'
+                    ? 'Do you have another player\'s referral or invite code? Enter it below to unlock a special starting package of 20 Coins.'
+                    : 'আপনার কাছে কি অন্য কোনো প্লেয়ারের ইনভাইট কোড আছে? তাহলে কোডটি নিচে সাবমিট করে সাথে সাথে ২০ কয়েন ক্লেইম করুন!'}
+                </p>
+
+                {profile.referredBy ? (
+                  <div className="bg-[#052e16]/30 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-xl flex items-center gap-2.5 text-xs font-semibold">
+                    <Check className="h-5 w-5 text-emerald-500 shrink-0" />
+                    <div>
+                      <span>
+                        {language === 'en' 
+                          ? 'Referral is claimed successfully! You have unlocked your 20 Taka/Coins.' 
+                          : 'রেফার কোড সফলভাবে দাবি করা হয়েছে! এবং ২০ কয়েন আপনার ওয়ালেটে যোগ করা হয়েছে।'}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder={language === 'en' ? "e.g., SABI7E1B" : "যেমন: SABI7E1B"}
+                      value={enteredCode}
+                      onChange={(e) => setEnteredCode(e.target.value.toUpperCase())}
+                      className="bg-[#0a0b12] text-white border border-gray-800 rounded-xl px-4 py-3 font-mono text-sm tracking-widest focus:outline-none focus:border-amber-500/60 flex-1"
+                    />
+                    <button
+                      onClick={handleClaimReferral}
+                      disabled={submittingClaim}
+                      className="bg-amber-500 hover:bg-amber-600 disabled:bg-gray-850 disabled:text-gray-500 text-black font-extrabold text-xs px-6 rounded-xl transition-all cursor-pointer"
+                    >
+                      {submittingClaim ? (language === 'en' ? 'Verifying...' : 'যাচাই হচ্ছে...') : (language === 'en' ? 'Claim 20 C' : 'কয়েন ক্লেইম করুন')}
+                    </button>
+                  </div>
+                )}
+                {claimError && (
+                  <p className="text-red-400 font-bold text-[11px] mt-2.5 leading-tight">
+                    ❌ {claimError}
+                  </p>
+                )}
+                {claimSuccess && (
+                  <p className="text-emerald-400 font-bold text-[11px] mt-2.5 leading-tight">
+                    ✅ {claimSuccess}
+                  </p>
+                )}
               </div>
 
             </div>
