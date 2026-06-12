@@ -92,7 +92,7 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative flex items-center justify-between h-16">
           {/* Desktop Navigation */}
-          <div className="flex items-center">
+          <div className="hidden md:flex items-center">
             <nav className="hidden md:flex space-x-1">
               {menuItems.map((item) => {
                 const Icon = item.icon;
@@ -116,9 +116,9 @@ export const Header: React.FC = () => {
             </nav>
           </div>
 
-          {/* Centered Logo */}
+          {/* Centered Logo on Desktop, Left-aligned on Mobile */}
           <div 
-            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2 cursor-pointer select-none"
+            className="md:absolute md:left-1/2 md:-translate-x-1/2 flex items-center gap-1.5 sm:gap-2 cursor-pointer select-none"
             onClick={() => {
               setCurrentView('home');
               registerLogoClick();
@@ -127,8 +127,8 @@ export const Header: React.FC = () => {
             <div className="p-1 sm:p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg shadow-orange-500/10 shrink-0">
               <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-black stroke-[2.5]" />
             </div>
-            <div className="text-left">
-              <span className="font-sans font-extrabold text-xs sm:text-base tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-amber-400 block whitespace-nowrap">
+            <div className="text-left animate-fade-in">
+              <span className="font-sans font-extrabold text-sm sm:text-base tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-amber-400 block whitespace-nowrap">
                 {t('appName')}
               </span>
               <p className="hidden xs:block text-[8px] font-mono tracking-widest text-[#94a3b8] uppercase leading-none mt-0.5">
@@ -142,7 +142,7 @@ export const Header: React.FC = () => {
             {profile && (
               <div 
                 onClick={() => setCurrentView('wallet')}
-                className="flex items-center gap-1.5 sm:gap-3 bg-[#1e293b]/60 hover:bg-[#1e293b] border border-gray-800 rounded-2xl px-2 sm:px-3 py-1 sm:py-1.5 cursor-pointer max-w-[140px] sm:max-w-none transition-all"
+                className="flex items-center gap-1.5 sm:gap-3 bg-[#1e293b]/60 hover:bg-[#1e293b] border border-gray-800 rounded-2xl px-2 sm:px-3 py-1 sm:py-1.5 cursor-pointer max-w-none transition-all"
               >
                 <div className="flex items-center gap-1 sm:gap-1.5 border-r border-gray-700/60 pr-1.5 sm:pr-2.5">
                   <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 shrink-0" />
