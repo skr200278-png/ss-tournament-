@@ -253,9 +253,16 @@ export const Dashboard: React.FC = () => {
                   {/* Top Bar Card */}
                   <div className="p-4 border-b border-gray-800/50 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-slate-800/80 text-amber-400 border border-amber-500/10">
-                        {match.game_category}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-slate-800/80 text-amber-400 border border-amber-500/10">
+                          {match.game_category}
+                        </span>
+                        {match.game_mode && (
+                          <span className="text-[9px] font-black font-sans px-2 py-0.5 rounded bg-[#a78bfa]/15 text-[#a78bfa] border border-[#a78bfa]/15 uppercase tracking-wider">
+                            {match.game_mode.replace(/\s*\(.*\)/g, '')}
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1 text-[11px] text-gray-400 font-mono">
                         <Clock className="h-3 w-3 text-orange-500" />
                         {formatDate(match.time)}

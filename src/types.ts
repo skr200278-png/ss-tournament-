@@ -38,6 +38,8 @@ export interface Tournament {
   };
   map_name?: string; // e.g., "Bermuda", "Erangel", "Classic"
   format?: string; // e.g., "Squad", "Solo", "Duo"
+  game_mode?: string; // e.g., "Battle Royale", "Clash Squad", etc.
+  rules?: string; // Match specific customized rules
   winner_name?: string;
   winner_uid?: string;
   winner_prize?: number;

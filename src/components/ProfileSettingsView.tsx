@@ -137,73 +137,113 @@ export const ProfileSettingsView: React.FC = () => {
       {/* Grid container */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        {/* Left column: Profile card */}
+        {/* Left column: Highly Polished Esports Profile Card */}
         <div className="md:col-span-1 space-y-6">
-          <div className="bg-[#121420] border border-gray-800 rounded-3xl p-6 relative overflow-hidden flex flex-col items-center text-center">
+          <div className="bg-[#121420] border border-amber-500/20 rounded-3xl p-6 relative overflow-hidden flex flex-col items-center text-center group shadow-xl">
             
-            {/* Ambient Background Glow */}
-            <div className="absolute -top-12 -left-12 w-28 h-28 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
+            {/* Holographic Glowing Effects */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-400" />
+            <div className="absolute -top-16 -left-16 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/15 transition-all duration-700 pointer-events-none" />
+            <div className="absolute -bottom-16 -right-16 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
             
-            {/* Avatar Shield */}
-            <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/10 mb-4 border border-amber-400/20 text-3xl select-none">
-              {profile.avatar ? (
-                <span>{profile.avatar}</span>
-              ) : (
-                <User className="h-10 w-10 text-black stroke-[2.5]" />
-              )}
+            {/* Esports Verified Badge & Gamer Role */}
+            <div className="w-full flex justify-between items-center mb-5 text-[10px] font-sans">
+              <span className="bg-amber-500/10 border border-amber-500/35 text-amber-400 font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-widest flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                {(() => {
+                  const bal = (profile.coins_balance || 0) + (profile.winning_balance || 0);
+                  if (bal > 2000) return '✪ GRANDMASTER';
+                  if (bal > 500) return '★ HERO LEGEND';
+                  if (bal > 100) return '♦ ELITE PRO';
+                  return '● ROOKIE RECRUIT';
+                })()}
+              </span>
+              <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold px-2 py-1 rounded-lg flex items-center gap-1 uppercase tracking-wider scale-90">
+                ✓ Active
+              </span>
             </div>
 
-            <h3 className="text-white font-extrabold text-lg truncate max-w-full">
+            {/* Avatar Shield with Pulsing Ring */}
+            <div className="relative mb-4 group select-none">
+              <div className="absolute inset-x-0 inset-y-0 bg-gradient-to-tr from-amber-500 to-orange-600 rounded-2xl blur opacity-35 group-hover:opacity-55 transition-opacity" />
+              <div className="relative w-24 h-24 bg-gradient-to-tr from-[#1b1e30] to-[#0d0e16] border-2 border-amber-500 rounded-2xl flex items-center justify-center shadow-2xl text-4xl transform hover:scale-[1.03] transition-transform duration-300">
+                {profile.avatar ? (
+                  <span className="block drop-shadow-md">{profile.avatar}</span>
+                ) : (
+                  <User className="h-12 w-12 text-amber-500 stroke-[2.5]" />
+                )}
+              </div>
+            </div>
+
+            <h3 className="text-white font-extrabold text-xl tracking-tight leading-none truncate max-w-full">
               {profile.name}
             </h3>
-            {profile.inGameName && (
-              <p className="text-amber-400 text-xs font-mono font-bold leading-normal mt-0.5">
-                IGN: {profile.inGameName}
-              </p>
+            
+            {profile.inGameName ? (
+              <div className="mt-1.5 bg-[#0a0b12] px-3 py-1 rounded-full border border-gray-800">
+                <p className="text-amber-400 text-xs font-mono font-bold">
+                  🎮 {profile.inGameName}
+                </p>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-xs mt-1.5 italic">No IGN configured yet</p>
             )}
 
-            <div className="flex flex-wrap gap-1 justify-center mt-2 w-full">
-              <span className="text-[8px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider block">
-                🎖️ {profile.devicePlatform || "Mobile"} Gamer
+            {/* Quick Badges inside Esports Card */}
+            <div className="flex flex-wrap gap-1 justify-center mt-3.5 w-full">
+              <span className="text-[8px] bg-slate-900 border border-gray-800 text-slate-300 font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
+                🎖️ {profile.devicePlatform || "Mobile"} Platform
               </span>
-              <span className="text-[8px] bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider block">
-                🎮 {profile.favoriteGame || "Free Fire"}
+              <span className="text-[8px] bg-slate-900 border border-gray-800 text-indigo-300 font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
+                ⚔️ {profile.favoriteGame || "Free Fire"} Favorite
               </span>
             </div>
 
-            {profile.statusBio && (
-              <p className="text-gray-400 text-[11px] italic mt-3.5 w-full px-2 break-words leading-relaxed border-t border-gray-800/55 pt-3.5 font-sans">
-                "{profile.statusBio}"
+            {/* Status Bio Statement */}
+            <div className="w-full bg-[#181a26]/30 border border-gray-800/60 p-3 rounded-2xl mt-4 text-left relative">
+              <span className="block text-[8px] text-gray-500 font-extrabold uppercase tracking-widest mb-1">
+                🗣️ Player Status Bio
+              </span>
+              <p className="text-gray-300 text-[11px] leading-relaxed font-sans italic break-words">
+                "{profile.statusBio || (language === 'en' ? 'Fearless rush gameplay only! ⚔️' : 'রাশ গেমপ্লে করতে ভালোবাসি! ⚔️')}"
               </p>
-            )}
+            </div>
 
-            {/* Email */}
-            <p className="text-gray-500 text-[10px] mt-2.5 select-all font-sans font-medium">
-              {profile.email || "No email available"}
+            {/* Email Address details */}
+            <p className="text-gray-500 text-[10px] mt-3 select-all font-sans font-medium hover:text-gray-400 transition-colors">
+              ✉ {profile.email || "No email verified"}
             </p>
 
-            {/* Balances summary */}
+            {/* Coin balances bento visualizer */}
             <div className="w-full mt-5 grid grid-cols-2 gap-2 text-xs">
               <div 
-                onClick={() => setCurrentView('wallet')}
-                className="bg-[#181a26]/70 border border-gray-800 rounded-2xl p-3 text-center cursor-pointer hover:border-amber-500/30 transition-all"
+                onClick={() => {
+                  setCurrentView('wallet');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="bg-[#181a26]/80 border border-gray-850 rounded-2xl p-3 text-center cursor-pointer hover:border-amber-500/50 hover:bg-[#1c1d2e] transition-all relative overflow-hidden"
               >
+                <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
                 <Coins className="h-4 w-4 text-amber-500 mx-auto mb-1 animate-pulse" />
                 <span className="block text-[8px] text-gray-500 font-bold uppercase">{language === 'en' ? 'COINS' : 'কয়েন'}</span>
-                <span className="text-white font-extrabold text-sm font-mono mt-0.5 block">{profile.coins_balance}</span>
+                <span className="text-amber-400 font-black text-sm font-mono mt-0.5 block">{profile.coins_balance}</span>
               </div>
 
               <div 
-                onClick={() => setCurrentView('wallet')}
-                className="bg-[#181a26]/70 border border-gray-800 rounded-2xl p-3 text-center cursor-pointer hover:border-emerald-500/30 transition-all"
+                onClick={() => {
+                  setCurrentView('wallet');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="bg-[#181a26]/80 border border-gray-850 rounded-2xl p-3 text-center cursor-pointer hover:border-emerald-500/50 hover:bg-[#1c1d2e] transition-all relative overflow-hidden"
               >
+                <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                 <Trophy className="h-4 w-4 text-emerald-400 mx-auto mb-1 animate-pulse" />
                 <span className="block text-[8px] text-gray-500 font-bold uppercase">{language === 'en' ? 'WINNINGS' : 'উইনিং'}</span>
-                <span className="text-[#10b981] font-extrabold text-sm font-mono mt-0.5 block">{profile.winning_balance}</span>
+                <span className="text-[#10b981] font-black text-sm font-mono mt-0.5 block">{profile.winning_balance}</span>
               </div>
             </div>
 
-            {/* UID Copy action */}
+            {/* In-Game UID Visual Layout */}
             <div className="w-full mt-5 pt-4 border-t border-gray-800/80 space-y-3.5 text-left">
               {profile.numericId && (
                 <div className="space-y-1">
@@ -233,7 +273,7 @@ export const ProfileSettingsView: React.FC = () => {
                   <span className="text-[10px] font-mono text-gray-400 truncate tracking-wide max-w-[140px]">{profile.uid}</span>
                   <button
                     onClick={handleCopyUid}
-                    className="p-1 text-gray-500 hover:text-white shrink-0 transition-colors cursor-pointer"
+                    className="p-1 text-gray-400 hover:text-white shrink-0 transition-colors cursor-pointer"
                     title="Copy System UID"
                   >
                     {copiedUid ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}

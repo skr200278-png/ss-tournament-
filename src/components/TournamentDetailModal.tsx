@@ -303,6 +303,29 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
                 </div>
               </div>
 
+              {/* Game Mode Detail & Custom Rules Section */}
+              <div className="space-y-3 bg-[#181a26]/45 p-4 rounded-2xl border border-gray-800/80 font-sans">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400 font-bold flex items-center gap-1">🎯 {language === 'en' ? 'Match Mode:' : 'গেমের ধরণ:'}</span>
+                  <span className="bg-[#a78bfa]/15 text-[#a78bfa] font-black px-2.5 py-1 rounded-lg text-[10px] uppercase border border-[#a78bfa]/20 tracking-wider">
+                    {tournament.game_mode || (tournament.format || 'Battle Royale')}
+                  </span>
+                </div>
+
+                <div className="pt-2 border-t border-gray-800/60 space-y-1.5 text-left">
+                  <span className="block text-[9px] text-amber-500 font-extrabold uppercase tracking-widest leading-none">
+                    📜 {language === 'en' ? 'TOURNAMENT RULES (পড়ুন)' : 'ম্যাচ খেলার নিয়মাবলী (Rules)'}
+                  </span>
+                  <p className="text-[11px] text-gray-300 leading-relaxed font-sans max-h-[100px] overflow-y-auto whitespace-pre-wrap break-words bg-black/35 p-2.5 rounded-xl border border-white/5 italic">
+                    {tournament.rules ? tournament.rules : (
+                      language === 'en' 
+                        ? '1. No third-party hacks or mod tools.\n2. Standard game features only.\n3. Results will be audited by admin and processed instantly.'
+                        : '১. কোনো প্রকার হ্যাক বা থার্ড-পার্টি টুলস ব্যবহার করা সম্পূর্ণ নিষিদ্ধ।\n২. এমুলেটর বা পিসি প্লেয়াররা অনুমতি ছাড়া জয়েন করতে পারবে না।\n৩. ম্যাচ শেষ হওয়া মাত্র স্ক্রিনশট সাবমিট করুন।'
+                    )}
+                  </p>
+                </div>
+              </div>
+
               {/* Wallet Matchup Error message or prompt / Add coins button shortcut */}
               {isInsufficient ? (
                 <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 flex gap-3">
