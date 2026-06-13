@@ -78,7 +78,7 @@ export const AdminDashboard: React.FC = () => {
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Active view tab inside dashboard
-  const [activeTab, setActiveTab] = useState<'tournaments' | 'deposits' | 'withdrawals' | 'results' | 'utilities' | 'users'>('tournaments');
+  const [activeTab, setActiveTab] = useState<'tournaments' | 'deposits' | 'withdrawals' | 'results' | 'utilities' | 'users' | 'audit'>('tournaments');
 
   // Real-time states
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
@@ -117,6 +117,9 @@ export const AdminDashboard: React.FC = () => {
   const [winnerBannerImage, setWinnerBannerImage] = useState<string>('');
   const [winnerBannerTheme, setWinnerBannerTheme] = useState<string>('classic_gold');
   const [customLeaderboardRows, setCustomLeaderboardRows] = useState<any[]>([]);
+
+  // Player Verification state
+  const [auditMatchId, setAuditMatchId] = useState<string>('');
 
   // Balance correction state
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -1075,7 +1078,8 @@ export const AdminDashboard: React.FC = () => {
           { id: 'withdrawals', label: 'Cash-Outs', badge: totalPendingWithdraws.length, color: 'bg-rose-500' },
           { id: 'results', label: 'Rewards distribution', badge: proofs.filter(p=>p.status==='pending').length },
           { id: 'utilities', label: 'App utilities & slider' },
-          { id: 'users', label: 'User accounts database' }
+          { id: 'users', label: 'User accounts database' },
+          { id: 'audit', label: '🛡️ Audit Player Lists' }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -2211,6 +2215,116 @@ export const AdminDashboard: React.FC = () => {
 
           </div>
         )}
+
+        {/* TAB 7: PLAYERS AUTHENTICITY AUDIT & VERIFICATION */}
+        {activeTab === 'audit' && (() => {
+          const selectedAuditTournament = tournaments.find(t => t.match_id === auditMatchId);
+          return (
+            <div className="bg-[#121420] border border-gray-800 rounded-3xl p-6 space-y-6">
+              <div>
+                <h3 className="font-extrabold text-white text-base">🛡️ Players Authenticity & Verification Audit</h3>
+                <p className="text-xs text-gray-400 mt-1 font-sans">
+                  ভেরিফিকেশন চেক প্যানেল: এখানে আপনি দেখতে পাবেন কোন প্লেয়ার অ্যাপ থেকে নিবন্ধিত নাকি বাইরে থেকে যোগ হয়েছে।
+                </p>
+              </div>
+
+              {/* Tournament Selector */}
+              <div className="max-w-md space-y-1.5">
+                <label className="text-[10px] text-gray-500 font-bold uppercase block">Select Tournament Match</label>
+                <select
+                  value={auditMatchId}
+                  onChange={(e) => setAuditMatchId(e.target.value)}
+                  className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2.5 text-white focus:outline-none text-xs font-semibold cursor-pointer"
+                >
+                  <option value="">-- Choose Match / ম্যাচ নির্বাচন করুন --</option>
+                  {tournaments.map(t => (
+                    <option key={t.match_id} value={t.match_id}>
+                      {t.title} ({t.game_category}) - Slot: {t.joined_count}/{t.total_slots}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedAuditTournament ? (
+                <div className="space-y-4">
+                  <div className="bg-slate-900/40 p-4 border border-gray-800 rounded-2xl flex flex-wrap justify-between items-center gap-3 font-sans">
+                    <div className="text-xs">
+                      <span className="block font-bold text-amber-400">{selectedAuditTournament.title}</span>
+                      <span className="text-gray-400 block mt-0.5">Game: <strong className="text-slate-300">{selectedAuditTournament.game_category}</strong> | Format: <strong className="text-slate-300">{selectedAuditTournament.game_mode || 'Classic'}</strong></span>
+                    </div>
+                    <div className="text-xs text-right">
+                      <span className="text-gray-400 block">System Joined count: <strong className="text-emerald-400 font-mono text-sm">{selectedAuditTournament.joined_players_uids?.length || 0}</strong></span>
+                    </div>
+                  </div>
+
+                  {(!selectedAuditTournament.joined_players_uids || selectedAuditTournament.joined_players_uids.length === 0) ? (
+                    <div className="text-center py-10 bg-black/10 border border-dashed border-gray-800 rounded-3xl p-6">
+                      <p className="text-xs text-gray-500 italic">No players have joined this tournament yet inside this container sandbox.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedAuditTournament.joined_players_uids.map((uid) => {
+                        const enteredDetails = selectedAuditTournament.joined_players_details?.[uid] || { inGameId: 'Not supplied' };
+                        const matchedUser = allUsers.find(u => u.uid === uid);
+
+                        return (
+                          <div
+                            key={uid}
+                            className="bg-[#0b0c13] border border-gray-800/80 rounded-2xl p-4 space-y-3 relative overflow-hidden group hover:border-[#f59e0b]/20 transition-all font-sans"
+                          >
+                            <div className="flex justify-between items-start">
+                              <span className="text-[10px] font-mono text-gray-500 font-semibold block">UID: ...{uid.substring(uid.length - 8)}</span>
+                              {matchedUser ? (
+                                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-extrabold px-2 py-0.5 rounded uppercase">
+                                  ✓ Verified App User
+                                </span>
+                              ) : (
+                                <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] font-extrabold px-2 py-0.5 rounded uppercase animate-pulse">
+                                  ⚠️ Direct Entry Leak
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs pt-1.5 border-t border-gray-800/50">
+                              <div className="space-y-0.5 bg-black/25 p-2 rounded-xl border border-white/5">
+                                <span className="text-[9px] font-bold text-gray-500 block uppercase">MATCH JOIN CREDENTIALS</span>
+                                <span className="font-extrabold text-[#f59e0b] block truncate text-[11px]">
+                                  {enteredDetails.inGameId}
+                                </span>
+                              </div>
+
+                              <div className="space-y-0.5 bg-black/25 p-2 rounded-xl border border-white/5">
+                                <span className="text-[9px] font-bold text-gray-500 block uppercase">APP ACCOUNT DETAILS</span>
+                                {matchedUser ? (
+                                  <>
+                                    <span className="font-extrabold text-white block truncate text-[11px]">
+                                      {matchedUser.name}
+                                    </span>
+                                    <span className="text-[9px] text-gray-400 block font-mono truncate">
+                                      Coins: {matchedUser.coins_balance} C
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="font-semibold text-rose-400 block italic leading-tight text-[10px]">
+                                    Not registered in local sandbox
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-amber-500/5 border border-amber-500/15 text-amber-500/80 rounded-2xl p-4 text-xs font-sans">
+                  অনুগ্রহ করে উপর থেকে যেকোনো একটি টুর্নামেন্ট বা ম্যাচ সিলেক্ট করুন এর বিস্তারিত বৈধতা এবং প্লেয়ারদের তালিকা দেখতে।
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
       </div>
 

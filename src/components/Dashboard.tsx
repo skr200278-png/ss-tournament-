@@ -15,6 +15,7 @@ import {
   Flame
 } from 'lucide-react';
 import { TournamentDetailModal } from './TournamentDetailModal';
+import { MatchStartingClock } from './MatchStartingClock';
 
 // Static Categories data
 export const categories = [
@@ -61,7 +62,9 @@ export const Dashboard: React.FC = () => {
     t, 
     language,
     setCurrentView,
-    settings
+    settings,
+    notificationPermission,
+    requestNotificationPermission
   } = useApp();
 
   const [selectedMatch, setSelectedMatch] = useState<Tournament | null>(null);
@@ -105,6 +108,33 @@ export const Dashboard: React.FC = () => {
           <marquee className="font-mono text-xs text-slate-300 w-full" scrollamount="4">
             {settings.notice}
           </marquee>
+        </div>
+      )}
+
+      {/* Native Notification Request Box (Bilingual, high polish) */}
+      {notificationPermission === 'default' && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-orange-600/10 to-[#121420] border border-orange-500/20 p-4 sm:p-5 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in shadow-lg border-white/5">
+          <div className="flex items-center gap-3 text-left">
+            <div className="h-10 w-10 shrink-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white text-lg shadow-md hover:scale-105 transition-all">
+              📢
+            </div>
+            <div>
+              <h4 className="font-extrabold text-white text-[11px] sm:text-xs uppercase tracking-wider">
+                {language === 'en' ? 'Get Direct Game Alarms!' : 'ফোনে ইনস্ট্যান্ট এলার্ম পান!'}
+              </h4>
+              <p className="text-[11px] text-gray-400 font-sans mt-0.5 leading-tight">
+                {language === 'en' 
+                  ? 'Enable notifications to receive alerts 15 minutes before joined matches and for new match arrivals.'
+                  : 'নটিফিকেশন চালু রাখুন! প্রতিটি ম্যাচ শুরুর ১৫ মিনিট আগে ও নতুন টুর্নামেন্ট এড করা হলে সরাসরি এলার্ম পাবেন।'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => requestNotificationPermission()}
+            className="w-full sm:w-auto shrink-0 py-2.5 px-5 bg-gradient-to-r from-amber-500 to-orange-600 text-black hover:from-amber-400 hover:to-orange-500 font-extrabold rounded-2xl text-[11px] transition-all cursor-pointer whitespace-nowrap shadow-md select-none"
+          >
+            {language === 'en' ? 'Allow Notifications' : 'নোটিফিকেশন অন করুন'}
+          </button>
         </div>
       )}
 
@@ -297,11 +327,7 @@ export const Dashboard: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="absolute bottom-3.5 right-3.5 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-gray-100 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 font-mono shadow-lg select-none">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                      <Clock className="h-3.5 w-3.5 text-orange-400" />
-                      {formatDate(match.time)}
-                    </div>
+                    <MatchStartingClock time={match.time} language={language} />
                   </div>
 
                   {/* Body details and parameters metadata */}

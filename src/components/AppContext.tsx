@@ -68,6 +68,8 @@ interface AppContextType {
   setTransactions: React.Dispatch<React.SetStateAction<CoinTransaction[]>>;
   applyReferralCode: (code: string) => Promise<{ success: boolean; message: string }>;
   updateUserProfile: (updatedFields: Partial<UserProfile>) => Promise<{ success: boolean; message: string }>;
+  notificationPermission: string;
+  requestNotificationPermission: () => Promise<string>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -94,6 +96,111 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Notification Management Setup
+  const [notificationPermission, setNotificationPermission] = useState<string>('default');
+  const prevTourIdsRef = React.useRef<string[]>([]);
+  const notifiedStartsRef = React.useRef<string[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestNotificationPermission = async (): Promise<string> => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      try {
+        const perm = await Notification.requestPermission();
+        setNotificationPermission(perm);
+        if (perm === 'granted') {
+          try {
+            new Notification(language === 'en' ? "🔔 Notifications Activated!" : "🔔 নোটিফিকেশন চালু হয়েছে!", {
+              body: language === 'en' 
+                ? "You will now receive alerts 15 minutes before joined matches and for new tournaments!"
+                : "নতুন টুর্নামেন্ট যোগ হলে এবং খেলা শুরুর ১৫ মিনিট আগে আপনি এখন ফোনে সিগন্যাল পাবেন!",
+              icon: '/favicon.ico'
+            });
+          } catch (err) {
+            console.warn("Native Notification test failed:", err);
+          }
+        }
+        return perm;
+      } catch (e) {
+        console.error("Failed to request notification permission:", e);
+      }
+    }
+    return 'default';
+  };
+
+  // Trigger notification when a new tournament is detected in real-time
+  useEffect(() => {
+    if (tournaments.length > 0) {
+      const currentIds = tournaments.map(t => t.match_id);
+      if (prevTourIdsRef.current.length > 0) {
+        const added = tournaments.filter(t => !prevTourIdsRef.current.includes(t.match_id));
+        if (added.length > 0 && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          added.forEach(t => {
+            try {
+              new Notification(
+                language === 'en' ? "🆕 New Match Added!" : "🆕 নতুন ম্যাচ এড করা হয়েছে!", 
+                {
+                  body: `${t.title} (${t.game_category}) - ${language === 'en' ? 'Fee:' : 'এন্ট্রি ফি:'} ${t.entry_fee} ${language === 'en' ? 'Coins' : 'কয়েন'}`,
+                  icon: '/favicon.ico'
+                }
+              );
+            } catch (err) {
+              console.warn("New tournament Notification popup was blocked:", err);
+            }
+          });
+        }
+      }
+      prevTourIdsRef.current = currentIds;
+    }
+  }, [tournaments, language]);
+
+  // BG check for joined matches starting soon (15 min warning)
+  useEffect(() => {
+    const activeUid = isGuest ? guestUser?.uid : user?.uid;
+    if (!activeUid || tournaments.length === 0) return;
+
+    const checkStartingSoonMatches = () => {
+      const now = Date.now();
+      const fifteenMins = 15 * 60 * 1000;
+      
+      tournaments.forEach(t => {
+        // Only warn for joined matches
+        if (t.joined_players_uids?.includes(activeUid)) {
+          const matchTime = new Date(t.time).getTime();
+          const diff = matchTime - now;
+          
+          if (diff > 0 && diff <= fifteenMins && !notifiedStartsRef.current.includes(t.match_id)) {
+            notifiedStartsRef.current.push(t.match_id);
+            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+              try {
+                const minutesLeft = Math.ceil(diff / 60000);
+                new Notification(
+                  language === 'en' ? "⏳ Match Starting Soon!" : "⏳ আপনার গেম শুরু হতে যাচ্ছে!",
+                  {
+                    body: language === 'en'
+                      ? `Your match "${t.title}" starts in ${minutesLeft} minutes. Open room card now!`
+                      : `আপনার খেলা "${t.title}" আগামী ${minutesLeft} মিনিটে শুরু হবে। এখনই রুম ক্রোড দেখুন!`,
+                    icon: '/favicon.ico'
+                  }
+                );
+              } catch (err) {
+                console.warn("Start alert Notification was blocked:", err);
+              }
+            }
+          }
+        }
+      });
+    };
+
+    checkStartingSoonMatches();
+    const interval = setInterval(checkStartingSoonMatches, 15000);
+    return () => clearInterval(interval);
+  }, [tournaments, user, guestUser, isGuest, language]);
 
   // Hidden admin activation feature (clicks logo 5 times to reveal)
   const [logoClicks, setLogoClicks] = useState<number>(0);
@@ -1075,7 +1182,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setTournaments,
       setTransactions,
       applyReferralCode,
-      updateUserProfile
+      updateUserProfile,
+      notificationPermission,
+      requestNotificationPermission
     }}>
       {children}
     </AppContext.Provider>
