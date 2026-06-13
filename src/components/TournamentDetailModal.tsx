@@ -199,10 +199,10 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="bg-[#121420] border border-gray-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative">
+      <div className="bg-[#121420] border border-gray-800 rounded-3xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden shadow-2xl relative">
         
         {/* Header decoration */}
-        <div className="bg-[#1a1c2b] p-5 border-b border-gray-800/80 flex items-center justify-between">
+        <div className="bg-[#1a1c2b] p-5 border-b border-gray-800/80 flex items-center justify-between shrink-0">
           <div>
             <div className="text-[10px] uppercase tracking-wider text-amber-500 font-bold font-mono">
               {t('confirmJoin')}
@@ -220,7 +220,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-5 sm:p-6 space-y-6 overflow-y-auto flex-1 min-h-0">
           {success ? (
             <div className="text-center py-6 space-y-3">
               <CheckCircle className="h-14 w-14 text-emerald-500 mx-auto animate-bounce" />
@@ -361,7 +361,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
               )}
 
               {/* Dynamic Game ID / Teammate Form Fields based on Format */}
-              <div className="space-y-4 pt-1 max-h-[320px] overflow-y-auto pr-1">
+              <div className="space-y-4 pt-1">
                 
                 {/* Team Name required for Duo / Squad / team matches */}
                 {playerCount > 1 && (
