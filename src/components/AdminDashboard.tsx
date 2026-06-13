@@ -410,6 +410,48 @@ export const AdminDashboard: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  const [migratingAll, setMigratingAll] = useState(false);
+
+  const handleFixAll2000Balances = async () => {
+    const dbUsersWith2000 = allUsers.filter(u => u.coins_balance === 2000);
+    if (dbUsersWith2000.length === 0) {
+      alert("No registered users with exactly 2000 coins found in the database. All clear!");
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to correct ${dbUsersWith2000.length} user account(s) holding 2000 welcome coins to 20 coins? This process is safe and cannot be undone.`)) {
+      return;
+    }
+
+    if (isGuest) {
+      const updated = allUsers.map(u => {
+        if (u.coins_balance === 2000) {
+          return { ...u, coins_balance: 20 };
+        }
+        return u;
+      });
+      setAllUsers(updated);
+      alert("Simulated success: Corrected balances of guest users holding 2000 coins to 20!");
+      return;
+    }
+
+    setMigratingAll(true);
+    let count = 0;
+    try {
+      for (const u of dbUsersWith2000) {
+        const userRef = doc(db, 'users', u.uid);
+        await updateDoc(userRef, { coins_balance: 20 });
+        count++;
+      }
+      alert(`Success: Successfully and safely updated ${count} user balance(s) from 2000 down to 20 coins!`);
+    } catch (err: any) {
+      console.error(err);
+      alert("An error occurred during updating database records: " + err.message);
+    } finally {
+      setMigratingAll(false);
+    }
+  };
+
   // CREATE or EDIT Game Tournament
   const handleSaveTournament = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2088,7 +2130,20 @@ export const AdminDashboard: React.FC = () => {
             
             {/* Header Search controls */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <h3 className="font-extrabold text-white text-base">Registered Gamers Ledger List ({filteredUsers.length})</h3>
+              <div className="flex flex-col gap-1">
+                <h3 className="font-extrabold text-white text-base">Registered Gamers Ledger List ({filteredUsers.length})</h3>
+                {allUsers.some(u => u.coins_balance === 2000) ? (
+                  <button
+                    onClick={handleFixAll2000Balances}
+                    disabled={migratingAll}
+                    className="self-start text-[10px] font-semibold px-2 py-0.5 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-black rounded-md mt-1 transition-all cursor-pointer"
+                  >
+                    {migratingAll ? "Processing..." : "⚠️ Fix 2000 Coin Accounts to 20 Coins"}
+                  </button>
+                ) : (
+                  <span className="text-[10px] text-gray-500">All registered balances are secure and corrected (No 2000 balances left).</span>
+                )}
+              </div>
               
               <div className="relative w-full sm:max-w-xs">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />

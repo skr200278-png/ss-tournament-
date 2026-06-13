@@ -160,7 +160,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           // Check if profile exists
           const userDoc = await getDoc(userDocRef);
           if (!userDoc.exists()) {
-            // Create user document with 2000 welcome coins so they can play-test directly!
+            // Create user document with 20 welcome coins so they can register directly!
             const pName = firebaseUser.displayName || 'Gamer-' + firebaseUser.uid.substring(0, 5);
             const rCode = generateReferralCode(pName, firebaseUser.uid);
             const numId = generateNumericId();
@@ -168,7 +168,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               uid: firebaseUser.uid,
               name: pName,
               email: firebaseUser.email || '',
-              coins_balance: 2000,
+              coins_balance: 20,
               winning_balance: 0,
               referralCode: rCode,
               numericId: numId,
@@ -180,6 +180,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             let needsUpdate = false;
             const updatePayload: any = {};
             
+            if (data.coins_balance === 2000) {
+              updatePayload.coins_balance = 20;
+              data.coins_balance = 20;
+              needsUpdate = true;
+            }
             if (!data.referralCode) {
               const code = generateReferralCode(data.name, firebaseUser.uid);
               updatePayload.referralCode = code;
@@ -218,7 +223,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     const unsubscribe = onSnapshot(userDocRef, (snapshot) => {
       if (snapshot.exists()) {
-        setProfile(snapshot.data() as UserProfile);
+        const data = snapshot.data() as UserProfile;
+        if (data.coins_balance === 2000) {
+          updateDoc(userDocRef, { coins_balance: 20 }).catch((err) => {
+            console.error("Failed to migrate balance in snapshot listener:", err);
+          });
+          data.coins_balance = 20;
+        }
+        setProfile(data);
       }
     }, (error) => {
       console.warn("Snapshot subscription failed for user doc, likely permission rules before seed:", error);
@@ -391,7 +403,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         uid: firebaseUser.uid,
         name: name,
         email: email,
-        coins_balance: 2000, // Pre-seeded 2000 welcome coins!
+        coins_balance: 20, // Pre-seeded 20 welcome coins!
         winning_balance: 0,
         createdAt: new Date().toISOString(),
         referralCode: rCode,

@@ -198,7 +198,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
       <div className="bg-[#121420] border border-gray-800 rounded-3xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden shadow-2xl relative">
         
         {/* Header decoration */}
@@ -219,18 +219,18 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-5 sm:p-6 space-y-6 overflow-y-auto flex-1 min-h-0">
-          {success ? (
-            <div className="text-center py-6 space-y-3">
-              <CheckCircle className="h-14 w-14 text-emerald-500 mx-auto animate-bounce" />
-              <h4 className="text-lg font-bold text-white">{t('joiningSuccess')}</h4>
-              <p className="text-gray-400 text-xs">
-                {language === 'en' ? 'Redirecting to your matches schedule...' : 'আপনার নিবন্ধিত ম্যাচের পাতায় নিয়ে যাওয়া হচ্ছে...'}
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+        {success ? (
+          <div className="p-5 sm:p-6 text-center py-12 space-y-3 overflow-y-auto flex-1 min-h-[300px] flex flex-col justify-center">
+            <CheckCircle className="h-14 w-14 text-emerald-500 mx-auto animate-bounce" />
+            <h4 className="text-lg font-bold text-white">{t('joiningSuccess')}</h4>
+            <p className="text-gray-400 text-xs">
+              {language === 'en' ? 'Redirecting to your matches schedule...' : 'আপনার নিবন্ধিত ম্যাচের পাতায় নিয়ে যাওয়া হচ্ছে...'}
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            {/* Scrollable Form Content */}
+            <div className="p-5 sm:p-6 space-y-6 overflow-y-auto flex-1 min-h-0">
               
               {/* Ticket Recap Card */}
               <div className="bg-[#1a1c2b]/50 border border-gray-800/60 rounded-2xl p-4 grid grid-cols-2 gap-4">
@@ -366,7 +366,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
                 {/* Team Name required for Duo / Squad / team matches */}
                 {playerCount > 1 && (
                   <div className="space-y-1.5 animate-slide-up">
-                    <label className="block text-xs font-bold text-gray-305 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">
                       {language === 'en' ? 'Squad / Duo Team Name' : 'স্কোয়াড ও ডুয়ো টিম নাম'} <span className="text-[#f59e0b] font-extrabold">*</span>
                     </label>
                     <input
@@ -376,7 +376,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
                       onChange={(e) => setTeamName(e.target.value)}
                       placeholder={language === 'en' ? "e.g., BD ELITES" : "যেমনঃ বিডি এলিট টিম"}
                       disabled={isInsufficient || isSubmitting}
-                      className="w-full bg-gray-900 border border-gray-800 focus:border-amber-500/75 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-650 focus:outline-none transition-all"
+                      className="w-full bg-gray-900 border border-gray-800 focus:border-amber-500/75 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none transition-all"
                     />
                   </div>
                 )}
@@ -563,29 +563,28 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
                   {errorMsg}
                 </div>
               )}
+            </div>
 
-              {/* Form Controls */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 py-3 border border-gray-800 text-gray-400 hover:text-white rounded-xl font-bold text-xs hover:bg-gray-800/40 transition-all cursor-pointer"
-                >
-                  {t('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isInsufficient || isSubmitting}
-                  className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 font-extrabold text-[#000] rounded-xl text-xs hover:from-amber-400 hover:to-orange-500 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin text-black" />}
-                  {isSubmitting ? t('joiningInProgress') : t('confirmJoin')}
-                </button>
-              </div>
-
-            </form>
-          )}
-        </div>
+            {/* Fixed Sticky Footer Controls */}
+            <div className="bg-[#1a1c2b] p-4 sm:p-5 border-t border-gray-800/80 flex gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3.5 border border-gray-800 text-gray-400 hover:text-white rounded-2xl font-bold text-xs hover:bg-gray-800/40 transition-all cursor-pointer select-none"
+              >
+                {t('cancel')}
+              </button>
+              <button
+                type="submit"
+                disabled={isInsufficient || isSubmitting}
+                className="flex-1 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 font-extrabold text-black rounded-2xl text-xs hover:from-amber-400 hover:to-orange-500 transition-all disabled:opacity-40 flex items-center justify-center gap-1.5 cursor-pointer hover:shadow-lg hover:shadow-orange-500/10 select-none"
+              >
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin text-black" />}
+                {isSubmitting ? t('joiningInProgress') : t('confirmJoin')}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

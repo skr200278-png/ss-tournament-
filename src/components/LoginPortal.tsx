@@ -214,7 +214,7 @@ export const LoginPortal: React.FC = () => {
               <>
                 <LogIn className="h-4.5 w-4.5" />
                 {isSignUp 
-                  ? (language === 'en' ? 'REGISTER NOW & CLAIM 2000 COINS' : 'রেজিস্ট্রেশন করুন ও ২০০০ কয়েন নিন')
+                  ? (language === 'en' ? 'REGISTER NOW & CLAIM 20 COINS' : 'রেজিস্ট্রেশন করুন ও ২০ কয়েন নিন')
                   : (language === 'en' ? 'LOG IN TO YOUR ACCOUNT' : 'অ্যাকাউন্টে লগইন করুন')}
               </>
             )}
