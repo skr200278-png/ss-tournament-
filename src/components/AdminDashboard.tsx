@@ -102,6 +102,7 @@ export const AdminDashboard: React.FC = () => {
   const [rules, setRules] = useState<string>('');
   const [totalSlots, setTotalSlots] = useState<number>(48);
   const [editMode, setEditMode] = useState<boolean>(false);
+  const [imageUrl, setImageUrl] = useState<string>('');
 
   // Room details popup
   const [roomMatch, setRoomMatch] = useState<Tournament | null>(null);
@@ -357,6 +358,58 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  // Compress and convert selected file to an ultra-compact Base64 JPEG
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isWinnerBanner: boolean = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Image is too large! Please choose an image smaller than 10MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Constraint dimensions to max 800px width/height while maintaining native aspect ratio
+        const MAX_SIZE = 800;
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height = Math.round((height * MAX_SIZE) / width);
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width = Math.round((width * MAX_SIZE) / height);
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          // Export with 0.75 JPEG compression factor to guarantee under 40KB base64 payloads
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+          
+          if (isWinnerBanner) {
+            setWinnerBannerImage(compressedBase64);
+          } else {
+            setImageUrl(compressedBase64);
+          }
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   // CREATE or EDIT Game Tournament
   const handleSaveTournament = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -393,7 +446,8 @@ export const AdminDashboard: React.FC = () => {
       map_name: mapName,
       format: formatType,
       game_mode: gameMode,
-      rules: rules
+      rules: rules,
+      image_url: imageUrl
     };
 
     try {
@@ -429,6 +483,7 @@ export const AdminDashboard: React.FC = () => {
     setTotalSlots(48);
     setGameMode('Battle Royale');
     setRules('');
+    setImageUrl('');
   };
 
   // Prefill match form for EDIT
@@ -477,6 +532,7 @@ export const AdminDashboard: React.FC = () => {
     setGameMode(t.game_mode || 'Battle Royale');
     setRules(t.rules || '');
     setTotalSlots(t.total_slots || 48);
+    setImageUrl(t.image_url || '');
   };
 
   // DELETE Tournament Match
@@ -1340,6 +1396,76 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
+                {/* TOURNAMENT HEADER IMAGE UPLOAD */}
+                <div className="bg-[#0a0b12]/50 p-4 rounded-2xl border border-gray-800/80 space-y-3">
+                  <div className="flex justify-between items-center flex-wrap gap-1">
+                    <span className="text-[10px] text-amber-400 font-extrabold uppercase tracking-wider block">
+                      🖼️ Tournament Banner Image (টুর্নামেন্ট ব্যানার ছবি)
+                    </span>
+                    <span className="text-[9px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20 font-mono font-bold">
+                      Aspect Ratio: 16:9 (১৬:৯)
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    {/* Option A: Device Gallery selection */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-gray-400 font-bold uppercase block">
+                        Option A: Select From Gallery (গ্যালারি থেকে ফটো)
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, false)}
+                        className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-1.5 text-white/70 file:font-bold file:text-xs file:bg-amber-500 file:border-none file:text-black file:rounded-lg file:px-2.5 file:py-1 file:mr-2 file:cursor-pointer cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Option B: Match Image url */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-gray-400 font-bold uppercase block">
+                        Option B: Or Direct Image Web URL (অথবা ডিরেক্ট ছবি লিংক)
+                      </label>
+                      <input
+                        type="text"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        placeholder="Paste custom link, e.g. https://www.example.com/ff.jpg"
+                        className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white font-mono text-[11px]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Thumbnail Preview rendering if present */}
+                  {imageUrl && (
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] text-gray-400 font-semibold block">Live 16:9 Poster Preview (যেমন দেখাবে অ্যাপে):</span>
+                      <div className="relative aspect-[16/9] w-full max-w-sm rounded-xl overflow-hidden border border-gray-800 bg-[#07080d]">
+                        <img 
+                          src={imageUrl} 
+                          alt="Banner Preview" 
+                          className="w-full h-full object-cover" 
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#121420] via-transparent to-black/35" />
+                        <div className="absolute bottom-2 left-2 text-[8px] bg-black/85 text-amber-400 font-bold px-2 py-0.5 rounded border border-amber-500/20">
+                          16:9 MATCH THUMBNAIL PREVIEW
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setImageUrl('')}
+                          className="absolute top-2 right-2 px-2 py-1 bg-black/80 hover:bg-black rounded-lg text-rose-450 transition-all text-[10px] font-bold border border-rose-500/20"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-gray-400 leading-normal bg-[#121420]/50 p-3 rounded-xl border border-gray-800 font-sans">
+                    💡 <strong>পারফেক্ট ছবির সাইজ টিপস:</strong> আপনার ব্যানারটি যেন <strong>১৬:৯ (16:9)</strong> সাইজের বা <strong>১২৮০ × ৭২০ পিক্সেল (1280×720)</strong> রেজোলিউশনের হয়। তাহলে আপনার প্লেয়ারদের মোবাইল ও পিসিতে ব্যানারটির কোন অংশ কাটা পড়বে না এবং একদম নিখুঁত <strong>খাপে খাপ</strong> দেখাবে!
+                  </p>
+                </div>
+
                 <button
                   type="submit"
                   className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-extrabold rounded-2xl text-xs transition-all flex items-center justify-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:shadow-lg select-none"
@@ -1752,15 +1878,47 @@ export const AdminDashboard: React.FC = () => {
                         </select>
                       </div>
 
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-400 font-bold uppercase block">2. Custom Banner JPG/PNG Image URL (Optional)</label>
-                        <input
-                          type="text"
-                          value={winnerBannerImage}
-                          onChange={(e) => setWinnerBannerImage(e.target.value)}
-                          placeholder="Paste image link, e.g. https://www.example.com/banner.jpg"
-                          className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white font-mono text-[11px]"
-                        />
+                      <div className="space-y-1.5 col-span-1">
+                        <label className="text-[10px] text-gray-405 font-bold uppercase block">
+                          2. Banner Image (Select from Gallery or paste URL)
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e, true)}
+                            className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-1 text-white/70 file:font-bold file:text-[10px] file:bg-amber-500 file:border-none file:text-black file:rounded-lg file:px-2 file:py-0.5 file:mr-1 file:cursor-pointer cursor-pointer text-[10px]"
+                          />
+                          <input
+                            type="text"
+                            value={winnerBannerImage}
+                            onChange={(e) => setWinnerBannerImage(e.target.value)}
+                            placeholder="Or paste direct image URL"
+                            className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-1.5 text-white font-mono text-[11px]"
+                          />
+                        </div>
+
+                        {/* Winner image preview */}
+                        {winnerBannerImage && (
+                          <div className="mt-2 text-left">
+                            <span className="text-[9px] text-gray-400 block">Winner Banner Preview:</span>
+                            <div className="relative h-20 w-full max-w-xs rounded-xl overflow-hidden border border-gray-800 bg-[#07080d] mt-1">
+                              <img 
+                                src={winnerBannerImage} 
+                                alt="Winner Banner Preview" 
+                                className="w-full h-full object-cover" 
+                                referrerPolicy="no-referrer"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setWinnerBannerImage('')}
+                                className="absolute top-1 right-1 px-1.5 py-0.5 bg-black/80 hover:bg-black rounded-lg text-rose-400 transition-all text-[9px] font-bold"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 

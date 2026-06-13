@@ -40,6 +40,7 @@ export interface Tournament {
   format?: string; // e.g., "Squad", "Solo", "Duo"
   game_mode?: string; // e.g., "Battle Royale", "Clash Squad", etc.
   rules?: string; // Match specific customized rules
+  image_url?: string; // Custom banner image for the tournament card
   winner_name?: string;
   winner_uid?: string;
   winner_prize?: number;

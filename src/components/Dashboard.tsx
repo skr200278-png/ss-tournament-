@@ -28,6 +28,30 @@ export const categories = [
   { name: "Subway Surfers", icon: "🏃", color: "from-pink-500 to-rose-600", desc: "Weekly High Score Tournament" },
 ];
 
+// Fallback high-quality background covers for game categories
+export const getGameFallbackBanner = (category: string): string => {
+  switch (category) {
+    case 'Free Fire':
+      return 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop';
+    case 'PUBG/BGMI':
+      return 'https://images.unsplash.com/photo-1553481187-be93c21490a9?q=80&w=800&auto=format&fit=crop';
+    case 'Ludo':
+      return 'https://images.unsplash.com/photo-1611195974226-a6a9be9dd763?q=80&w=800&auto=format&fit=crop';
+    case 'Call of Duty':
+      return 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop';
+    case 'Mobile Legends':
+      return 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop';
+    case 'DLS':
+      return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=800&auto=format&fit=crop';
+    case 'COC':
+      return 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=800&auto=format&fit=crop';
+    case 'Subway Surfers':
+      return 'https://images.unsplash.com/photo-1484788984921-03950022c9ef?q=80&w=800&auto=format&fit=crop';
+    default:
+      return 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=800&auto=format&fit=crop';
+  }
+};
+
 export const Dashboard: React.FC = () => {
   const { 
     tournaments, 
@@ -248,34 +272,47 @@ export const Dashboard: React.FC = () => {
               return (
                 <div
                   key={match.match_id}
-                  className="bg-[#121420] border border-gray-800/90 rounded-2xl hover:border-gray-700/80 overflow-hidden flex flex-col justify-between transition-all"
+                  className="bg-[#121420] border border-gray-800/90 rounded-3xl hover:border-amber-500/30 overflow-hidden flex flex-col justify-between transition-all group duration-300"
                 >
-                  {/* Top Bar Card */}
-                  <div className="p-4 border-b border-gray-800/50 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-slate-800/80 text-amber-400 border border-amber-500/10">
-                          {match.game_category}
+                  {/* Game Cover Banner Image slot */}
+                  <div className="relative aspect-[16/9] w-full overflow-hidden shrink-0 bg-[#0d0e16]/85 border-b border-gray-800/40">
+                    <img
+                      src={match.image_url || getGameFallbackBanner(match.game_category)}
+                      alt={match.title}
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                      referrerPolicy="no-referrer"
+                    />
+                    {/* Shaded vignette to support text readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#121420] via-transparent to-black/35" />
+                    
+                    {/* Floating top tags and clock */}
+                    <div className="absolute top-3.5 left-3.5 flex gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-extrabold font-mono px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md text-amber-400 border border-amber-500/20 shadow-lg select-none">
+                        {match.game_category}
+                      </span>
+                      {match.game_mode && (
+                        <span className="text-[9px] font-black font-sans px-2.5 py-1 rounded-md bg-[#a78bfa] text-black border border-[#a78bfa]/20 uppercase tracking-wider shadow-lg select-none">
+                          {match.game_mode.replace(/\s*\(.*\)/g, '')}
                         </span>
-                        {match.game_mode && (
-                          <span className="text-[9px] font-black font-sans px-2 py-0.5 rounded bg-[#a78bfa]/15 text-[#a78bfa] border border-[#a78bfa]/15 uppercase tracking-wider">
-                            {match.game_mode.replace(/\s*\(.*\)/g, '')}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 text-[11px] text-gray-400 font-mono">
-                        <Clock className="h-3 w-3 text-orange-500" />
-                        {formatDate(match.time)}
-                      </div>
+                      )}
                     </div>
 
-                    <h3 className="font-bold text-white text-sm sm:text-base tracking-tight line-clamp-1">
+                    <div className="absolute bottom-3.5 right-3.5 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-gray-100 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 font-mono shadow-lg select-none">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                      <Clock className="h-3.5 w-3.5 text-orange-400" />
+                      {formatDate(match.time)}
+                    </div>
+                  </div>
+
+                  {/* Body details and parameters metadata */}
+                  <div className="p-4 border-b border-gray-800/50 space-y-3.5">
+                    <h3 className="font-extrabold text-white text-sm sm:text-base tracking-tight line-clamp-1">
                       {match.title}
                     </h3>
 
                     {/* Metadata attributes */}
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="flex items-center gap-1 text-gray-400 bg-[#0d0e16]/55 px-2 py-1.5 rounded-xl">
+                      <div className="flex items-center gap-1 text-gray-400 bg-[#0d0e16]/55 px-2.5 py-1.5 rounded-xl border border-white/5">
                         <span className="text-[10px] text-gray-500 uppercase">
                           {(() => {
                             switch (match.game_category) {
@@ -288,7 +325,7 @@ export const Dashboard: React.FC = () => {
                             }
                           })()}
                         </span>
-                        <span className="font-semibold text-white truncate">
+                        <span className="font-semibold text-white truncate text-[11px]">
                           {match.map_name || (() => {
                             switch (match.game_category) {
                               case 'Ludo': return 'Classic Board';
@@ -303,7 +340,7 @@ export const Dashboard: React.FC = () => {
                           })()}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 text-gray-400 bg-[#0d0e16]/55 px-2 py-1.5 rounded-xl">
+                      <div className="flex items-center gap-1 text-gray-400 bg-[#0d0e16]/55 px-2.5 py-1.5 rounded-xl border border-white/5">
                         <span className="text-[10px] text-gray-500 uppercase">
                           {(() => {
                             switch (match.game_category) {
@@ -316,7 +353,7 @@ export const Dashboard: React.FC = () => {
                             }
                           })()}
                         </span>
-                        <span className="font-semibold text-white truncate">
+                        <span className="font-semibold text-white truncate text-[11px]">
                           {match.format || (() => {
                             switch (match.game_category) {
                               case 'Ludo': return '1v1';
