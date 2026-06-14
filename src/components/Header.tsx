@@ -14,14 +14,16 @@ export const Header: React.FC = () => {
     t,
     isGuest,
     showAdminSecret,
-    registerLogoClick
+    registerLogoClick,
+    deferredPrompt,
+    showInstallGuide,
+    setShowInstallGuide,
+    handleInstallApp
   } = useApp();
 
   const hasAdminAccess = showAdminSecret || (profile && profile.email === 'skr200278@gmail.com');
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showInstallGuide, setShowInstallGuide] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -30,38 +32,7 @@ export const Header: React.FC = () => {
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIphoneOrIpad = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIphoneOrIpad);
-
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-    };
   }, []);
-
-  const handleInstallApp = async () => {
-    if (deferredPrompt) {
-      try {
-        deferredPrompt.prompt();
-        const choiceResult = await deferredPrompt.userChoice;
-        if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the PWA install prompt');
-          setDeferredPrompt(null);
-        } else {
-          console.log('User dismissed the PWA install prompt');
-        }
-      } catch (err) {
-        console.warn('PWA prompt failed, showing beautiful interactive guide:', err);
-        setShowInstallGuide(true);
-      }
-    } else {
-      // Show the complete beautiful guide/modal instead of simple alert
-      setShowInstallGuide(true);
-    }
-  };
 
   const handleCopyLink = () => {
     const appUrl = "https://ais-pre-wznxdkmdziisf7jrspbwnk-204082368003.asia-east1.run.app";

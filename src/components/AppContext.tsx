@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   onAuthStateChanged, 
   signInWithPopup, 
+  signInWithRedirect,
   GoogleAuthProvider, 
   signOut, 
   User as FirebaseUser,
@@ -42,7 +43,7 @@ interface AppContextType {
   transactions: CoinTransaction[];
   loading: boolean;
   t: any; // Translation function
-  login: () => Promise<void>;
+  login: () => Promise<{ success: boolean; error?: string }>;
   loginAsGuest: () => void;
   loginWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   registerWithEmail: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
@@ -70,6 +71,10 @@ interface AppContextType {
   updateUserProfile: (updatedFields: Partial<UserProfile>) => Promise<{ success: boolean; message: string }>;
   notificationPermission: string;
   requestNotificationPermission: () => Promise<string>;
+  deferredPrompt: any;
+  showInstallGuide: boolean;
+  setShowInstallGuide: (show: boolean) => void;
+  handleInstallApp: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -101,6 +106,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [notificationPermission, setNotificationPermission] = useState<string>('default');
   const prevTourIdsRef = React.useRef<string[]>([]);
   const notifiedStartsRef = React.useRef<string[]>([]);
+
+  // Global PWA State Variables
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallGuide, setShowInstallGuide] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted global PWA install prompt');
+          setDeferredPrompt(null);
+        } else {
+          console.log('User dismissed global PWA install prompt');
+        }
+      } catch (err) {
+        console.warn('Global PWA prompt failed, fallback to guide:', err);
+        setShowInstallGuide(true);
+      }
+    } else {
+      setShowInstallGuide(true);
+    }
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -459,13 +499,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Handle Google Auth Login
-  const login = async () => {
+  const login = async (): Promise<{ success: boolean; error?: string }> => {
     setLoading(true);
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
     try {
       await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Popup interaction was either blocked or cancelled:", error);
+      return { success: true };
+    } catch (error: any) {
+      console.warn("Popup interaction failed, trying Redirect fallback:", error);
+      
+      // Let's analyze the exact error code
+      // If it's blocked by user, popup blocker, in-app browser webview constraints or similar:
+      if (
+        error?.code === 'auth/popup-blocked' ||
+        error?.code === 'auth/popup-closed-by-user' ||
+        error?.code === 'auth/cancelled-popup-request' ||
+        error?.message?.toLowerCase().includes('popup') ||
+        error?.message?.toLowerCase().includes('iframe')
+      ) {
+        try {
+          await signInWithRedirect(auth, provider);
+          return { success: true };
+        } catch (redirectError: any) {
+          console.error("Redirect login also failed:", redirectError);
+          const msg = language === 'en'
+            ? "Google Login blocked on this browser limit. Copy the link and open in Google Chrome/Safari!"
+            : "গুগল সাইন-ইন আপনার ফোনে ব্লকড আছে। থ্রি-ডট মেনু থেকে ওপেন ইন ক্রোম বা ব্রাউজারে লিংকটি খুলুন!";
+          return { success: false, error: redirectError?.message || msg };
+        }
+      }
+      
+      const friendlyMsg = language === 'en'
+        ? `Google Auth failed: ${error?.message || 'Check connection'}`
+        : `গুগল সাইন-ইন ব্যর্থ হয়েছে: ${error?.message || 'কানেকশন চেক করুন'}`;
+      return { success: false, error: friendlyMsg };
     } finally {
       setLoading(false);
     }
@@ -1184,7 +1254,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       applyReferralCode,
       updateUserProfile,
       notificationPermission,
-      requestNotificationPermission
+      requestNotificationPermission,
+      deferredPrompt,
+      showInstallGuide,
+      setShowInstallGuide,
+      handleInstallApp
     }}>
       {children}
     </AppContext.Provider>

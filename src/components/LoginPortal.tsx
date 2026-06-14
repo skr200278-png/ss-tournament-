@@ -8,7 +8,9 @@ export const LoginPortal: React.FC = () => {
     loginWithEmail, 
     registerWithEmail, 
     language, 
-    setLanguage
+    setLanguage,
+    handleInstallApp,
+    deferredPrompt
   } = useApp();
 
   const [isSignUp, setIsSignUp] = useState(false);
@@ -21,6 +23,21 @@ export const LoginPortal: React.FC = () => {
 
   const toggleLang = () => {
     setLanguage(language === 'en' ? 'bn' : 'en');
+  };
+
+  const handleGoogleLogin = async () => {
+    setErrorMsg(null);
+    setLoading(true);
+    try {
+      const res = await login();
+      if (res && !res.success) {
+        setErrorMsg(res.error || (language === 'en' ? "Google Authentication failed. Please try again." : "গুগল সাইন-ইন সম্পন্ন করা যায়নি। পুনরায় চেষ্টা করুন।"));
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || (language === 'en' ? "An error occurred during Google Auth." : "গুগল লগইনে একটি ভুল হয়েছে।"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -235,7 +252,7 @@ export const LoginPortal: React.FC = () => {
         <div className="space-y-3">
           <button
             type="button"
-            onClick={login}
+            onClick={handleGoogleLogin}
             className="w-full py-3 px-4 bg-[#0a0b12] hover:bg-[#111222] border border-gray-800 text-white font-bold rounded-2xl text-xs transition-all flex items-center justify-center gap-2.5 cursor-pointer select-none"
           >
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
@@ -257,6 +274,25 @@ export const LoginPortal: React.FC = () => {
               />
             </svg>
             {language === 'en' ? 'Continue with Google Account' : 'গুগল একাউন্ট দিয়ে সরাসরি প্রবেশ'}
+          </button>
+        </div>
+
+        {/* PWA Direct Installation Card for Guests & First timers */}
+        <div className="mt-5 pt-5 border-t border-gray-800/60 text-center">
+          <p className="text-[10px] text-gray-500 mb-2.5 leading-relaxed">
+            {language === 'en' 
+              ? "Install our lightweight mobile app directly on your home screen for high performance." 
+              : "সেরা পারফরম্যান্স ও ল্যাগ-ফ্রি গেমপ্লে’র জন্য সরাসরি মোবাইলে আমাদের লাইটওয়েট অফিশিয়াল অ্যাপটি ইনস্টল করুন!"}
+          </p>
+          <button
+            type="button"
+            onClick={handleInstallApp}
+            className="w-full py-2.5 px-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 hover:border-amber-400 text-amber-400 font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer select-none transition-all shadow-sm"
+          >
+            <svg className="h-4 w-4 shrink-0 font-extrabold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            {language === 'en' ? 'INSTALL OFFICIAL APP' : 'অফিশিয়াল অ্যাপ ইনস্টল করুন'}
           </button>
         </div>
       </div>
