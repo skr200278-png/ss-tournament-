@@ -9,6 +9,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { WinnersList } from './components/WinnersList';
 import { LoginPortal } from './components/LoginPortal';
 import { ProfileSettingsView } from './components/ProfileSettingsView';
+import { CommunityChat } from './components/CommunityChat';
 import { 
   Trophy, 
   HelpCircle, 
@@ -22,7 +23,8 @@ import {
   Wallet,
   Settings,
   Shield,
-  User
+  User,
+  MessageSquare
 } from 'lucide-react';
 
 const AppContent: React.FC = () => {
@@ -50,6 +52,8 @@ const AppContent: React.FC = () => {
         return <WinnersList />;
       case 'profile':
         return <ProfileSettingsView />;
+      case 'chat':
+        return <CommunityChat />;
       case 'admin':
         return <AdminDashboard />;
       default:
@@ -109,7 +113,7 @@ const AppContent: React.FC = () => {
 
       {/* Mobile Bottom Navigation Bar (Phone-style persistent layout) */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f111a] border-t border-gray-800/80 backdrop-blur-lg bg-opacity-95 shadow-[0_-8px_30px_rgb(0,0,0,0.8)] pb-safe">
-        <div className="grid grid-cols-5 h-16 items-center">
+        <div className="grid grid-cols-6 h-16 items-center">
           <button
             onClick={() => {
               setCurrentView('home');
@@ -152,6 +156,21 @@ const AppContent: React.FC = () => {
             <Trophy className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-bold">
               {language === 'en' ? 'Winners' : 'বিজয়ী'}
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              setCurrentView('chat');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex flex-col items-center justify-center h-full transition-all ${
+              currentView === 'chat' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <MessageSquare className="h-5 w-5" />
+            <span className="text-[10px] mt-1 font-bold">
+              {language === 'en' ? 'Chat' : 'আড্ডা'}
             </span>
           </button>
 

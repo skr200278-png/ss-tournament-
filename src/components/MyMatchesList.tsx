@@ -204,7 +204,7 @@ export const MyMatchesList: React.FC = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Helper: check if tournament starts within 15 minutes to reveal Room Key
+  // Helper: check if tournament starts within 10 minutes to reveal Room Key
   const getMinutesToMatch = (isoStr: string) => {
     const matchTime = new Date(isoStr);
     const diffMs = matchTime.getTime() - currentTime.getTime();
@@ -213,8 +213,8 @@ export const MyMatchesList: React.FC = () => {
 
   const isRoomCredentialsVisible = (isoStr: string) => {
     const mins = getMinutesToMatch(isoStr);
-    // Revealed if match starts within 15 mins (or starts in past)
-    return mins <= 15;
+    // Revealed if match starts within 10 mins (or starts in past)
+    return mins <= 10;
   };
 
   // Real leaderboard generator (strictly from admin-declared entries)

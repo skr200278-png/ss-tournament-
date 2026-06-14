@@ -35,8 +35,8 @@ interface AppContextType {
   isGuest: boolean;
   language: Language;
   setLanguage: (lang: Language) => void;
-  currentView: 'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile';
-  setCurrentView: (view: 'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile') => void;
+  currentView: 'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat';
+  setCurrentView: (view: 'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat') => void;
   selectedCategory: string; // "All" or a game name
   setSelectedCategory: (cat: string) => void;
   tournaments: Tournament[];
@@ -61,6 +61,7 @@ interface AppContextType {
     payment_mode?: 'manual' | 'auto';
     gateway_type?: 'sms_forwarder' | 'third_party_api_sim';
     third_party_api_key?: string;
+    whatsapp_group_url?: string;
   };
   updateSettings: (newSettings: any) => Promise<void>;
   showAdminSecret: boolean;
@@ -96,7 +97,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [guestUser, setGuestUser] = useState<UserProfile | null>(null);
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [language, setLanguage] = useState<Language>('en');
-  const [currentView, setCurrentView] = useState<'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
@@ -157,8 +158,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           try {
             new Notification(language === 'en' ? "🔔 Notifications Activated!" : "🔔 নোটিফিকেশন চালু হয়েছে!", {
               body: language === 'en' 
-                ? "You will now receive alerts 15 minutes before joined matches and for new tournaments!"
-                : "নতুন টুর্নামেন্ট যোগ হলে এবং খেলা শুরুর ১৫ মিনিট আগে আপনি এখন ফোনে সিগন্যাল পাবেন!",
+                ? "You will now receive alerts 10 minutes before joined matches and for new tournaments!"
+                : "নতুন টুর্নামেন্ট যোগ হলে এবং খেলা শুরুর ১০ মিনিট আগে আপনি এখন ফোনে সিগন্যাল পাবেন!",
               icon: '/favicon.ico'
             });
           } catch (err) {
@@ -199,14 +200,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [tournaments, language]);
 
-  // BG check for joined matches starting soon (15 min warning)
+  // BG check for joined matches starting soon (10 min warning as requested)
   useEffect(() => {
     const activeUid = isGuest ? guestUser?.uid : user?.uid;
     if (!activeUid || tournaments.length === 0) return;
 
     const checkStartingSoonMatches = () => {
       const now = Date.now();
-      const fifteenMins = 15 * 60 * 1000;
+      const tenMins = 10 * 60 * 1000;
       
       tournaments.forEach(t => {
         // Only warn for joined matches
@@ -214,7 +215,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const matchTime = new Date(t.time).getTime();
           const diff = matchTime - now;
           
-          if (diff > 0 && diff <= fifteenMins && !notifiedStartsRef.current.includes(t.match_id)) {
+          if (diff > 0 && diff <= tenMins && !notifiedStartsRef.current.includes(t.match_id)) {
             notifiedStartsRef.current.push(t.match_id);
             if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
               try {
@@ -223,8 +224,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   language === 'en' ? "⏳ Match Starting Soon!" : "⏳ আপনার গেম শুরু হতে যাচ্ছে!",
                   {
                     body: language === 'en'
-                      ? `Your match "${t.title}" starts in ${minutesLeft} minutes. Open room card now!`
-                      : `আপনার খেলা "${t.title}" আগামী ${minutesLeft} মিনিটে শুরু হবে। এখনই রুম ক্রোড দেখুন!`,
+                      ? `Your registered match "${t.title}" starts in ${minutesLeft} minutes. Open room info now!`
+                      : `আপনার টুর্নামেন্ট খেলা "${t.title}" আগামী ${minutesLeft} মিনিটের মধ্যে শুরু হচ্ছে। এখনই রুম কার্ড দেখুন!`,
                     icon: '/favicon.ico'
                   }
                 );
@@ -278,7 +279,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     banner_url: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1200",
     payment_mode: "manual" as "manual" | "auto",
     gateway_type: "sms_forwarder" as "sms_forwarder" | "third_party_api_sim",
-    third_party_api_key: ""
+    third_party_api_key: "",
+    whatsapp_group_url: "https://chat.whatsapp.com/EsportsEliteLobbyBD"
   });
 
   // Translation Helper
@@ -476,7 +478,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           banner_url: data.banner_url || "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1200",
           payment_mode: data.payment_mode || "manual",
           gateway_type: data.gateway_type || "sms_forwarder",
-          third_party_api_key: data.third_party_api_key || ""
+          third_party_api_key: data.third_party_api_key || "",
+          whatsapp_group_url: data.whatsapp_group_url || "https://chat.whatsapp.com/EsportsEliteLobbyBD"
         });
       }
     }, (error) => {

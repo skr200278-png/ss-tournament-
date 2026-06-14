@@ -135,6 +135,7 @@ export const AdminDashboard: React.FC = () => {
   const [paymentMode, setPaymentMode] = useState<'manual' | 'auto'>(settings.payment_mode || 'manual');
   const [gatewayType, setGatewayType] = useState<'sms_forwarder' | 'third_party_api_sim'>(settings.gateway_type || 'sms_forwarder');
   const [thirdPartyApiKey, setThirdPartyApiKey] = useState<string>(settings.third_party_api_key || '');
+  const [whatsappGroupUrl, setWhatsappGroupUrl] = useState<string>(settings.whatsapp_group_url || '');
 
   // FOR THE AUTOMATED BANKING SMS LEDGER SIMULATOR
   const [simMethod, setSimMethod] = useState<'bKash' | 'Nagad' | 'Rocket'>('bKash');
@@ -244,6 +245,7 @@ export const AdminDashboard: React.FC = () => {
     setPaymentMode(settings.payment_mode || 'manual');
     setGatewayType(settings.gateway_type || 'sms_forwarder');
     setThirdPartyApiKey(settings.third_party_api_key || '');
+    setWhatsappGroupUrl(settings.whatsapp_group_url || '');
   }, [settings]);
 
   // 1. Listen or fetch All Users
@@ -737,7 +739,8 @@ export const AdminDashboard: React.FC = () => {
         banner_url: bannerUrl,
         payment_mode: paymentMode,
         gateway_type: gatewayType,
-        third_party_api_key: thirdPartyApiKey
+        third_party_api_key: thirdPartyApiKey,
+        whatsapp_group_url: whatsappGroupUrl
       });
       alert("App utility setting parameters saved successfully!");
     } catch (err) {
@@ -2114,6 +2117,19 @@ export const AdminDashboard: React.FC = () => {
                   value={bannerUrl}
                   onChange={(e) => setBannerUrl(e.target.value)}
                   placeholder="Paste banner image URL..."
+                  className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-gray-500 font-bold uppercase">
+                  🌐 Official Community WhatsApp / Messenger Group URL
+                </label>
+                <input
+                  type="text"
+                  value={whatsappGroupUrl}
+                  onChange={(e) => setWhatsappGroupUrl(e.target.value)}
+                  placeholder="Paste WhatsApp Group Invite Link..."
                   className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white"
                 />
               </div>

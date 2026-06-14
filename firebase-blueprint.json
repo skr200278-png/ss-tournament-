@@ -84,6 +84,20 @@
         "active": { "type": "boolean" }
       },
       "required": ["active"]
+    },
+    "Chat": {
+      "title": "Chat",
+      "description": "Live Community chat message payload.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderAvatar": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "object" },
+        "isAdmin": { "type": "boolean" }
+      },
+      "required": ["userId", "senderName", "message"]
     }
   },
   "firestore": {
@@ -106,6 +120,10 @@
     "/admins/{adminId}": {
       "schema": "Admin",
       "description": "Registered app managers."
+    },
+    "/chats/{chatId}": {
+      "schema": "Chat",
+      "description": "Global real-time lobby community chat collection."
     }
   }
 }

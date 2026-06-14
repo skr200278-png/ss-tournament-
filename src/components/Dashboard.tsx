@@ -124,8 +124,8 @@ export const Dashboard: React.FC = () => {
               </h4>
               <p className="text-[11px] text-gray-400 font-sans mt-0.5 leading-tight">
                 {language === 'en' 
-                  ? 'Enable notifications to receive alerts 15 minutes before joined matches and for new match arrivals.'
-                  : 'নটিফিকেশন চালু রাখুন! প্রতিটি ম্যাচ শুরুর ১৫ মিনিট আগে ও নতুন টুর্নামেন্ট এড করা হলে সরাসরি এলার্ম পাবেন।'}
+                  ? 'Enable notifications to receive alerts 10 minutes before joined matches and for new match arrivals.'
+                  : 'নটিফিকেশন চালু রাখুন! প্রতিটি ম্যাচ শুরুর ১০ মিনিট আগে ও নতুন টুর্নামেন্ট এড করা হলে সরাসরি এলার্ম পাবেন।'}
               </p>
             </div>
           </div>
