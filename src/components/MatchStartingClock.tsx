@@ -33,7 +33,9 @@ export const MatchStartingClock: React.FC<MatchStartingClockProps> = ({ time, la
       setTimeLeftMs(diff);
 
       const fifteenMins = 15 * 60 * 1000;
-      if (diff <= 0) {
+      if (isNaN(targetTimestamp)) {
+        setStatus('FUTURE');
+      } else if (diff <= 0) {
         setStatus('STARTED');
       } else if (diff <= fifteenMins) {
         setStatus('COUNTDOWN');
@@ -48,46 +50,43 @@ export const MatchStartingClock: React.FC<MatchStartingClockProps> = ({ time, la
     return () => clearInterval(interval);
   }, [time]);
 
-  if (status === 'STARTED') {
-    return (
-      <div className="absolute bottom-3.5 right-3.5 flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-[#f59e0b] bg-[#f59e0b]/15 backdrop-blur-md px-3 py-1 rounded-full border border-[#f59e0b]/30 shadow-lg font-sans select-none animate-pulse">
-        <Timer className="h-3.5 w-3.5 text-amber-500" />
-        <span>
-          {language === 'en' ? 'Live Match • Started' : 'লাইভ • ম্যাচ শুরু হয়েছে'}
-        </span>
-      </div>
-    );
-  }
-
-  if (status === 'COUNTDOWN') {
-    const totalSeconds = Math.floor(timeLeftMs / 1000);
-    const m = Math.floor(totalSeconds / 60);
-    const s = totalSeconds % 60;
-
-    // Zero padding helper
-    const pad = (num: number) => String(num).padStart(2, '0');
-
-    return (
-      <div className="absolute bottom-3.5 right-3.5 flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black text-rose-400 bg-rose-500/20 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-rose-500/40 shadow-xl font-mono select-none animate-pulse">
-        <Hourglass className="h-3.5 w-3.5 text-rose-500 animate-spin" style={{ animationDuration: '3s' }} />
-        <span>
-          {language === 'en' ? 'Starts in: ' : 'শুরু হবে: '}
-          <span className="text-white font-bold">{pad(m)}m {pad(s)}s</span>
-        </span>
-      </div>
-    );
-  }
-
-  // Future case: standard label with Clock icon
   return (
-    <div className="absolute bottom-3.5 right-3.5 flex flex-col items-end gap-0.5 max-w-[70%] select-none">
-      <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-gray-100 bg-black/75 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 font-mono shadow-lg">
+    <div className="absolute bottom-3.5 right-3.5 flex flex-col items-end gap-1.5 max-w-[85%] select-none z-10">
+      {/* 1. Status/Countdown Badge stacked above the Start Time */}
+      {status === 'STARTED' && (
+        <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-extrabold text-amber-400 bg-amber-500/20 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-500/30 shadow-lg font-sans animate-pulse">
+          <Timer className="h-3 w-3 text-amber-400" />
+          <span>
+            {language === 'en' ? 'Live Match • Started' : 'লাইভ • ম্যাচ শুরু হয়েছে'}
+          </span>
+        </div>
+      )}
+
+      {status === 'COUNTDOWN' && (() => {
+        const totalSeconds = Math.max(0, Math.floor(timeLeftMs / 1000));
+        const m = Math.floor(totalSeconds / 60);
+        const s = totalSeconds % 60;
+        const pad = (num: number) => String(num).padStart(2, '0');
+        
+        return (
+          <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black text-rose-400 bg-rose-500/25 backdrop-blur-md px-2.5 py-1 rounded-full border border-rose-500/40 shadow-xl font-mono animate-pulse">
+            <Hourglass className="h-3 w-3 text-rose-400 animate-spin" style={{ animationDuration: '3s' }} />
+            <span>
+              {language === 'en' ? 'Starts in: ' : 'শুরু হবে: '}
+              <span className="text-white font-bold">{pad(m)}m {pad(s)}s</span>
+            </span>
+          </div>
+        );
+      })()}
+
+      {/* 2. Absolute Start Time Badge (ALWAYS SHOWS) */}
+      <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-gray-100 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 font-mono shadow-md">
         <Clock className="h-3.5 w-3.5 text-orange-400 shrink-0" />
         <span className="truncate leading-none">
-          <span className="text-gray-400 font-sans mr-1 text-[9px] uppercase tracking-wider">
+          <span className="text-gray-400 font-sans mr-1 text-[8px] uppercase tracking-wider">
             {language === 'en' ? 'Start Time:' : 'শুরুর সময়:'}
           </span>
-          <span className="font-extrabold text-[#f59e0b]">
+          <span className="font-extrabold text-orange-400">
             {formatDate(time)}
           </span>
         </span>
@@ -95,4 +94,5 @@ export const MatchStartingClock: React.FC<MatchStartingClockProps> = ({ time, la
     </div>
   );
 };
+
 export default MatchStartingClock;
