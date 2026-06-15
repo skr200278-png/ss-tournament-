@@ -144,6 +144,12 @@ export const CommunityChat: React.FC = () => {
         </a>
       </div>
 
+      {whatsAppLink === "https://chat.whatsapp.com/EsportsEliteLobbyBD" && (
+        <div className="bg-amber-500/10 border border-amber-500/30 p-3.5 rounded-2xl text-[11px] text-amber-300 leading-relaxed text-left">
+          ⚠️ <strong>এডমিন সাইনপেট নোট (Admin Setup Reminder):</strong> বর্তমানে এখানে একটি ডেমো লিংক সেট করা আছে, যার জন্য হোয়াটসঅ্যাপে <em>"Failed to get group info"</em> দেখাচ্ছে। অ্যাডমিন প্যানেল (Admin Panel) &rarr; Settings ট্যাবে গিয়ে <strong>"Official Community WhatsApp Group Link"</strong> অপশনটিতে আপনার নিজের হোয়াটসঅ্যাপ গ্রুপের লিংকটি পেস্ট করে আপডেট করুন।
+        </div>
+      )}
+
       {/* Main Realtime Chat Interface */}
       <div className="bg-[#0f111a] border border-gray-800 rounded-3xl h-[480px] sm:h-[540px] flex flex-col overflow-hidden shadow-2xl relative">
         

@@ -87,6 +87,8 @@ export const AdminDashboard: React.FC = () => {
   const [userSearch, setUserSearch] = useState<string>('');
   const [depositSearch, setDepositSearch] = useState<string>('');
   const [withdrawSearch, setWithdrawSearch] = useState<string>('');
+  const [depositViewMode, setDepositViewMode] = useState<'pending' | 'history'>('pending');
+  const [withdrawViewMode, setWithdrawViewMode] = useState<'pending' | 'history'>('pending');
 
   // Forms states
   const [matchId, setMatchId] = useState<string>('');
@@ -591,9 +593,12 @@ export const AdminDashboard: React.FC = () => {
       } else {
         const docRef = doc(db, 'tournaments', matchId);
         await deleteDoc(docRef);
+        // Resilient fallback update of local/global state for instant UI updates
+        setTournaments(prev => prev.filter(t => t.match_id !== matchId));
       }
       alert("Match removed successfully.");
-    } catch (err) {
+    } catch (err: any) {
+      alert("Failed to delete tournament match: " + (err?.message || String(err)));
       handleFirestoreError(err, OperationType.DELETE, `tournaments/${matchId}`);
     }
   };
@@ -651,10 +656,14 @@ export const AdminDashboard: React.FC = () => {
         await updateDoc(txRef, {
           status: 'approved'
         });
+
+        // Resilient fallback update for immediate visual display
+        setAllTransactions(prev => prev.map(t => t.transaction_id === tx.transaction_id ? { ...t, status: 'approved' } : t));
       }
 
       alert("Deposit verified! Coins credited to user wallet.");
-    } catch (err) {
+    } catch (err: any) {
+      alert("Failed to approve deposit: " + (err?.message || String(err)));
       handleFirestoreError(err, OperationType.WRITE, `transactions/${tx.transaction_id}`);
     }
   };
@@ -671,9 +680,13 @@ export const AdminDashboard: React.FC = () => {
         await updateDoc(txRef, {
           status: 'rejected'
         });
+
+        // Resilient fallback update for immediate visual display
+        setAllTransactions(prev => prev.map(t => t.transaction_id === tx.transaction_id ? { ...t, status: 'rejected' } : t));
       }
       alert("Deposit request rejected.");
-    } catch (err) {
+    } catch (err: any) {
+      alert("Failed to reject deposit: " + (err?.message || String(err)));
       handleFirestoreError(err, OperationType.WRITE, `transactions/${tx.transaction_id}`);
     }
   };
@@ -690,9 +703,13 @@ export const AdminDashboard: React.FC = () => {
         await updateDoc(txRef, {
           status: 'approved'
         });
+
+        // Resilient fallback update for immediate visual display
+        setAllTransactions(prev => prev.map(t => t.transaction_id === tx.transaction_id ? { ...t, status: 'approved' } : t));
       }
       alert("Request marked as PAID and success transaction completed.");
-    } catch (err) {
+    } catch (err: any) {
+      alert("Failed to approve payout: " + (err?.message || String(err)));
       handleFirestoreError(err, OperationType.WRITE, `transactions/${tx.transaction_id}`);
     }
   };
@@ -720,9 +737,13 @@ export const AdminDashboard: React.FC = () => {
         await updateDoc(txRef, {
           status: 'rejected'
         });
+
+        // Resilient fallback update for immediate visual display
+        setAllTransactions(prev => prev.map(t => t.transaction_id === tx.transaction_id ? { ...t, status: 'rejected' } : t));
       }
       alert("Withdrawal request rejected. Coins refunded to user successfully.");
-    } catch (err) {
+    } catch (err: any) {
+      alert("Failed to reject withdrawal: " + (err?.message || String(err)));
       handleFirestoreError(err, OperationType.WRITE, `transactions/${tx.transaction_id}`);
     }
   };
@@ -937,7 +958,9 @@ export const AdminDashboard: React.FC = () => {
   );
 
   const totalPendingDeposits = allTransactions.filter(tx => tx.type === 'deposit' && tx.status === 'pending');
+  const totalHistoryDeposits = allTransactions.filter(tx => tx.type === 'deposit' && tx.status !== 'pending');
   const totalPendingWithdraws = allTransactions.filter(tx => tx.type === 'withdraw' && tx.status === 'pending');
+  const totalHistoryWithdraws = allTransactions.filter(tx => tx.type === 'withdraw' && tx.status !== 'pending');
 
   const pendingDeposits = totalPendingDeposits.filter(tx => 
     depositSearch === '' ||
@@ -947,7 +970,22 @@ export const AdminDashboard: React.FC = () => {
     (tx.account_number && tx.account_number.includes(depositSearch))
   );
 
+  const historyDeposits = totalHistoryDeposits.filter(tx => 
+    depositSearch === '' ||
+    tx.userName.toLowerCase().includes(depositSearch.toLowerCase()) ||
+    tx.userId.includes(depositSearch) ||
+    (tx.tx_id && tx.tx_id.toLowerCase().includes(depositSearch.toLowerCase())) ||
+    (tx.account_number && tx.account_number.includes(depositSearch))
+  );
+
   const pendingWithdraws = totalPendingWithdraws.filter(tx => 
+    withdrawSearch === '' ||
+    tx.userName.toLowerCase().includes(withdrawSearch.toLowerCase()) ||
+    tx.userId.includes(withdrawSearch) ||
+    (tx.account_number && tx.account_number.includes(withdrawSearch))
+  );
+
+  const historyWithdraws = totalHistoryWithdraws.filter(tx => 
     withdrawSearch === '' ||
     tx.userName.toLowerCase().includes(withdrawSearch.toLowerCase()) ||
     tx.userId.includes(withdrawSearch) ||
@@ -1651,15 +1689,43 @@ export const AdminDashboard: React.FC = () => {
         {/* TAB 2: DEPOSITS APPROVALS */}
         {activeTab === 'deposits' && (
           <div className="bg-[#121420] border border-gray-800 rounded-3xl p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2">
+            {/* View Mode Switching Sub-bar */}
+            <div className="flex border-b border-gray-800/80 pb-1.5 gap-2">
+              <button
+                type="button"
+                onClick={() => setDepositViewMode('pending')}
+                className={`pb-2 px-4 font-bold text-xs border-b-2 transition-all cursor-pointer ${
+                  depositViewMode === 'pending'
+                    ? 'border-amber-500 text-amber-500'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                📥 Pending Queue ({pendingDeposits.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setDepositViewMode('history')}
+                className={`pb-2 px-4 font-bold text-xs border-b-2 transition-all cursor-pointer ${
+                  depositViewMode === 'history'
+                    ? 'border-amber-500 text-amber-500'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                📜 Processed Ledger ({totalHistoryDeposits.length})
+              </button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 pt-1">
               <h3 className="font-extrabold text-white text-base flex items-center gap-2">
-                Pending Coin Deposit Requests
-                <span className="bg-emerald-500 text-black font-extrabold px-2.5 py-0.5 rounded-full text-[10px] font-mono">
-                  {pendingDeposits.length}
+                {depositViewMode === 'pending' ? 'Pending Coin Deposit Requests' : 'Approved & Rejected Coin Deposit History'}
+                <span className={`font-extrabold px-2.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  depositViewMode === 'pending' ? 'bg-emerald-500 text-black' : 'bg-gray-800 text-gray-300'
+                }`}>
+                  {depositViewMode === 'pending' ? pendingDeposits.length : historyDeposits.length}
                 </span>
                 {depositSearch && (
                   <span className="text-xs text-gray-400 font-normal">
-                    (filtered from {totalPendingDeposits.length})
+                    (filtered from {depositViewMode === 'pending' ? totalPendingDeposits.length : totalHistoryDeposits.length})
                   </span>
                 )}
               </h3>
@@ -1685,44 +1751,79 @@ export const AdminDashboard: React.FC = () => {
                     <th className="pb-3">Account Send Number</th>
                     <th className="pb-3 font-mono">Transaction ID (TxID)</th>
                     <th className="pb-3 font-mono text-center">Amount (C)</th>
-                    <th className="pb-3 text-right">Verify Action</th>
+                    <th className="pb-3 text-right">{depositViewMode === 'pending' ? 'Verify Action' : 'Status'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800/40">
-                  {pendingDeposits.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-gray-500 font-semibold text-xs">
-                        No pending coin recharges found in Firebase logs.
-                      </td>
-                    </tr>
-                  ) : (
-                    pendingDeposits.map((tx) => (
-                      <tr key={tx.transaction_id} className="hover:bg-slate-950/20">
-                        <td className="py-4">
-                          <span className="font-bold text-white block">{tx.userName}</span>
-                          <span className="text-[10px] font-mono text-indigo-400 block pb-1 pr-4">{tx.userId}</span>
-                          <span className="text-[10px] text-gray-500 font-mono italic">{new Date(tx.timestamp).toLocaleString()}</span>
-                        </td>
-                        <td className="py-4 font-bold text-indigo-300">{tx.payment_method}</td>
-                        <td className="py-4 font-semibold font-mono text-slate-300">{tx.account_number || '01XXXXXXXX'}</td>
-                        <td className="py-4 text-amber-500 font-extrabold font-mono tracking-wider">{tx.tx_id}</td>
-                        <td className="py-4 font-mono font-extrabold text-center text-white text-sm">{tx.amount} BDT</td>
-                        <td className="py-4 text-right space-x-2 whitespace-nowrap pr-2">
-                          <button
-                            onClick={() => handleApproveDeposit(tx)}
-                            className="py-1.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-lg inline-flex items-center gap-1 select-none"
-                          >
-                            <Check className="h-3.5 w-3.5 stroke-[2.5]" /> Approve
-                          </button>
-                          <button
-                            onClick={() => handleRejectDeposit(tx)}
-                            className="py-1.5 px-3 border border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white font-extrabold rounded-lg inline-flex items-center gap-1 select-none"
-                          >
-                            <X className="h-3.5 w-3.5 stroke-[2.5]" /> Reject
-                          </button>
+                  {depositViewMode === 'pending' ? (
+                    pendingDeposits.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-gray-500 font-semibold text-xs">
+                          No pending coin recharges found in Firebase logs.
                         </td>
                       </tr>
-                    ))
+                    ) : (
+                      pendingDeposits.map((tx) => (
+                        <tr key={tx.transaction_id} className="hover:bg-slate-950/20">
+                          <td className="py-4">
+                            <span className="font-bold text-white block">{tx.userName}</span>
+                            <span className="text-[10px] font-mono text-indigo-400 block pb-1 pr-4">{tx.userId}</span>
+                            <span className="text-[10px] text-gray-500 font-mono italic">{new Date(tx.timestamp).toLocaleString()}</span>
+                          </td>
+                          <td className="py-4 font-bold text-indigo-300">{tx.payment_method}</td>
+                          <td className="py-4 font-semibold font-mono text-slate-300">{tx.account_number || '01XXXXXXXX'}</td>
+                          <td className="py-4 text-amber-500 font-extrabold font-mono tracking-wider">{tx.tx_id}</td>
+                          <td className="py-4 font-mono font-extrabold text-center text-white text-sm">{tx.amount} BDT</td>
+                          <td className="py-4 text-right space-x-2 whitespace-nowrap pr-2">
+                            <button
+                              onClick={() => handleApproveDeposit(tx)}
+                              className="py-1.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-lg inline-flex items-center gap-1 select-none"
+                            >
+                              <Check className="h-3.5 w-3.5 stroke-[2.5]" /> Approve
+                            </button>
+                            <button
+                              onClick={() => handleRejectDeposit(tx)}
+                              className="py-1.5 px-3 border border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white font-extrabold rounded-lg inline-flex items-center gap-1 select-none"
+                            >
+                              <X className="h-3.5 w-3.5 stroke-[2.5]" /> Reject
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )
+                  ) : (
+                    historyDeposits.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-gray-500 font-semibold text-xs">
+                          No processed deposit histories found.
+                        </td>
+                      </tr>
+                    ) : (
+                      historyDeposits.map((tx) => (
+                        <tr key={tx.transaction_id} className="hover:bg-slate-950/20">
+                          <td className="py-4">
+                            <span className="font-bold text-white block">{tx.userName}</span>
+                            <span className="text-[10px] font-mono text-indigo-400 block pb-1 pr-4">{tx.userId}</span>
+                            <span className="text-[10px] text-gray-500 font-mono italic">{new Date(tx.timestamp).toLocaleString()}</span>
+                          </td>
+                          <td className="py-4 font-bold text-indigo-300">{tx.payment_method}</td>
+                          <td className="py-4 font-semibold font-mono text-slate-300">{tx.account_number || '01XXXXXXXX'}</td>
+                          <td className="py-4 text-amber-500 font-extrabold font-mono tracking-wider">{tx.tx_id}</td>
+                          <td className="py-4 font-mono font-extrabold text-center text-white text-sm">{tx.amount} BDT</td>
+                          <td className="py-4 text-right whitespace-nowrap pr-2">
+                            {tx.status === 'approved' ? (
+                              <span className="py-1.5 px-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold inline-flex items-center gap-1">
+                                <Check className="h-3.5 w-3.5" /> Approved
+                              </span>
+                            ) : (
+                              <span className="py-1.5 px-3 bg-rose-500/10 text-rose-450 border border-rose-500/20 rounded-lg text-xs font-bold inline-flex items-center gap-1">
+                                <X className="h-3.5 w-3.5" /> Rejected
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )
                   )}
                 </tbody>
               </table>
@@ -1733,15 +1834,43 @@ export const AdminDashboard: React.FC = () => {
         {/* TAB 3: WITHDRAWAL REQUESTS */}
         {activeTab === 'withdrawals' && (
           <div className="bg-[#121420] border border-gray-800 rounded-3xl p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2">
+            {/* View Mode Switching Sub-bar */}
+            <div className="flex border-b border-gray-800/80 pb-1.5 gap-2">
+              <button
+                type="button"
+                onClick={() => setWithdrawViewMode('pending')}
+                className={`pb-2 px-4 font-bold text-xs border-b-2 transition-all cursor-pointer ${
+                  withdrawViewMode === 'pending'
+                    ? 'border-amber-500 text-amber-500'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                📤 Pending Payouts ({pendingWithdraws.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setWithdrawViewMode('history')}
+                className={`pb-2 px-4 font-bold text-xs border-b-2 transition-all cursor-pointer ${
+                  withdrawViewMode === 'history'
+                    ? 'border-amber-500 text-amber-500'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                📜 Processed Payout History ({totalHistoryWithdraws.length})
+              </button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 pt-1">
               <h3 className="font-extrabold text-white text-base flex items-center gap-2">
-                Pending Withdrawal Payout Orders
-                <span className="bg-rose-500 text-black font-extrabold px-2.5 py-0.5 rounded-full text-[10px] font-mono">
-                  {pendingWithdraws.length}
+                {withdrawViewMode === 'pending' ? 'Pending Withdrawal Payout Orders' : 'Approved & Rejected Withdrawal History'}
+                <span className={`font-extrabold px-2.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  withdrawViewMode === 'pending' ? 'bg-rose-500 text-black' : 'bg-gray-800 text-gray-300'
+                }`}>
+                  {withdrawViewMode === 'pending' ? pendingWithdraws.length : historyWithdraws.length}
                 </span>
                 {withdrawSearch && (
                   <span className="text-xs text-gray-400 font-normal">
-                    (filtered from {totalPendingWithdraws.length})
+                    (filtered from {withdrawViewMode === 'pending' ? totalPendingWithdraws.length : totalHistoryWithdraws.length})
                   </span>
                 )}
               </h3>
@@ -1766,43 +1895,77 @@ export const AdminDashboard: React.FC = () => {
                     <th className="pb-3">Payout Gateway</th>
                     <th className="pb-3">Receiver Wallet Number</th>
                     <th className="pb-3 font-mono text-center">Amount (C)</th>
-                    <th className="pb-3 text-right">Update Status</th>
+                    <th className="pb-3 text-right">{withdrawViewMode === 'pending' ? 'Update Status' : 'Status'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800/40">
-                  {pendingWithdraws.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-gray-500">
-                        No pending payouts loaded. All withdrawals complete.
-                      </td>
-                    </tr>
-                  ) : (
-                    pendingWithdraws.map((tx) => (
-                      <tr key={tx.transaction_id} className="hover:bg-slate-950/20">
-                        <td className="py-4">
-                          <span className="font-bold text-white block">{tx.userName}</span>
-                          <span className="text-[10px] font-mono text-indigo-400 block">{tx.userId}</span>
-                          <span className="text-[10px] text-gray-500">{new Date(tx.timestamp).toLocaleString()}</span>
-                        </td>
-                        <td className="py-4 font-bold text-[#e11d48]">{tx.payment_method}</td>
-                        <td className="py-4 font-mono font-semibold tracking-wider text-slate-300">{tx.account_number}</td>
-                        <td className="py-4 font-mono font-extrabold text-[#f43f5e] text-center text-sm">{tx.amount} Coin</td>
-                        <td className="py-4 text-right space-x-2 whitespace-nowrap">
-                          <button
-                            onClick={() => handleApproveWithdrawal(tx)}
-                            className="py-1.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-lg inline-flex items-center gap-1 select-none font-sans"
-                          >
-                            <Check className="h-3.5 w-3.5 stroke-[2.5]" /> Mark Paid
-                          </button>
-                          <button
-                            onClick={() => handleRejectWithdrawal(tx)}
-                            className="py-1.5 px-3 border border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white font-extrabold rounded-lg inline-flex items-center gap-1 select-none font-sans"
-                          >
-                            <X className="h-3.5 w-3.5 stroke-[2.5]" /> Reject & Refund
-                          </button>
+                  {withdrawViewMode === 'pending' ? (
+                    pendingWithdraws.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-gray-500">
+                          No pending payouts loaded. All withdrawals complete.
                         </td>
                       </tr>
-                    ))
+                    ) : (
+                      pendingWithdraws.map((tx) => (
+                        <tr key={tx.transaction_id} className="hover:bg-slate-950/20">
+                          <td className="py-4">
+                            <span className="font-bold text-white block">{tx.userName}</span>
+                            <span className="text-[10px] font-mono text-indigo-400 block">{tx.userId}</span>
+                            <span className="text-[10px] text-gray-500">{new Date(tx.timestamp).toLocaleString()}</span>
+                          </td>
+                          <td className="py-4 font-bold text-[#e11d48]">{tx.payment_method}</td>
+                          <td className="py-4 font-mono font-semibold tracking-wider text-slate-300">{tx.account_number}</td>
+                          <td className="py-4 font-mono font-extrabold text-[#f43f5e] text-center text-sm">{tx.amount} Coin</td>
+                          <td className="py-4 text-right space-x-2 whitespace-nowrap">
+                            <button
+                              onClick={() => handleApproveWithdrawal(tx)}
+                              className="py-1.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-lg inline-flex items-center gap-1 select-none font-sans"
+                            >
+                              <Check className="h-3.5 w-3.5 stroke-[2.5]" /> Mark Paid
+                            </button>
+                            <button
+                              onClick={() => handleRejectWithdrawal(tx)}
+                              className="py-1.5 px-3 border border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white font-extrabold rounded-lg inline-flex items-center gap-1 select-none font-sans"
+                            >
+                              <X className="h-3.5 w-3.5 stroke-[2.5]" /> Reject & Refund
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )
+                  ) : (
+                    historyWithdraws.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-gray-500">
+                          No processed payout histories found.
+                        </td>
+                      </tr>
+                    ) : (
+                      historyWithdraws.map((tx) => (
+                        <tr key={tx.transaction_id} className="hover:bg-slate-950/20">
+                          <td className="py-4">
+                            <span className="font-bold text-white block">{tx.userName}</span>
+                            <span className="text-[10px] font-mono text-indigo-400 block">{tx.userId}</span>
+                            <span className="text-[10px] text-gray-500">{new Date(tx.timestamp).toLocaleString()}</span>
+                          </td>
+                          <td className="py-4 font-bold text-[#e11d48]">{tx.payment_method}</td>
+                          <td className="py-4 font-mono font-semibold tracking-wider text-slate-300">{tx.account_number}</td>
+                          <td className="py-4 font-mono font-extrabold text-[#f43f5e] text-center text-sm">{tx.amount} Coin</td>
+                          <td className="py-4 text-right whitespace-nowrap pr-2">
+                            {tx.status === 'approved' ? (
+                              <span className="py-1.5 px-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold inline-flex items-center gap-1">
+                                <Check className="h-3.5 w-3.5" /> Paid Out
+                              </span>
+                            ) : (
+                              <span className="py-1.5 px-3 bg-rose-500/10 text-rose-450 border border-rose-500/20 rounded-lg text-xs font-bold inline-flex items-center gap-1">
+                                <X className="h-3.5 w-3.5" /> Rejected
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )
                   )}
                 </tbody>
               </table>
@@ -2121,17 +2284,20 @@ export const AdminDashboard: React.FC = () => {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] text-gray-500 font-bold uppercase">
-                  🌐 Official Community WhatsApp / Messenger Group URL
+              <div className="space-y-1.5 bg-emerald-500/5 p-3.5 rounded-2xl border border-emerald-500/15">
+                <label className="text-[10px] text-emerald-400 font-bold uppercase block text-left">
+                  🌐 Official Community WhatsApp Group Link (হোয়াটসঅ্যাপ গ্রুপ লিংক)
                 </label>
                 <input
                   type="text"
                   value={whatsappGroupUrl}
                   onChange={(e) => setWhatsappGroupUrl(e.target.value)}
-                  placeholder="Paste WhatsApp Group Invite Link..."
-                  className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white"
+                  placeholder="Paste your WhatsApp Group Invite Link (e.g., https://chat.whatsapp.com/xxxx)..."
+                  className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:border-emerald-500 focus:outline-none"
                 />
+                <p className="text-[10.5px] text-amber-400 leading-relaxed text-left mt-1.5">
+                  ⚠️ <strong>হোয়াটসঅ্যাপ গ্রুপ লিংক সেটআপ করুন:</strong> বর্তমানে এখানে একটি ডেমো লিংক দেওয়া আছে, তাই জয়েন করতে গেলে হোয়াটসঅ্যাপে <em>"Failed to get group info"</em> দেখাচ্ছে। দয়া করে আপনার হোয়াটসঅ্যাপ গ্রুপের <strong>"Invite via link"</strong> থেকে আসল লিংকটি কপি করে এনে এখানে পেস্ট করে "Apply Parameters" বাটনে চাপুন।
+                </p>
               </div>
 
               <button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from './AppContext';
-import { Trophy, Wallet, Gamepad2, Calendar, Languages, LogIn, LogOut, Menu, X, Coins, Shield, User, Download, Info, Copy, Check, MessageSquare } from 'lucide-react';
+import { Trophy, Wallet, Gamepad2, Calendar, Languages, LogIn, LogOut, Menu, X, Coins, Shield, User, Download, Info, Copy, Check, MessageSquare, Share2 } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { 
@@ -26,6 +26,7 @@ export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => {
     // Detect iOS devices for manual install tips
@@ -33,6 +34,32 @@ export const Header: React.FC = () => {
     const isIphoneOrIpad = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIphoneOrIpad);
   }, []);
+
+  const handleShareApp = async () => {
+    const rawLink = window.location.origin + "/";
+    const shareText = language === 'en' 
+      ? `🔥 Play Free Fire, PUBG & Ludo Tournaments on ProTournament BD and win amazing cash coins!\n\nJoin now using this link (Open in Google Chrome or Safari browser):\n🔗 ${rawLink}` 
+      : `🔥 প্রোটুর্নামেন্ট বিডি (ProTournament BD) এ ফ্রি ফায়ার, পাবজি ও লুডু টুর্নামেন্ট খেলে গোল্ডেন কয়েন ও আকর্ষণীয় প্রাইজ জিতে নিন!\n\nলিংকটি কপি করে গুগল ক্রোম ব্রাউজারে খুলুন ও ফোনে ইনস্টল করুন:\n🔗 ${rawLink}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'ProTournament BD',
+          text: shareText,
+          url: rawLink
+        });
+      } catch (err) {
+        // Fallback to clipboard
+        navigator.clipboard.writeText(shareText);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2500);
+      }
+    } else {
+      navigator.clipboard.writeText(shareText);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2500);
+    }
+  };
 
   const handleCopyLink = () => {
     const appUrl = window.location.origin;
@@ -60,7 +87,15 @@ export const Header: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0f111a] border-b border-gray-800 backdrop-blur-md bg-opacity-95 text-white">
+    <>
+      {shareCopied && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-emerald-500 text-black px-6 py-3 rounded-full font-extrabold text-xs shadow-2xl flex items-center gap-2 border border-emerald-400 animate-bounce">
+          <Check className="h-4 w-4 stroke-[3]" />
+          <span>{language === 'en' ? 'Sharing Link Copied! Send it to Friends!' : 'শেয়ারিং লিংক কপি হয়েছে! বন্ধুদের পাঠিয়ে দিন!'}</span>
+        </div>
+      )}
+
+      <header className="sticky top-0 z-50 bg-[#0f111a] border-b border-gray-800 backdrop-blur-md bg-opacity-95 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative flex items-center justify-between h-16">
           {/* Desktop Navigation */}
@@ -170,6 +205,19 @@ export const Header: React.FC = () => {
               <span className="hidden leading-none font-semibold sm:inline">{language === 'en' ? 'বাং' : 'EN'}</span>
             </button>
 
+            {/* Share App Button */}
+            <button
+              id="header-share-app-btn"
+              onClick={handleShareApp}
+              className="hidden sm:flex px-3 py-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-xl border border-emerald-500/30 bg-emerald-500/5 transition-all items-center justify-center gap-1.5 text-xs font-sans font-extrabold hover:scale-[1.02]"
+              title="Share App link with your Friends"
+            >
+              <Share2 className="h-3.5 w-3.5 shrink-0" />
+              <span>
+                {language === 'en' ? 'Share App' : 'শেয়ার অ্যাপ 🔗'}
+              </span>
+            </button>
+
             {/* Install App Button */}
             <button
               id="pwa-install-header-btn"
@@ -274,6 +322,19 @@ export const Header: React.FC = () => {
           </button>
           
           <div className="pt-3 border-t border-gray-800/80 my-3 flex flex-col gap-2">
+            {/* Mobile Share App option */}
+            <button
+              id="mobile-share-app-btn"
+              onClick={() => {
+                handleShareApp();
+                setMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border border-emerald-550/30 bg-emerald-500/10 text-emerald-400 rounded-xl font-extrabold text-xs"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              {language === 'en' ? 'Share App with Friends' : 'বন্ধুদের সাথে অ্যাপ শেয়ার করুন 🔗'}
+            </button>
+
             {/* Mobile PWA Install option */}
             <button
               id="mobile-pwa-install-btn"
@@ -281,7 +342,7 @@ export const Header: React.FC = () => {
                 handleInstallApp();
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border border-amber-500/30 bg-amber-500/10 text-amber-400 rounded-xl font-extrabold text-xs"
+              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 border border-amber-500/30 bg-amber-500/10 text-amber-400 rounded-xl font-extrabold text-xs animate-pulse"
             >
               <Download className="h-3.5 w-3.5" />
               {language === 'en' ? 'Add App to Home Screen' : 'মোবাইলে ইনস্টল করুন'}
@@ -441,6 +502,7 @@ export const Header: React.FC = () => {
         </div>
       )}
     </header>
+    </>
   );
 };
 export default Header;

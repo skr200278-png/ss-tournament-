@@ -118,6 +118,11 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
       return;
     }
 
+    if (tournament.winner_name) {
+      setErrorMsg(language === 'en' ? 'This tournament is already completed and winners declared!' : 'এই টুর্নামেন্টটি ইতিমধ্যেই শেষ হয়েছে এবং ফলাফল ঘোষণা করা হয়েছে!');
+      return;
+    }
+
     if (isInsufficient) {
       setErrorMsg(t('insufficientBalance'));
       return;

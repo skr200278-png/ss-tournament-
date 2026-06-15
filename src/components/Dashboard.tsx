@@ -12,7 +12,9 @@ import {
   Info,
   CheckCircle,
   AlertTriangle,
-  Flame
+  Flame,
+  Share2,
+  Check
 } from 'lucide-react';
 import { TournamentDetailModal } from './TournamentDetailModal';
 import { MatchStartingClock } from './MatchStartingClock';
@@ -68,15 +70,43 @@ export const Dashboard: React.FC = () => {
   } = useApp();
 
   const [selectedMatch, setSelectedMatch] = useState<Tournament | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  // Filter tournaments by category
-  const filteredTournaments = selectedCategory === 'All'
+  const handleShareApp = async () => {
+    const rawLink = window.location.origin + "/";
+    const shareText = language === 'en' 
+      ? `🔥 Play Free Fire, PUBG & Ludo Tournaments on ProTournament BD and win amazing cash coins!\n\nJoin now using this link (Open in Google Chrome or Safari browser):\n🔗 ${rawLink}` 
+      : `🔥 প্রোটুর্নামেন্ট বিডি (ProTournament BD) এ ফ্রি ফায়ার, পাবজি ও লুডু টুর্নামেন্ট খেলে গোল্ডেন কয়েন ও আকর্ষণীয় প্রাইজ জিতে নিন!\n\nলিংকটি কপি করে গুগল ক্রোম ব্রাউজারে খুলুন ও ফোনে ইনস্টল করুন:\n🔗 ${rawLink}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'ProTournament BD',
+          text: shareText,
+          url: rawLink
+        });
+      } catch (err) {
+        // Fallback to clipboard
+        navigator.clipboard.writeText(shareText);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      }
+    } else {
+      navigator.clipboard.writeText(shareText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  // Filter tournaments by category and remove completed/winner declared matches
+  const filteredTournaments = (selectedCategory === 'All'
     ? tournaments
-    : tournaments.filter(t => t.game_category.toLowerCase() === selectedCategory.toLowerCase());
+    : tournaments.filter(t => t.game_category.toLowerCase() === selectedCategory.toLowerCase())
+  ).filter(t => !t.winner_name);
 
-  // Count active tournaments per category
+  // Count active tournaments per category (excluding declared ones)
   const getCount = (gameName: string) => {
-    return tournaments.filter(t => t.game_category.toLowerCase() === gameName.toLowerCase()).length;
+    return tournaments.filter(t => t.game_category.toLowerCase() === gameName.toLowerCase() && !t.winner_name).length;
   };
 
   const handleMatchClick = (match: Tournament) => {
@@ -174,6 +204,29 @@ export const Dashboard: React.FC = () => {
           <p className="text-gray-400 text-sm max-w-lg">
             {t('tagline')}
           </p>
+
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1">
+            <button
+              onClick={handleShareApp}
+              className={`py-3 px-6 rounded-2xl font-extrabold text-xs transition-colors flex items-center justify-center gap-2 active:scale-95 cursor-pointer shadow-lg hover:scale-[1.02] duration-200 ${
+                copied 
+                  ? 'bg-emerald-500 text-black shadow-emerald-500/10' 
+                  : 'bg-amber-500 hover:bg-amber-405 text-black shadow-amber-500/10'
+              }`}
+            >
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4 stroke-[3]" />
+                  <span>{language === 'en' ? 'App link copied to clipboard!' : 'অ্যাপ লিংক কপি করা হয়েছে!'}</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="h-4 w-4 stroke-[2.5]" />
+                  <span>{language === 'en' ? 'Share App with Friends' : 'বন্ধুদের সাথে অ্যাপ শেয়ার করুন 🔗'}</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
