@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from './AppContext';
+import { WalletView } from './WalletView';
 import { 
   User, 
   ShieldCheck, 
@@ -17,19 +18,27 @@ import {
   Clock,
   ArrowRight,
   Users,
-  Share2
+  Share2,
+  Wallet
 } from 'lucide-react';
 
 export const ProfileSettingsView: React.FC = () => {
-  const { profile, language, t, setCurrentView, applyReferralCode, updateUserProfile } = useApp();
+  const { profile, language, t, currentView, setCurrentView, applyReferralCode, updateUserProfile } = useApp();
   const [copiedUid, setCopiedUid] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [enteredCode, setEnteredCode] = useState('');
   const [submittingClaim, setSubmittingClaim] = useState(false);
   const [claimError, setClaimError] = useState('');
   const [claimSuccess, setClaimSuccess] = useState('');
-  const [activeTab, setActiveTab] = useState<'profile' | 'support' | 'referral' | 'policy'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'wallet' | 'support' | 'referral' | 'policy'>('profile');
   const [activePolicy, setActivePolicy] = useState<'privacy' | 'terms' | 'refund'>('privacy');
+
+  // Synchronize state if coming directly to the wallet tab
+  React.useEffect(() => {
+    if (currentView === 'wallet') {
+      setActiveTab('wallet');
+    }
+  }, [currentView]);
 
   // Profile Edit states
   const [inGameName, setInGameName] = useState(profile?.inGameName || '');
@@ -218,7 +227,7 @@ export const ProfileSettingsView: React.FC = () => {
             <div className="w-full mt-5 grid grid-cols-2 gap-2 text-xs">
               <div 
                 onClick={() => {
-                  setCurrentView('wallet');
+                  setActiveTab('wallet');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className="bg-[#181a26]/80 border border-gray-850 rounded-2xl p-3 text-center cursor-pointer hover:border-amber-500/50 hover:bg-[#1c1d2e] transition-all relative overflow-hidden"
@@ -231,7 +240,7 @@ export const ProfileSettingsView: React.FC = () => {
 
               <div 
                 onClick={() => {
-                  setCurrentView('wallet');
+                  setActiveTab('wallet');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className="bg-[#181a26]/80 border border-gray-850 rounded-2xl p-3 text-center cursor-pointer hover:border-emerald-500/50 hover:bg-[#1c1d2e] transition-all relative overflow-hidden"
@@ -300,6 +309,17 @@ export const ProfileSettingsView: React.FC = () => {
             >
               <User className="h-4 w-4" />
               {language === 'en' ? 'My Profile' : 'আমার প্রোফাইল'}
+            </button>
+            <button
+              onClick={() => setActiveTab('wallet')}
+              className={`flex-1 min-w-[100px] py-3 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                activeTab === 'wallet'
+                  ? 'bg-amber-500 text-black shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Wallet className="h-4 w-4" />
+              {language === 'en' ? 'Wallet' : 'ওয়ালেট'}
             </button>
             <button
               onClick={() => setActiveTab('support')}
@@ -494,6 +514,12 @@ export const ProfileSettingsView: React.FC = () => {
                   )}
                 </button>
               </form>
+            </div>
+          )}
+
+          {activeTab === 'wallet' && (
+            <div className="bg-[#121420] border border-gray-800 rounded-3xl p-5 sm:p-6 animate-fade-in">
+              <WalletView />
             </div>
           )}
 

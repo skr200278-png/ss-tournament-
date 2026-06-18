@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { AppProvider, useApp } from './components/AppContext';
 import { testFirestoreConnection } from './firebase';
 import { Header } from './components/Header';
+import { HomeView } from './components/HomeView';
 import { Dashboard } from './components/Dashboard';
 import { WalletView } from './components/WalletView';
 import { MyMatchesList } from './components/MyMatchesList';
@@ -24,7 +25,8 @@ import {
   Settings,
   Shield,
   User,
-  MessageSquare
+  MessageSquare,
+  Home
 } from 'lucide-react';
 
 const AppContent: React.FC = () => {
@@ -43,9 +45,11 @@ const AppContent: React.FC = () => {
 
     switch (currentView) {
       case 'home':
+        return <HomeView />;
+      case 'games':
         return <Dashboard />;
       case 'wallet':
-        return <WalletView />;
+        return <ProfileSettingsView />;
       case 'joined':
         return <MyMatchesList />;
       case 'results':
@@ -57,7 +61,7 @@ const AppContent: React.FC = () => {
       case 'admin':
         return <AdminDashboard />;
       default:
-        return <Dashboard />;
+        return <HomeView />;
     }
   };
 
@@ -123,9 +127,24 @@ const AppContent: React.FC = () => {
               currentView === 'home' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
             }`}
           >
+            <Home className="h-5 w-5" />
+            <span className="text-[10px] mt-1 font-bold">
+              {language === 'en' ? 'Home' : 'হোম'}
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              setCurrentView('games');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex flex-col items-center justify-center h-full transition-all ${
+              currentView === 'games' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
+            }`}
+          >
             <Gamepad2 className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-bold">
-              {language === 'en' ? 'Games' : 'হোম গেম'}
+              {language === 'en' ? 'Games' : 'গেমস'}
             </span>
           </button>
 
@@ -176,26 +195,11 @@ const AppContent: React.FC = () => {
 
           <button
             onClick={() => {
-              setCurrentView('wallet');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className={`flex flex-col items-center justify-center h-full transition-all ${
-              currentView === 'wallet' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <Wallet className="h-5 w-5 animate-pulse" style={{ animationDuration: '3s' }} />
-            <span className="text-[10px] mt-1 font-bold">
-              {language === 'en' ? 'Wallet' : 'ওয়ালেট'}
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
               setCurrentView('profile');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             className={`flex flex-col items-center justify-center h-full transition-all ${
-              currentView === 'profile' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
+              currentView === 'profile' || currentView === 'wallet' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
             }`}
           >
             <User className="h-5 w-5" />

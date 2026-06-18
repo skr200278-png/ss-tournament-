@@ -35,8 +35,8 @@ interface AppContextType {
   isGuest: boolean;
   language: Language;
   setLanguage: (lang: Language) => void;
-  currentView: 'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat';
-  setCurrentView: (view: 'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat') => void;
+  currentView: 'home' | 'games' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat';
+  setCurrentView: (view: 'home' | 'games' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat') => void;
   selectedCategory: string; // "All" or a game name
   setSelectedCategory: (cat: string) => void;
   tournaments: Tournament[];
@@ -49,7 +49,7 @@ interface AppContextType {
   registerWithEmail: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   addCoins: (amount: number, type: 'coins' | 'winning') => Promise<void>;
-  joinTournament: (tournament: Tournament, inGameId: string) => Promise<{ success: boolean; message: string }>;
+  joinTournament: (tournament: Tournament, inGameId: string, customFeeMultiplier?: number) => Promise<{ success: boolean; message: string }>;
   seedSampleData: () => Promise<void>;
   clearAllDemoData: () => Promise<void>;
   settings: {
@@ -62,6 +62,10 @@ interface AppContextType {
     gateway_type?: 'sms_forwarder' | 'third_party_api_sim';
     third_party_api_key?: string;
     whatsapp_group_url?: string;
+    facebook_page_url?: string;
+    facebook_group_url?: string;
+    youtube_channel_url?: string;
+    telegram_channel_url?: string;
   };
   updateSettings: (newSettings: any) => Promise<void>;
   showAdminSecret: boolean;
@@ -96,8 +100,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [guestUser, setGuestUser] = useState<UserProfile | null>(null);
   const [isGuest, setIsGuest] = useState<boolean>(false);
-  const [language, setLanguage] = useState<Language>('en');
-  const [currentView, setCurrentView] = useState<'home' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat'>('home');
+  const [language, setLanguage] = useState<Language>(() => {
+    const saved = localStorage.getItem('app_language');
+    return (saved === 'en' || saved === 'bn') ? (saved as Language) : 'bn';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('app_language', language);
+  }, [language]);
+  const [currentView, setCurrentView] = useState<'home' | 'games' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
@@ -479,7 +490,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           payment_mode: data.payment_mode || "manual",
           gateway_type: data.gateway_type || "sms_forwarder",
           third_party_api_key: data.third_party_api_key || "",
-          whatsapp_group_url: data.whatsapp_group_url || "https://chat.whatsapp.com/EsportsEliteLobbyBD"
+          whatsapp_group_url: data.whatsapp_group_url || "https://chat.whatsapp.com/EsportsEliteLobbyBD",
+          facebook_page_url: data.facebook_page_url || "https://www.facebook.com/ProTournamentBD",
+          facebook_group_url: data.facebook_group_url || "https://www.facebook.com/groups/protournamentbd",
+          youtube_channel_url: data.youtube_channel_url || "https://www.youtube.com/@ProTournamentBD",
+          telegram_channel_url: data.telegram_channel_url || "https://t.me/ProTournamentBD"
         });
       }
     }, (error) => {
@@ -954,18 +969,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Join Tournament Logic
-  const joinTournament = async (tournament: Tournament, inGameId: string): Promise<{ success: boolean; message: string }> => {
+  const joinTournament = async (tournament: Tournament, inGameId: string, customFeeMultiplier?: number): Promise<{ success: boolean; message: string }> => {
+    const multiplier = customFeeMultiplier && customFeeMultiplier > 0 ? customFeeMultiplier : 1;
+    const computedFee = tournament.entry_fee * multiplier;
+
     const activeProfile = profile;
     const activeUid = isGuest ? guestUser?.uid : user?.uid;
     if (!activeUid || !activeProfile) {
       return { success: false, message: t('notLoggedIn') };
     }
 
-    if (activeProfile.coins_balance < tournament.entry_fee) {
+    if (activeProfile.coins_balance < computedFee) {
       return { success: false, message: t('insufficientBalance') };
     }
 
-    if (tournament.joined_count >= tournament.total_slots) {
+    if (tournament.joined_count + multiplier > tournament.total_slots) {
       return { success: false, message: t('matchFull') };
     }
 
@@ -975,14 +993,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: t('alreadyJoined') };
     }
 
-    const nextCount = (tournament.joined_count || 0) + 1;
+    const nextCount = (tournament.joined_count || 0) + multiplier;
     const nextList = [...joinedUids, activeUid];
 
     if (isGuest && guestUser) {
       // Simulated State Deduction
       const updatedProfile = {
         ...guestUser,
-        coins_balance: guestUser.coins_balance - tournament.entry_fee
+        coins_balance: guestUser.coins_balance - computedFee
       };
       setGuestUser(updatedProfile);
       setProfile(updatedProfile);
@@ -1013,7 +1031,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         userId: activeUid,
         userName: guestUser.name,
         type: 'join_fee',
-        amount: tournament.entry_fee,
+        amount: computedFee,
         status: 'approved',
         timestamp: new Date().toISOString(),
         match_title: tournament.title
@@ -1034,7 +1052,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           userId: activeUid,
           userName: activeProfile.name,
           type: 'join_fee',
-          amount: tournament.entry_fee,
+          amount: computedFee,
           status: 'approved',
           timestamp: new Date().toISOString(),
           match_title: tournament.title
@@ -1043,13 +1061,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         // Deduct balance
         await updateDoc(userRef, {
-          coins_balance: increment(-tournament.entry_fee)
+          coins_balance: increment(-computedFee)
         });
 
         // Add user list & details to tournament map
         const updateDetailKey = `joined_players_details.${activeUid}`;
         await updateDoc(tourRef, {
-          joined_count: increment(1),
+          joined_count: increment(multiplier),
           joined_players_uids: arrayUnion(activeUid),
           [updateDetailKey]: {
             inGameId: inGameId,

@@ -1,6 +1,6 @@
 {
-  "name": "Remix: Tournament Web Application",
-  "description": "A responsive Tournament Web Application for esports matches with an in-app Coin wallet, local deposit/withdrawal instructions \u0026 Dual Language (English and Bengali) support.",
+  "name": "ProTournament BD",
+  "description": "A responsive Esports Tournament Hub for Free Fire, PUBG, and Ludo matches with secure coin-based deposits, withdrawals, and dual-language (Bengali & English) support.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

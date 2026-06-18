@@ -138,6 +138,10 @@ export const AdminDashboard: React.FC = () => {
   const [gatewayType, setGatewayType] = useState<'sms_forwarder' | 'third_party_api_sim'>(settings.gateway_type || 'sms_forwarder');
   const [thirdPartyApiKey, setThirdPartyApiKey] = useState<string>(settings.third_party_api_key || '');
   const [whatsappGroupUrl, setWhatsappGroupUrl] = useState<string>(settings.whatsapp_group_url || '');
+  const [facebookPageUrl, setFacebookPageUrl] = useState<string>(settings.facebook_page_url || '');
+  const [facebookGroupUrl, setFacebookGroupUrl] = useState<string>(settings.facebook_group_url || '');
+  const [youtubeChannelUrl, setYoutubeChannelUrl] = useState<string>(settings.youtube_channel_url || '');
+  const [telegramChannelUrl, setTelegramChannelUrl] = useState<string>(settings.telegram_channel_url || '');
 
   // FOR THE AUTOMATED BANKING SMS LEDGER SIMULATOR
   const [simMethod, setSimMethod] = useState<'bKash' | 'Nagad' | 'Rocket'>('bKash');
@@ -248,6 +252,10 @@ export const AdminDashboard: React.FC = () => {
     setGatewayType(settings.gateway_type || 'sms_forwarder');
     setThirdPartyApiKey(settings.third_party_api_key || '');
     setWhatsappGroupUrl(settings.whatsapp_group_url || '');
+    setFacebookPageUrl(settings.facebook_page_url || '');
+    setFacebookGroupUrl(settings.facebook_group_url || '');
+    setYoutubeChannelUrl(settings.youtube_channel_url || '');
+    setTelegramChannelUrl(settings.telegram_channel_url || '');
   }, [settings]);
 
   // 1. Listen or fetch All Users
@@ -761,7 +769,11 @@ export const AdminDashboard: React.FC = () => {
         payment_mode: paymentMode,
         gateway_type: gatewayType,
         third_party_api_key: thirdPartyApiKey,
-        whatsapp_group_url: whatsappGroupUrl
+        whatsapp_group_url: whatsappGroupUrl,
+        facebook_page_url: facebookPageUrl,
+        facebook_group_url: facebookGroupUrl,
+        youtube_channel_url: youtubeChannelUrl,
+        telegram_channel_url: telegramChannelUrl
       });
       alert("App utility setting parameters saved successfully!");
     } catch (err) {
@@ -1048,65 +1060,81 @@ export const AdminDashboard: React.FC = () => {
   return (
     <div className="space-y-8 animate-fade-in text-gray-200">
       
-      {/* Admin Panel Header Title */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-800/60 pb-6">
-        <div>
-          <span className="text-[10px] font-mono tracking-widest text-amber-400 font-extrabold uppercase bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
+      {/* Admin Panel Header Title - High Fidelity Premium styling */}
+      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#17192d] via-[#121424] to-[#0c0d16] border border-gray-800/85 p-6 sm:p-7 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-2xl">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="space-y-2 text-left z-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/15 text-[10px] text-amber-400 font-extrabold font-mono uppercase tracking-wider">
+            <ShieldCheck className="h-3 w-3 animate-pulse" />
             STAFF ROOT CONSOLE
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-sans font-extrabold text-white tracking-tight mt-2">
-            Tournament Admin Control Center
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-sans font-black text-white tracking-tight leading-none uppercase">
+            Tournament Control Center ⚡
           </h1>
-          <p className="text-gray-400 text-xs">Direct Firestore link: gen-lang-client-0894569085. Real-time updates push live to user clients.</p>
+          <p className="text-gray-400 text-xs font-semibold">
+            Manage your games, approve transaction ledger orders, and set up your dynamic social links instantly.
+          </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5 z-10">
           <button
             onClick={() => setCurrentView('home')}
-            className="py-2 px-4 border border-gray-800 bg-gray-950 text-gray-300 hover:bg-gray-800 hover:text-white rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5"
+            className="py-2.5 px-4 bg-gray-900/80 hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-white rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
             ← {language === 'en' ? 'Exit Admin Dashboard' : 'এডমিন থেকে বের হোন'}
           </button>
           <button
             onClick={() => setIsAdminAuthenticated(false)}
-            className="py-2 px-4 border border-rose-500/20 bg-rose-500/5 text-rose-300 hover:bg-rose-500 hover:text-white rounded-xl text-xs font-semibold transition-all"
+            className="py-2.5 px-4 border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-black rounded-xl text-xs font-extrabold transition-all cursor-pointer active:scale-95"
           >
             Lock Dashboard
           </button>
         </div>
       </div>
 
-      {/* Real-time Analytic Cards Grid */}
+      {/* Real-time Analytic Cards Grid - Stunning dashboard style */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#121420] border border-gray-800/80 p-5 rounded-2xl space-y-2">
-          <span className="block text-gray-500 text-[10px] font-bold uppercase font-mono">Total GAMERS</span>
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#121420] to-[#0c0d16] border border-gray-800/80 p-5 rounded-3xl space-y-3 shadow-lg hover:border-indigo-500/30 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-2xl sm:text-3xl font-mono font-extrabold text-white">{stats.totalUsers}</span>
-            <Users className="h-6 w-6 text-indigo-400" />
+            <span className="block text-gray-400 text-[10px] font-black uppercase font-mono tracking-wider">Total Gamers</span>
+            <Users className="h-5 w-5 text-indigo-400" />
+          </div>
+          <div className="space-y-0.5 text-left">
+            <span className="text-2xl sm:text-3xl font-mono font-black text-white block">{stats.totalUsers}</span>
+            <span className="text-[10px] text-gray-400 font-semibold block">Registered BD Players</span>
           </div>
         </div>
 
-        <div className="bg-[#121420] border border-gray-800/80 p-5 rounded-2xl space-y-2">
-          <span className="block text-gray-500 text-[10px] font-bold uppercase font-mono">ACTIVE LEAGUES</span>
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#121420] to-[#0c0d16] border border-gray-800/80 p-5 rounded-3xl space-y-3 shadow-lg hover:border-amber-500/30 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-2xl sm:text-3xl font-mono font-extrabold text-amber-400">{stats.activeMatches}</span>
-            <Trophy className="h-6 w-6 text-amber-500" />
+            <span className="block text-gray-400 text-[10px] font-black uppercase font-mono tracking-wider">Active Leagues</span>
+            <Trophy className="h-5 w-5 text-amber-500 animate-pulse" />
+          </div>
+          <div className="space-y-0.5 text-left">
+            <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400 block">{stats.activeMatches}</span>
+            <span className="text-[10px] text-gray-400 font-semibold block">Tournaments Live</span>
           </div>
         </div>
 
-        <div className="bg-[#121420] border border-gray-800/80 p-5 rounded-2xl space-y-2">
-          <span className="block text-gray-500 text-[10px] font-bold uppercase font-mono">TODAY'S DEPOSITS</span>
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#121420] to-[#0c0d16] border border-gray-800/80 p-5 rounded-3xl space-y-3 shadow-lg hover:border-emerald-500/30 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-2xl sm:text-3xl font-mono font-extrabold text-emerald-400">{stats.todayDeposits} C</span>
-            <TrendingUp className="h-6 w-6 text-emerald-400" />
+            <span className="block text-gray-400 text-[10px] font-black uppercase font-mono tracking-wider">Today's Deposit</span>
+            <TrendingUp className="h-5 w-5 text-emerald-400" />
+          </div>
+          <div className="space-y-0.5 text-left">
+            <span className="text-2xl sm:text-3xl font-mono font-black text-emerald-400 block">{stats.todayDeposits} ৳</span>
+            <span className="text-[10px] text-gray-400 font-semibold block">Auto-Ledger Success</span>
           </div>
         </div>
 
-        <div className="bg-[#121420] border border-gray-800/80 p-5 rounded-2xl space-y-2">
-          <span className="block text-gray-500 text-[10px] font-bold uppercase font-mono font-mono">TODAY'S WITHDRAWALS</span>
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#121420] to-[#0c0d16] border border-gray-800/80 p-5 rounded-3xl space-y-3 shadow-lg hover:border-rose-500/30 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-2xl sm:text-3xl font-mono font-extrabold text-rose-400">{stats.todayWithdrawals} C</span>
-            <DollarSign className="h-6 w-6 text-rose-400" />
+            <span className="block text-gray-400 text-[10px] font-black uppercase font-mono tracking-wider">Today's Paid-Out</span>
+            <DollarSign className="h-5 w-5 text-rose-450" />
+          </div>
+          <div className="space-y-0.5 text-left">
+            <span className="text-2xl sm:text-3xl font-mono font-black text-rose-400 block">{stats.todayWithdrawals} ৳</span>
+            <span className="text-[10px] text-gray-400 font-semibold block">Successful Cash-outs</span>
           </div>
         </div>
       </section>
@@ -1229,9 +1257,6 @@ export const AdminDashboard: React.FC = () => {
                       <option value="Ludo">Ludo</option>
                       <option value="Call of Duty">Call of Duty</option>
                       <option value="Mobile Legends">Mobile Legends</option>
-                      <option value="DLS">Football DLS</option>
-                      <option value="COC">Clash of Clans</option>
-                      <option value="Subway Surfers">Subway Surfers</option>
                     </select>
                   </div>
 
@@ -2298,6 +2323,58 @@ export const AdminDashboard: React.FC = () => {
                 <p className="text-[10.5px] text-amber-400 leading-relaxed text-left mt-1.5">
                   ⚠️ <strong>হোয়াটসঅ্যাপ গ্রুপ লিংক সেটআপ করুন:</strong> বর্তমানে এখানে একটি ডেমো লিংক দেওয়া আছে, তাই জয়েন করতে গেলে হোয়াটসঅ্যাপে <em>"Failed to get group info"</em> দেখাচ্ছে। দয়া করে আপনার হোয়াটসঅ্যাপ গ্রুপের <strong>"Invite via link"</strong> থেকে আসল লিংকটি কপি করে এনে এখানে পেস্ট করে "Apply Parameters" বাটনে চাপুন।
                 </p>
+              </div>
+
+              <div className="space-y-1.5 bg-[#1877f2]/5 p-3.5 rounded-2xl border border-[#1877f2]/15">
+                <label className="text-[10px] text-blue-400 font-bold uppercase block text-left">
+                  🔵 ProTournament BD Facebook Page Link (ফেসবুক পেজ লিংক)
+                </label>
+                <input
+                  type="text"
+                  value={facebookPageUrl}
+                  onChange={(e) => setFacebookPageUrl(e.target.value)}
+                  placeholder="Paste Facebook Page URL (e.g., https://www.facebook.com/ProTournamentBD)..."
+                  className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:border-[#1877f2] focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5 bg-[#1877f2]/5 p-3.5 rounded-2xl border border-[#1877f2]/15">
+                <label className="text-[10px] text-blue-300 font-bold uppercase block text-left">
+                  🔵 Facebook Community Group Link (ফেসবুক গ্রুপ লিংক)
+                </label>
+                <input
+                  type="text"
+                  value={facebookGroupUrl}
+                  onChange={(e) => setFacebookGroupUrl(e.target.value)}
+                  placeholder="Paste Facebook Group URL (e.g., https://www.facebook.com/groups/protournamentbd)..."
+                  className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:border-[#1877f2] focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5 bg-[#ff0000]/5 p-3.5 rounded-2xl border border-[#ff0000]/15">
+                <label className="text-[10px] text-red-500 font-bold uppercase block text-left">
+                  🛑 YouTube Channel Link (ইউটিউব চ্যানেল লিংক)
+                </label>
+                <input
+                  type="text"
+                  value={youtubeChannelUrl}
+                  onChange={(e) => setYoutubeChannelUrl(e.target.value)}
+                  placeholder="Paste YouTube Channel URL (e.g., https://www.youtube.com/@ProTournamentBD)..."
+                  className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:border-[#ff0000] focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5 bg-[#229ed9]/5 p-3.5 rounded-2xl border border-[#229ed9]/15">
+                <label className="text-[10px] text-sky-400 font-bold uppercase block text-left">
+                  ✈️ Telegram Channel Link (টেলিগ্রাম গ্রুপ/চ্যানেল লিংক)
+                </label>
+                <input
+                  type="text"
+                  value={telegramChannelUrl}
+                  onChange={(e) => setTelegramChannelUrl(e.target.value)}
+                  placeholder="Paste Telegram Channel Link (e.g., https://t.me/ProTournamentBD)..."
+                  className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:border-[#229ed9] focus:outline-none"
+                />
               </div>
 
               <button

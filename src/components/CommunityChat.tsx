@@ -1,284 +1,281 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useApp } from './AppContext';
-import { db, auth } from '../firebase';
-import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
 import { 
-  MessageSquare, 
-  Send, 
-  Users, 
-  Trash2, 
+  Facebook, 
+  Youtube, 
+  Send as TelegramIcon, 
+  MessageCircle, 
   ExternalLink, 
-  Shield, 
-  User, 
-  AlertCircle,
-  Clock,
-  Sparkles
+  Video, 
+  Users, 
+  Tv, 
+  Heart, 
+  Zap, 
+  Sparkles,
+  Check
 } from 'lucide-react';
 
-interface ChatMessage {
-  id: string;
-  userId: string;
-  senderName: string;
-  senderAvatar?: string;
-  message: string;
-  timestamp: any;
-  isAdmin?: boolean;
-}
-
 export const CommunityChat: React.FC = () => {
-  const { profile, isGuest, guestUser, language, settings, showAdminSecret } = useApp();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  const [chatLoading, setChatLoading] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { language, settings } = useApp();
+  const [copied, setCopied] = useState<string | null>(null);
 
-  const activeUser = isGuest ? guestUser : profile;
-  const hasAdminAccess = showAdminSecret || (profile && profile.email === 'skr200278@gmail.com');
-  const whatsAppLink = settings.whatsapp_group_url || "https://chat.whatsapp.com/EsportsEliteLobbyBD";
+  const fbPage = settings.facebook_page_url || "https://www.facebook.com/ProTournamentBD";
+  const fbGroup = settings.facebook_group_url || "https://www.facebook.com/groups/protournamentbd";
+  const ytChannel = settings.youtube_channel_url || "https://www.youtube.com/@ProTournamentBD";
+  const telegram = settings.telegram_channel_url || "https://t.me/ProTournamentBD";
+  const whatsApp = settings.whatsapp_group_url || "https://chat.whatsapp.com/EsportsEliteLobbyBD";
 
-  // Subscribe to real-time chat messages
-  useEffect(() => {
-    const chatRef = collection(db, 'chats');
-    const q = query(chatRef, orderBy('timestamp', 'asc'), limit(100));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs: ChatMessage[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        msgs.push({
-          id: doc.id,
-          userId: data.userId || 'unknown',
-          senderName: data.senderName || 'Anonymous Player',
-          senderAvatar: data.senderAvatar || 'preset_1',
-          message: data.message || '',
-          timestamp: data.timestamp,
-          isAdmin: data.isAdmin || false,
-        });
-      });
-      setMessages(msgs);
-      setChatLoading(false);
-      // Scroll to bottom
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    }, (error) => {
-      console.error("Error reading chat snapshot:", error);
-      setChatLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Scroll to bottom on updates
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !activeUser || isSending) return;
-
-    setIsSending(true);
-    const textToSend = newMessage.trim().substring(0, 300);
-
-    try {
-      await addDoc(collection(db, 'chats'), {
-        userId: activeUser.uid,
-        senderName: activeUser.name,
-        senderAvatar: activeUser.avatar || 'preset_1',
-        message: textToSend,
-        timestamp: serverTimestamp(),
-        isAdmin: hasAdminAccess,
-      });
-      setNewMessage('');
-    } catch (err) {
-      console.error("Failed to post message:", err);
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const handleDeleteMessage = async (msgId: string) => {
-    if (!hasAdminAccess) return;
-    if (confirm(language === 'en' ? "Delete this message?" : "এই মেসেজটি ডিলিট করতে চান?")) {
-      try {
-        await deleteDoc(doc(db, 'chats', msgId));
-      } catch (err) {
-        console.error("Failed to delete chat message:", err);
-      }
-    }
+  const handleCopyLink = (url: string, name: string) => {
+    navigator.clipboard.writeText(url);
+    setCopied(name);
+    setTimeout(() => {
+      setCopied(null);
+    }, 2000);
   };
 
   return (
-    <div className="space-y-4 max-w-4xl mx-auto animate-fade-in font-sans">
+    <div className="space-y-6 max-w-4xl mx-auto animate-fade-in font-sans pb-12 text-left">
       
-      {/* Dynamic WhatsApp Group Invitation Card */}
-      <div className="bg-gradient-to-r from-emerald-500/10 via-[#0f111a] to-teal-500/10 border border-emerald-500/20 p-4 sm:p-5 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
-        <div className="flex items-center gap-3.5 text-left w-full md:w-auto">
-          <div className="h-11 w-11 bg-emerald-500 hover:scale-105 transition-all text-black rounded-2xl flex items-center justify-center text-xl font-extrabold shadow-lg shrink-0 select-none">
-            💬
+      {/* Visual Header Banner */}
+      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#111322] via-[#10142D] to-[#120f26] border border-gray-800 p-6 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
+        <div className="space-y-2.5 z-10 text-left">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/15 text-[10px] text-amber-400 font-extrabold font-mono uppercase tracking-wider">
+            <Sparkles className="h-3 w-3 animate-pulse text-amber-400" />
+            {language === 'en' ? 'Community & Video Stream Hub' : 'অফিশিয়াল সোশ্যাল ও মিডিয়া হাব'}
           </div>
-          <div>
-            <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-              {language === 'en' ? 'OFFICIAL GROUP' : 'অফিশিয়াল পাবলিক গ্রুপ'}
-            </span>
-            <h4 className="font-extrabold text-white text-sm mt-1">
-              {language === 'en' ? 'Connect via Official WhatsApp Group' : 'আমাদের অফিশিয়াল হোয়াটসঅ্যাপ গ্রুপে যোগ দিন'}
-            </h4>
-            <p className="text-[11px] text-gray-400 leading-snug mt-0.5 max-w-md">
-              {language === 'en' 
-                ? 'Discuss layout rules, match schedules, tournament rooms, and quick payments with 2000+ elite players.' 
-                : 'সব খেলোয়াড়দের সাথে সরাসরি চ্যাট করতে, পেমেন্ট ট্র্যাকিং ও ইনস্ট্যান্ট সাপের্ট পেতে গ্রুপে যুক্ত থাকুন।'}
-            </p>
-          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none uppercase">
+            {language === 'en' ? 'Keep Connected ⚡' : 'আমাদের সাথে সংযুক্ত থাকুন ⚡'}
+          </h2>
+          <p className="text-xs text-gray-400 max-w-lg leading-relaxed font-medium">
+            {language === 'en' 
+              ? 'Get daily room codes, play with premium support channels, and watch all active matches broadcasts or clips directly on our social feeds.' 
+              : 'প্রতিদিনের ম্যাচের প্রতিটি টুর্নামেন্টের ভিডিও রেকর্ডিং বা লাইভ ব্রডকাস্ট দেখতে এবং জরুরি দরকারে সরাসরি অ্যাডমিনের সাথে যোগাযোগ রাখুন।'}
+          </p>
         </div>
-        <a 
-          href={whatsAppLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full md:w-auto text-center shrink-0 py-3 px-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-extrabold rounded-2xl text-xs transition-all flex items-center justify-center gap-2 select-none pointer-events-auto cursor-pointer"
-        >
-          <ExternalLink className="h-4 w-4 stroke-[2.5]" />
-          {language === 'en' ? 'JOIN WHATSAPP GROUP' : 'গ্রুপে জয়েন করুন'}
-        </a>
+        <div className="relative shrink-0 flex items-center justify-center">
+          <div className="absolute h-24 w-24 bg-amber-500/10 rounded-full blur-2xl animate-pulse" />
+          <Tv className="h-14 w-14 text-amber-500 z-10 animate-bounce" style={{ animationDuration: '4s' }} />
+        </div>
       </div>
 
-      {whatsAppLink === "https://chat.whatsapp.com/EsportsEliteLobbyBD" && (
-        <div className="bg-amber-500/10 border border-amber-500/30 p-3.5 rounded-2xl text-[11px] text-amber-300 leading-relaxed text-left">
-          ⚠️ <strong>এডমিন সাইনপেট নোট (Admin Setup Reminder):</strong> বর্তমানে এখানে একটি ডেমো লিংক সেট করা আছে, যার জন্য হোয়াটসঅ্যাপে <em>"Failed to get group info"</em> দেখাচ্ছে। অ্যাডমিন প্যানেল (Admin Panel) &rarr; Settings ট্যাবে গিয়ে <strong>"Official Community WhatsApp Group Link"</strong> অপশনটিতে আপনার নিজের হোয়াটসঅ্যাপ গ্রুপের লিংকটি পেস্ট করে আপডেট করুন।
-        </div>
-      )}
-
-      {/* Main Realtime Chat Interface */}
-      <div className="bg-[#0f111a] border border-gray-800 rounded-3xl h-[480px] sm:h-[540px] flex flex-col overflow-hidden shadow-2xl relative">
+      {/* 2. DEDICATED PRESTIGE CARD FOR THE OFFICIAL FACEBOOK PAGE */}
+      <div className="bg-gradient-to-br from-[#1877f2]/15 via-[#0e111c] to-[#0d0e14] border-2 border-[#1877f2]/25 rounded-3xl p-5 sm:p-7 relative overflow-hidden shadow-2xl group">
+        <div className="absolute top-0 right-0 w-36 h-36 bg-[#1877f2]/5 rounded-full blur-3xl group-hover:bg-[#1877f2]/10 transition-all duration-300" />
         
-        {/* Chat Room Header Info */}
-        <div className="px-5 py-3.5 border-b border-gray-800 bg-slate-950/40 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <h3 className="font-extrabold text-sm text-white flex items-center gap-1.5 uppercase tracking-wider">
-              <Users className="h-4 w-4 text-amber-400" />
-              {language === 'en' ? 'Live Community Chat' : 'গ্লোবাল আড্ডা ও সাপোর্ট রুম'}
-            </h3>
-          </div>
-          <span className="text-[10px] font-mono text-gray-400 bg-gray-800/40 px-2.5 py-1 rounded-full">
-            {messages.length} {language === 'en' ? 'online messages' : 'টি মেসেজ'}
-          </span>
-        </div>
-
-        {/* Message feed bubble board */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-gradient-to-b from-[#07080d]/30 to-[#0e0f17]/30 custom-scrollbar">
-          {chatLoading ? (
-            <div className="h-full flex flex-col items-center justify-center space-y-2 text-gray-500">
-              <div className="h-6 w-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-              <span className="text-xs font-mono">{language === 'en' ? 'Connecting to lobby chat...' : 'সার্ভার আড্ডার সাথে সংযুক্ত হচ্ছে...'}</span>
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+          <div className="flex items-start gap-4 text-left">
+            <div className="h-14 w-14 bg-[#1877f2] hover:scale-105 transition-all duration-200 text-white rounded-2xl flex items-center justify-center text-3xl font-extrabold shadow-lg shadow-[#1877f2]/25 shrink-0 select-none">
+              <Facebook className="h-7 w-7 stroke-[2.2]" />
             </div>
-          ) : messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
-              <span className="text-3xl select-none">💬</span>
-              <p className="text-xs text-gray-400 font-medium">
-                {language === 'en' ? 'No messages yet. Be the first to start the chat!' : 'কোনো বার্তা নেই। এই রিয়েল-টাইম আড্ডায় প্রথম মেসেজটি আপনিই করুন!'}
+            <div className="space-y-1.5">
+              <span className="text-[9px] uppercase font-black tracking-widest text-[#1877f2] bg-[#1877f2]/10 px-2.5 py-0.5 rounded-full font-mono border border-[#1877f2]/20">
+                {language === 'en' ? '★ TOURNAMENT VIDEOS HUB' : '★ টুর্নামেন্ট ভিডিও ও লাইভ সম্প্রচার'}
+              </span>
+              <h3 className="font-black text-white text-base sm:text-lg tracking-tight flex items-center gap-1.5">
+                {language === 'en' ? 'ProTournament BD Facebook Page' : 'প্রোটুর্নামেন্ট বিডি অফিসিয়াল ফেসবুক পেজ'}
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed max-w-2xl font-medium">
+                {language === 'en' 
+                  ? 'All matches played on our platform are streamed live or published as highlight videos. Follow our brand-new page to watch custom Free Fire, PUBG, and Ludo gameplay highlights and support our growing community!' 
+                  : 'আমাদের টুর্নামেন্টের সকল ম্যাচগুলোর প্রিমিয়াম গেমপ্লে ভিডিও ও লাইভ স্ট্রিম এই পেজে আপলোড করা হয়। এখনই ফলো করে আপনার নিজের খেলার ভিডিও দেখে নিন এবং বন্ধুদের সাথে শেয়ার করুন!'}
               </p>
             </div>
-          ) : (
-            messages.map((msg, index) => {
-              const isMe = msg.userId === activeUser?.uid;
-              const formattedTime = msg.timestamp
-                ? new Date(msg.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                : '';
+          </div>
+          
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-2 w-full lg:w-48 shrink-0">
+            <a 
+              href={fbPage}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full text-center py-3 px-5 bg-gradient-to-r from-[#1877f2] to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-extrabold rounded-2xl text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#1877f2]/15 active:scale-95"
+            >
+              <Video className="h-4 w-4" />
+              <span>{language === 'en' ? 'Watch Videos & Follow' : 'ভিডিও দেখুন ও ফলো করুন 🎞️'}</span>
+            </a>
+            <button
+              onClick={() => handleCopyLink(fbPage, 'fbPage')}
+              className="w-full text-center py-2.5 px-4 bg-gray-900/60 hover:bg-gray-800 text-gray-300 font-bold rounded-xl text-[11px] border border-gray-800 transition-all flex items-center justify-center gap-1.5 active:scale-95"
+            >
+              {copied === 'fbPage' ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>{language === 'en' ? 'Link Copied!' : 'লিংক কপি হয়েছে!'}</span>
+                </>
+              ) : (
+                <>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>{language === 'en' ? 'Copy Page Link' : 'লিংক কপি করুন'}</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
 
-              return (
-                <div 
-                  key={msg.id} 
-                  id={`chat-msg-${msg.id}`}
-                  className={`flex items-start gap-2.5 text-xs ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
-                >
-                  {/* Sender Avatar placeholder */}
-                  <div className="h-8.5 w-8.5 rounded-xl bg-gradient-to-br from-gray-800 to-gray-950 border border-gray-700/50 flex items-center justify-center font-extrabold text-amber-500 shadow-md shrink-0">
-                    {msg.senderName.substring(0, 1).toUpperCase()}
-                  </div>
-
-                  {/* Message details layout */}
-                  <div className="max-w-[75%] space-y-1">
-                    <div className={`flex items-center gap-1.5 text-[10px] ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <span className="font-bold text-gray-300 hover:text-white transition-all">
-                        {msg.senderName}
-                      </span>
-                      {msg.isAdmin && (
-                        <span className="bg-rose-500/10 text-rose-400 px-1.5 py-0.2 rounded text-[8px] font-bold border border-rose-500/20 flex items-center gap-0.5">
-                          <Shield className="h-2 w-2" /> ADMIN
-                        </span>
-                      )}
-                      {formattedTime && (
-                        <span className="text-gray-500 font-mono flex items-center gap-0.5 text-[9px]">
-                          <Clock className="h-2.5 w-2.5" />
-                          {formattedTime}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className={`p-3.5 rounded-2xl leading-relaxed text-[11.5px] break-words shadow-md select-text ${
-                      isMe 
-                        ? 'bg-amber-500 text-black font-semibold rounded-tr-none' 
-                        : 'bg-[#1b1c2b] text-gray-100 rounded-tl-none border border-gray-800'
-                    }`}>
-                      {msg.message}
-                    </div>
-                  </div>
-
-                  {/* Admin specific action helper - trash/cleanup button */}
-                  {hasAdminAccess && (
-                    <button
-                      onClick={() => handleDeleteMessage(msg.id)}
-                      className="self-center p-1.5 hover:bg-rose-500/10 text-gray-500 hover:text-rose-400 rounded-lg transition-all cursor-pointer select-none"
-                      title="Admin: Delete message"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
+      {/* Grid of Other Channels (WhatsApp, FB Group, YouTube, Telegram) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        {/* WhatsApp Channel */}
+        <div className="bg-[#0c0d15] border border-emerald-500/20 p-5 rounded-3xl flex flex-col justify-between gap-4 text-left shadow-lg">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="h-10 w-10 bg-emerald-505 bg-emerald-500 text-black rounded-xl flex items-center justify-center text-xl shrink-0 font-extrabold shadow-md">
+                <MessageCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="text-[9px] text-[#10b981] font-bold uppercase tracking-wider block font-mono">SUPPORT DESK</span>
+                <h4 className="text-white text-sm font-extrabold">{language === 'en' ? 'WhatsApp Support Line' : 'হোয়াটসঅ্যাপ হেল্প লাইন'}</h4>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-400 leading-relaxed font-semibold">
+              {language === 'en'
+                ? 'Directly message our live admin panel for fast coin loading additions, payment approvals, or custom room questions.'
+                : 'যেকোনো কয়েন ডিপোজিট, উইথড্রয়াল এপ্রুভাল কিংবা ম্যাচে জয়েন করা সংক্রান্ত সমস্যা সমাধানে সরাসরি হোয়াটসঅ্যাপে কথা বলুন।'}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <a 
+              href={whatsApp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 text-center py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span>{language === 'en' ? 'Message Support' : 'সরাসরি যোগাযোগ করুন'}</span>
+            </a>
+            <button
+              onClick={() => handleCopyLink(whatsApp, 'whatsapp')}
+              className="px-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-gray-400 hover:text-white transition-all text-xs"
+            >
+              {copied === 'whatsapp' ? <Check className="h-4 w-4 text-emerald-400" /> : <ExternalLink className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
 
-        {/* Input Bar Form */}
-        <form onSubmit={handleSendMessage} className="p-3 bg-slate-950 border-t border-gray-800 flex items-center gap-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder={
-              !activeUser 
-                ? (language === 'en' ? "Please login to chat" : "চ্যাট করতে অনুগ্রহ করে লগইন করুন")
-                : (language === 'en' ? "Type a community message (max 300 chars)..." : "গ্লোবাল বা বন্ধুদের সাথে আড্ডা শুরু করুন...")
-            }
-            disabled={!activeUser || isSending}
-            maxLength={300}
-            className="flex-grow py-3 px-4 bg-[#0a0b12] border border-gray-800 text-white rounded-2xl text-[11.5px] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 transition-all font-sans"
-          />
-          <button
-            type="submit"
-            disabled={!newMessage.trim() || !activeUser || isSending}
-            className="h-[40px] px-4 bg-amber-500 text-black hover:bg-amber-400 disabled:bg-gray-800 disabled:text-gray-500 font-extrabold rounded-2xl text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md select-none"
-          >
-            <Send className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{language === 'en' ? 'Send' : 'সেন্ড'}</span>
-          </button>
-        </form>
+        {/* Facebook Community Group */}
+        <div className="bg-[#0c0d15] border border-blue-500/20 p-5 rounded-3xl flex flex-col justify-between gap-4 text-left shadow-lg">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="h-10 w-10 bg-[#1877f2] text-white rounded-xl flex items-center justify-center text-xl shrink-0 font-extrabold shadow-md">
+                <Users className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="text-[9px] text-blue-400 font-bold uppercase tracking-wider block font-mono">COMMUNITY FORUM</span>
+                <h4 className="text-white text-sm font-extrabold">{language === 'en' ? 'Facebook Player Group' : 'ফেসবুক মেম্বার গ্রুপ'}</h4>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-400 leading-relaxed font-semibold">
+              {language === 'en'
+                ? 'Join 5000+ top gamers to share custom tournament screenshots, locate team partners, and vote on game changes.'
+                : 'দেশসেরা হাজারো ফ্রি ফায়ার ও পাবজি স্কোয়াড মেম্বারদের গ্রুপে আজই যোগ দিন এবং আপনার খেলার স্ক্রিনশট শেয়ার করুন।'}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <a 
+              href={fbGroup}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 text-center py-2.5 bg-[#1877f2] hover:bg-blue-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span>{language === 'en' ? 'Join Community' : 'মেম্বার গ্রুপে যোগ দিন'}</span>
+            </a>
+            <button
+              onClick={() => handleCopyLink(fbGroup, 'fbGroup')}
+              className="px-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-gray-400 hover:text-white transition-all text-xs"
+            >
+              {copied === 'fbGroup' ? <Check className="h-4 w-4 text-emerald-400" /> : <ExternalLink className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* YouTube Channel */}
+        <div className="bg-[#0c0d15] border border-red-500/20 p-5 rounded-3xl flex flex-col justify-between gap-4 text-left shadow-lg">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="h-10 w-10 bg-red-600 text-white rounded-xl flex items-center justify-center text-xl shrink-0 font-extrabold shadow-md">
+                <Youtube className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="text-[9px] text-red-500 font-bold uppercase tracking-wider block font-mono">LIVE STREAMS</span>
+                <h4 className="text-white text-sm font-extrabold">{language === 'en' ? 'Official YouTube Channel' : 'অফিশিয়াল ইউটিউব চ্যানেল'}</h4>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-400 leading-relaxed font-semibold">
+              {language === 'en'
+                ? 'Subscribe to watch pristine HD livestream tournament broadcasts, professional guide videos, and winners prize clips.'
+                : 'আমাদের ইউটিউব চ্যানেলে ম্যাচের লাইভ স্ট্রিম ও কিভাবে টুর্নামেন্টে জয়েন ও উইথড্র করবেন তার গাইড ভিডিও পাবেন।'}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <a 
+              href={ytChannel}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 text-center py-2.5 bg-[#ff0000] hover:bg-red-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span>{language === 'en' ? 'Subscribe Now' : 'সাবস্ক্রাইব করুন'}</span>
+            </a>
+            <button
+              onClick={() => handleCopyLink(ytChannel, 'ytChannel')}
+              className="px-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-gray-400 hover:text-white transition-all text-xs"
+            >
+              {copied === 'ytChannel' ? <Check className="h-4 w-4 text-emerald-400" /> : <ExternalLink className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Telegram Hub */}
+        <div className="bg-[#0c0d15] border border-sky-500/20 p-5 rounded-3xl flex flex-col justify-between gap-4 text-left shadow-lg">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="h-10 w-10 bg-[#229ed9] text-white rounded-xl flex items-center justify-center text-xl shrink-0 font-extrabold shadow-md">
+                <TelegramIcon className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="text-[9px] text-sky-400 font-bold uppercase tracking-wider block font-mono">FAST NOTICES</span>
+                <h4 className="text-white text-sm font-extrabold">{language === 'en' ? 'Telegram Alerts' : 'টেলিগ্রাম নোটিশ চ্যানেল'}</h4>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-400 leading-relaxed font-semibold">
+              {language === 'en'
+                ? 'Get instantaneous custom notifications when new slots or matches are loaded, plus quick room password details.'
+                : 'নতুন টুর্নামেন্ট স্লট ওপেন হওয়া মাত্রই বা ম্যাচের রুম আইডি ছাড়া হলেই সবচেয়ে দ্রুত নোটিফিকেশন পেতে যুক্ত হোন।'}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <a 
+              href={telegram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 text-center py-2.5 bg-[#229ed9] hover:bg-[#1a82b4] text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span>{language === 'en' ? 'Join Channel' : 'চ্যানেলে যোগ দিন'}</span>
+            </a>
+            <button
+              onClick={() => handleCopyLink(telegram, 'telegram')}
+              className="px-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-gray-400 hover:text-white transition-all text-xs"
+            >
+              {copied === 'telegram' ? <Check className="h-4 w-4 text-emerald-400" /> : <ExternalLink className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
       </div>
 
       {/* Safety Notice and Guidelines bottom card */}
-      <div className="bg-slate-950/60 border border-gray-800/80 p-3.5 rounded-2xl flex items-center gap-2.5">
-        <AlertCircle className="h-4.5 w-4.5 text-amber-500 shrink-0" />
-        <p className="text-[10px] text-gray-400 leading-relaxed font-sans">
-          <strong>Community Guidelines:</strong> {language === 'en' 
-            ? 'Spamming, promotions, abusive language, or false tournament results reports will result in instant life-time account ban. Please stay respectful.' 
-            : 'চ্যাটরুমে অপশব্দ ব্যবহার, অননুমোদিত লিংক শেয়ার করা কিংবা কোনো প্রকার ট্রল করলে আপনার প্রো-টুর্নামেন্ট বিডি একাউন্ট আজীবন নিষিদ্ধ করা হবে।'}
+      <div className="bg-[#0b0c13] border border-gray-850 p-4 sm:p-5 rounded-2xl flex items-start gap-3.5 shadow-xl">
+        <Heart className="h-6 w-6 text-amber-500 shrink-0 fill-amber-500/10" />
+        <p className="text-[11px] text-gray-400 leading-relaxed font-medium">
+          <strong>{language === 'en' ? 'Core Updates Notification' : 'একটি বিশেষ ঘোষণা:'}</strong> {language === 'en' 
+            ? 'We have retired the standard in-app lobby chat system to prevent spam links, scams, and slow load times. Please utilize the WhatsApp Support Desk for transactions, and follow ProTournament BD Facebook Page to support your highlight videos!' 
+            : 'চ্যাটরুমের অননুমোদিত লিংক প্রচার বা অপ্রয়োজনীয় জ্যাম কমাতে আমাদের ইন-অ্যাপ সাধারণ চ্যাটরুম সিস্টেমটি অফ করে দেওয়া হয়েছে। যেকোনো প্রকার সাপোর্ট বা কয়েন সংক্রান্ত তথ্যের জন্য আমাদের অফিশিয়াল হোয়াটসঅ্যাপ বা ফেসবুক পেজে যোগাযোগ করুন। ধন্যবাদ!'}
         </p>
       </div>
+
     </div>
   );
 };
+export default CommunityChat;

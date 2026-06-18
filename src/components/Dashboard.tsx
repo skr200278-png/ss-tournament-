@@ -14,21 +14,22 @@ import {
   AlertTriangle,
   Flame,
   Share2,
-  Check
+  Check,
+  Download,
+  Smartphone,
+  Compass,
+  Chrome
 } from 'lucide-react';
 import { TournamentDetailModal } from './TournamentDetailModal';
 import { MatchStartingClock } from './MatchStartingClock';
 
-// Static Categories data
+// Static Categories data (Filtered only Free Fire, PUBG, Ludo, CODM, Mobile Legends as requested)
 export const categories = [
   { name: "Free Fire", icon: "💥", color: "from-orange-500 to-red-600", desc: "Clash Squad & Bermuda Solo/Squad" },
   { name: "PUBG/BGMI", icon: "🔫", color: "from-yellow-500 to-amber-600", desc: "Classic Erangel & TDM matches" },
   { name: "Ludo", icon: "🎲", color: "from-emerald-500 to-teal-600", desc: "1v1 Quick Ludo Board showdowns" },
   { name: "Call of Duty", icon: "⚔️", color: "from-slate-600 to-zinc-800", desc: "CODM Search & Destroy / Battle Royale" },
   { name: "Mobile Legends", icon: "🛡️", color: "from-indigo-600 to-purple-800", desc: "5v5 MLBB Battle Arena Showdowns" },
-  { name: "DLS", icon: "⚽", color: "from-blue-500 to-indigo-600", desc: "Dream League Soccer 1v1 Arena" },
-  { name: "COC", icon: "🏰", color: "from-purple-500 to-pink-600", desc: "Clash of Clans Friendly Challenges" },
-  { name: "Subway Surfers", icon: "🏃", color: "from-pink-500 to-rose-600", desc: "Weekly High Score Tournament" },
 ];
 
 // Fallback high-quality background covers for game categories
@@ -44,12 +45,6 @@ export const getGameFallbackBanner = (category: string): string => {
       return 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop';
     case 'Mobile Legends':
       return 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop';
-    case 'DLS':
-      return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=800&auto=format&fit=crop';
-    case 'COC':
-      return 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=800&auto=format&fit=crop';
-    case 'Subway Surfers':
-      return 'https://images.unsplash.com/photo-1484788984921-03950022c9ef?q=80&w=800&auto=format&fit=crop';
     default:
       return 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=800&auto=format&fit=crop';
   }
@@ -66,11 +61,28 @@ export const Dashboard: React.FC = () => {
     setCurrentView,
     settings,
     notificationPermission,
-    requestNotificationPermission
+    requestNotificationPermission,
+    handleInstallApp
   } = useApp();
 
   const [selectedMatch, setSelectedMatch] = useState<Tournament | null>(null);
   const [copied, setCopied] = useState(false);
+  const [selectedModeType, setSelectedModeType] = useState<string>('All');
+
+  // Detect iOS or Android Webview/In-app browser (Facebook Messenger, Telegram, Instagram, etc)
+  const isInAppBrowser = () => {
+    if (typeof window === 'undefined') return false;
+    const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+    return (
+      ua.indexOf('FBAN') > -1 || 
+      ua.indexOf('FBAV') > -1 || 
+      ua.indexOf('Instagram') > -1 || 
+      ua.indexOf('Messenger') > -1 || 
+      ua.indexOf('WhatsApp') > -1 ||
+      ua.indexOf('Line') > -1 ||
+      ua.indexOf('GSA') > -1
+    );
+  };
 
   const handleShareApp = async () => {
     const rawLink = window.location.origin + "/";
@@ -98,11 +110,35 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Filter tournaments by category and remove completed/winner declared matches
+  // Filter tournaments by category, mode, and remove completed/winner declared matches
   const filteredTournaments = (selectedCategory === 'All'
     ? tournaments
     : tournaments.filter(t => t.game_category.toLowerCase() === selectedCategory.toLowerCase())
-  ).filter(t => !t.winner_name);
+  ).filter(t => !t.winner_name)
+   .filter(t => {
+     if (selectedModeType === 'All') return true;
+     
+     const gm = (t.game_mode || '').toLowerCase();
+     const format = (t.format || '').toLowerCase();
+     const title = (t.title || '').toLowerCase();
+     const map = (t.map_name || '').toLowerCase();
+
+     const isClashSquad = gm.includes('cs') || gm.includes('clash') || format.includes('cs') || format.includes('clash') || title.includes('cs') || title.includes('clash') || title.includes('clash squad');
+     const isLoneWolf = gm.includes('lone') || gm.includes('wolf') || format.includes('lone') || format.includes('wolf') || title.includes('lone') || title.includes('wolf');
+
+     if (selectedModeType === 'CS') {
+       return isClashSquad && !isLoneWolf;
+     }
+     if (selectedModeType === 'Lone Wolf') {
+       return isLoneWolf;
+     }
+     if (selectedModeType === 'BR') {
+       // Battle Royale (BR) matches standard maps like Bermuda, but they are NOT Clash Squad or Lone Wolf
+       if (isClashSquad || isLoneWolf) return false;
+       return gm.includes('br') || gm.includes('battle') || format.includes('br') || format.includes('battle') || map.includes('bermuda') || map.includes('purgatory') || map.includes('erangel') || map.includes('kalahari') || map.includes('alpine') || title.includes('battle r') || title.includes('br');
+     }
+     return true;
+   });
 
   // Count active tournaments per category (excluding declared ones)
   const getCount = (gameName: string) => {
@@ -113,238 +149,157 @@ export const Dashboard: React.FC = () => {
     setSelectedMatch(match);
   };
 
-  const formatDate = (isoStr: string) => {
-    try {
-      const d = new Date(isoStr);
-      return d.toLocaleDateString(language === 'en' ? 'en-US' : 'bn-BD', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return isoStr;
-    }
-  };
-
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Scrolling Notice Banner */}
+    <div className="space-y-6 animate-fade-in text-left">
+      
+      {/* 1. ABSOLUTE TOP: NOTICE TICKER */}
       {settings.notice && (
         <div className="bg-amber-500/10 border border-amber-500/15 text-amber-300 px-4 py-2.5 rounded-2xl flex items-center gap-3 overflow-hidden text-xs font-semibold shadow-md">
           <span className="flex items-center gap-1 bg-amber-500 text-black px-2 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider shrink-0 font-mono">
             NOTICE
           </span>
-          <marquee className="font-mono text-xs text-slate-300 w-full" scrollamount="4">
+          <marquee className="font-mono text-xs text-slate-350 w-full font-semibold" scrollamount="4">
             {settings.notice}
           </marquee>
         </div>
       )}
 
-      {/* Native Notification Request Box (Bilingual, high polish) */}
-      {notificationPermission === 'default' && (
-        <div className="bg-gradient-to-r from-amber-500/10 via-orange-600/10 to-[#121420] border border-orange-500/20 p-4 sm:p-5 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in shadow-lg border-white/5">
-          <div className="flex items-center gap-3 text-left">
-            <div className="h-10 w-10 shrink-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white text-lg shadow-md hover:scale-105 transition-all">
-              📢
-            </div>
-            <div>
-              <h4 className="font-extrabold text-white text-[11px] sm:text-xs uppercase tracking-wider">
-                {language === 'en' ? 'Get Direct Game Alarms!' : 'ফোনে ইনস্ট্যান্ট এলার্ম পান!'}
-              </h4>
-              <p className="text-[11px] text-gray-400 font-sans mt-0.5 leading-tight">
-                {language === 'en' 
-                  ? 'Enable notifications to receive alerts 10 minutes before joined matches and for new match arrivals.'
-                  : 'নটিফিকেশন চালু রাখুন! প্রতিটি ম্যাচ শুরুর ১০ মিনিট আগে ও নতুন টুর্নামেন্ট এড করা হলে সরাসরি এলার্ম পাবেন।'}
-              </p>
-            </div>
-          </div>
+      {/* 2. SELECT GAME CATEGORY */}
+      <div className="bg-[#0b0c13] border border-gray-800/60 p-4 sm:p-5 rounded-3xl space-y-3 shadow-xl relative text-left">
+        <label className="text-[10px] text-gray-400 font-black uppercase tracking-widest block leading-none">
+          {language === 'en' ? '🎮 SELECT GAME CATEGORY:' : '🎮 গেম ক্যাটাগরি সিলেক্ট করুন:'}
+        </label>
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-800">
           <button
-            onClick={() => requestNotificationPermission()}
-            className="w-full sm:w-auto shrink-0 py-2.5 px-5 bg-gradient-to-r from-amber-500 to-orange-600 text-black hover:from-amber-400 hover:to-orange-500 font-extrabold rounded-2xl text-[11px] transition-all cursor-pointer whitespace-nowrap shadow-md select-none"
-          >
-            {language === 'en' ? 'Allow Notifications' : 'নোটিফিকেশন অন করুন'}
-          </button>
-        </div>
-      )}
-
-      {/* Promotional Banner */}
-      {settings.banner_url && (
-        <div className="relative rounded-3xl overflow-hidden border border-gray-800/80 h-36 sm:h-44 shadow-lg hover:border-gray-700/80 transition-all group">
-          <img 
-            src={settings.banner_url} 
-            alt="Promotion Banner" 
-            className="w-full h-full object-cover transition-all group-hover:scale-[1.01]" 
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#07080d]/60 via-transparent to-[#121420]/30 p-4 sm:p-6 flex flex-col justify-end">
-            <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest sm:mb-1 block">
-              {language === 'en' ? '★ SPECIAL TOURNAMENT ANNOUNCEMENT' : '★ বিশেষ টুর্নামেন্ট বিজ্ঞপ্তি'}
-            </span>
-            <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-none drop-shadow-md">
-              {language === 'en' ? 'Daily esports matches with instant cashout lobby' : 'দৈনিক মোবাইল টুর্নামেন্টে অংশ নিয়ে জিতে নিন কয়েন কিলার ব্যালেন্স'}
-            </h3>
-          </div>
-        </div>
-      )}
-
-      {/* Dynamic Header Promo */}
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-gray-900 to-[#1e1b4b] border border-gray-800 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-600/5 rounded-full blur-2xl pointer-events-none"></div>
-        
-        <div className="space-y-4 text-center md:text-left">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-semibold font-mono uppercase tracking-wide">
-            <Flame className="h-3 w-3 animate-pulse text-amber-500" />
-            {language === 'en' ? 'HOT TOURNAMENTS LIVE NOW' : 'লাইভ টুর্নামেন্ট টুডে'}
-          </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-sans font-extrabold text-white tracking-tight leading-none">
-            {t('appName')}
-          </h1>
-          <p className="text-gray-400 text-sm max-w-lg">
-            {t('tagline')}
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1">
-            <button
-              onClick={handleShareApp}
-              className={`py-3 px-6 rounded-2xl font-extrabold text-xs transition-colors flex items-center justify-center gap-2 active:scale-95 cursor-pointer shadow-lg hover:scale-[1.02] duration-200 ${
-                copied 
-                  ? 'bg-emerald-500 text-black shadow-emerald-500/10' 
-                  : 'bg-amber-500 hover:bg-amber-405 text-black shadow-amber-500/10'
-              }`}
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4 stroke-[3]" />
-                  <span>{language === 'en' ? 'App link copied to clipboard!' : 'অ্যাপ লিংক কপি করা হয়েছে!'}</span>
-                </>
-              ) : (
-                <>
-                  <Share2 className="h-4 w-4 stroke-[2.5]" />
-                  <span>{language === 'en' ? 'Share App with Friends' : 'বন্ধুদের সাথে অ্যাপ শেয়ার করুন 🔗'}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <div className="bg-[#111827]/80 rounded-2xl p-4 border border-gray-800 text-center flex-1 sm:min-w-[140px]">
-            <span className="block text-gray-400 text-xs uppercase tracking-wider">{language === 'en' ? 'ACTIVE MATCHES' : 'চলমান ম্যাচ'}</span>
-            <span className="text-2xl font-mono font-bold text-amber-400">{tournaments.length}</span>
-          </div>
-          <div className="bg-[#111827]/80 rounded-2xl p-4 border border-gray-800 text-center flex-1 sm:min-w-[140px]">
-            <span className="block text-gray-400 text-xs uppercase tracking-wider">{language === 'en' ? 'CONVERSION RATE' : 'মূল্য পরিবর্তন'}</span>
-            <span className="text-lg font-bold text-emerald-400">1 BDT = 1 Coin</span>
-          </div>
-        </div>
-      </div>
-
-      {/* GAME CATEGORIES CAROUSEL/GRID */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg sm:text-xl font-sans font-extrabold text-white tracking-tight flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-amber-500" />
-            {t('gameCategories')}
-          </h2>
-
-          {selectedCategory !== 'All' && (
-            <button
-              onClick={() => setSelectedCategory('All')}
-              className="text-xs font-semibold text-amber-400 hover:text-amber-300"
-            >
-              {language === 'en' ? 'View All Games' : 'সব গেম দেখুন'} &rarr;
-            </button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          {/* Default ALL Category Card */}
-          <div
             onClick={() => setSelectedCategory('All')}
-            className={`cursor-pointer rounded-2xl p-4 transition-all relative overflow-hidden flex flex-col justify-between h-28 border border-gray-800/80 hover:scale-[1.02] ${
+            className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-150 whitespace-nowrap cursor-pointer select-none border shrink-0 ${
               selectedCategory === 'All'
-                ? 'bg-gradient-to-br from-amber-500/20 to-orange-600/10 border-amber-500/50 shadow-lg shadow-amber-500/5'
-                : 'bg-[#181a26]/90 hover:bg-[#1f2130]'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-black border-amber-400 shadow-md font-black'
+                : 'bg-[#141624]/80 hover:bg-[#1a1d30] text-gray-300 border-gray-800/80'
             }`}
           >
-            <span className="text-2xl">🔥</span>
-            <div>
-              <span className="block font-bold text-white text-sm sm:text-base">{t('allGames')}</span>
-              <span className="text-[10px] sm:text-xs text-gray-400">
-                {tournaments.length} {language === 'en' ? 'Matches' : 'টি টুর্নামেন্ট'}
-              </span>
-            </div>
-            {selectedCategory === 'All' && (
-              <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-500"></div>
-            )}
-          </div>
-
-          {/* Dynamic Categories Cards */}
+            <span>🔥</span>
+            <span>{language === 'en' ? 'All Games' : 'সকল গেম'}</span>
+          </button>
           {categories.map((cat) => {
             const isSel = selectedCategory.toLowerCase() === cat.name.toLowerCase();
             const count = getCount(cat.name);
             return (
-              <div
+              <button
                 key={cat.name}
                 onClick={() => setSelectedCategory(cat.name)}
-                className={`cursor-pointer rounded-2xl p-4 transition-all relative overflow-hidden flex flex-col justify-between h-28 border hover:scale-[1.02] ${
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-150 whitespace-nowrap cursor-pointer select-none border shrink-0 ${
                   isSel
-                    ? `bg-gradient-to-br ${cat.color}/20 border-amber-400 shadow-md shadow-amber-500/5`
-                    : 'bg-[#181a26]/90 hover:bg-[#1f2130] border-gray-800/80'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-black border-amber-400 shadow-md font-black'
+                    : 'bg-[#141624]/80 hover:bg-[#1a1d30] text-gray-300 border-gray-800/80'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl">{cat.icon}</span>
-                  {count > 0 && (
-                    <span className="text-[9px] px-2 py-0.5 font-bold font-mono text-black bg-amber-400 rounded-full">
-                      {count}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <span className="block font-bold text-white text-sm sm:text-base">{cat.name}</span>
-                  <span className="text-[10px] text-gray-400 line-clamp-1">{cat.desc}</span>
-                </div>
-                {isSel && (
-                  <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-500"></div>
+                <span className="text-sm">{cat.icon}</span>
+                <span>{cat.name}</span>
+                {count > 0 && (
+                  <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded-full font-mono font-bold">
+                    {count}
+                  </span>
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
-      </section>
+      </div>
 
-      {/* TOURNAMENT Matches List */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg sm:text-xl font-sans font-extrabold text-white tracking-tight">
-            {selectedCategory === 'All' 
-              ? t('activeTournaments')
-              : t('tournamentsFor', { game: selectedCategory })}
+      {/* 3. SELECT SLOT MODE (BR, CS, LONE WOLF) */}
+      <div className="space-y-2">
+        <label className="text-[10px] text-[#a78bfa] font-black uppercase tracking-widest block leading-none">
+          {language === 'en' ? '⚡ SELECT SLOT MODE' : '⚡ গেম খেলার স্লট মোড (CS / BR / লোন উলফ):'}
+        </label>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 w-full">
+          {[
+            { id: 'All', labelEn: 'All Modes & Slots', labelBn: 'সকল স্লট 🎮', icon: '🔥' },
+            { id: 'CS', labelEn: 'Clash Squad (CS)', labelBn: 'CS স্লট (ক্ল্যাশ স্কোয়াড) 💥', icon: '⚡' },
+            { id: 'BR', labelEn: 'Battle Royale (BR)', labelBn: 'BR স্লট (ব্যাটেল রয়্যাল) 🗺️', icon: '🏆' },
+            { id: 'Lone Wolf', labelEn: 'Lone Wolf', labelBn: 'লোন উলফ 🐺', icon: '⚔️' }
+          ].map((mode) => {
+            const isSel = selectedModeType === mode.id;
+            return (
+              <button
+                key={mode.id}
+                onClick={() => setSelectedModeType(mode.id)}
+                className={`flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl text-[11px] sm:text-xs font-black transition-all relative cursor-pointer active:scale-95 whitespace-nowrap select-none border-2 duration-150 ${
+                  isSel 
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-black border-amber-400 shadow-lg font-black'
+                    : 'bg-[#141624]/80 hover:bg-[#1a1d30] text-gray-300 border-gray-800/80'
+                }`}
+              >
+                <span className="text-sm shrink-0">{mode.icon}</span>
+                <span className="truncate">{language === 'en' ? mode.labelEn : mode.labelBn}</span>
+                {isSel && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse border-2 border-black" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ⚠️ CRITICAL RULES DISCIPLINE WARNING CARD */}
+      <div className="bg-gradient-to-r from-[#170e0a] via-[#22130c] to-[#170e0a] border-2 border-rose-600/40 p-4.5 rounded-3xl flex flex-row items-center gap-4.5 shadow-2xl relative overflow-hidden animate-slide-up">
+        {/* Blinking orange status dot */}
+        <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+          <span className="text-[8px] text-rose-400 font-black uppercase font-mono tracking-widest hidden sm:inline-block">RULE WARNING</span>
+        </div>
+        <div className="bg-gradient-to-br from-amber-500 to-rose-600 text-black p-3 rounded-2xl shadow-lg shrink-0 flex items-center justify-center">
+          <AlertTriangle className="h-6 w-6 text-black animate-bounce shrink-0" />
+        </div>
+        <div className="space-y-1 text-left">
+          <h4 className="text-xs font-black text-amber-500 uppercase tracking-wide font-mono flex items-center gap-1">
+            ⚠️ {language === 'en' ? 'POLICY & MATCH RULES WARNING' : 'ম্যাচ পলিসি সতর্কবার্তা'}
+          </h4>
+          <p className="text-xs sm:text-sm text-gray-200 font-bold leading-relaxed max-w-xl">
+            {language === 'en' 
+              ? 'It is strictly mandatory to read the rules before playing any match. Otherwise, you run the risk of losing prizes even if you win!'
+              : 'প্রতিটি গেম খেলার পূর্বে রুলস পড়া আবশ্যক, নইলে পুরস্কার জেতার শর্তেও তা মিস হতে পারে!'}
+          </p>
+        </div>
+      </div>
+
+      {/* 2. INSTANT TOURNAMENT MATCH LIST */}
+      <div className="space-y-4 pt-1">
+        <div className="flex items-center justify-between border-b border-gray-800/50 pb-2">
+          <h2 className="text-md sm:text-lg font-extrabold text-white tracking-tight flex items-center gap-1.5 leading-none">
+            <Trophy className="h-4.5 w-4.5 text-amber-500 animate-pulse" />
+            <span>
+              {selectedCategory === 'All' 
+                ? (language === 'en' ? 'Available Matches To Join' : 'খেলার জন্য উপলব্ধ ম্যাচ সমুহ')
+                : t('tournamentsFor', { game: selectedCategory })}
+            </span>
           </h2>
-          <span className="text-xs text-gray-400 font-mono">
-            {filteredTournaments.length} {language === 'en' ? 'Available' : 'টি উপলভ্য'}
+          <span className="text-[11px] text-gray-400 font-mono font-bold bg-[#141624] border border-gray-800 px-2.5 py-1 rounded-lg">
+            {filteredTournaments.length} {language === 'en' ? 'Matches' : 'টি ম্যাচ'}
           </span>
         </div>
 
         {filteredTournaments.length === 0 ? (
-          <div className="border border-dashed border-gray-800 rounded-3xl p-12 text-center bg-[#0d0e16]/40 max-w-2xl mx-auto space-y-4">
-            <Info className="h-10 w-10 text-slate-500 mx-auto" />
-            <h3 className="text-white font-bold">{language === 'en' ? 'No Games Active' : 'কোন ম্যাচ চালু নেই'}</h3>
-            <p className="text-gray-400 text-xs leading-relaxed">
-              {t('noTournaments')}
+          <div className="border border-dashed border-gray-850 rounded-3xl p-10 text-center bg-[#0d0e16]/40 max-w-2xl mx-auto space-y-3">
+            <Info className="h-8 w-8 text-slate-500 mx-auto" />
+            <h3 className="text-white font-bold text-sm">{language === 'en' ? 'No Matches in This Slot' : 'এই স্লটে নতুন কোনো ম্যাচ নেই'}</h3>
+            <p className="text-gray-400 text-[11px] leading-relaxed max-w-xs mx-auto">
+              {language === 'en' 
+                ? 'There are currently no active matches for the selected categories/slots. Please choose another game or wait for newer matches.'
+                : 'এই স্লটের সব ম্যাচ সম্পূর্ণ হয়ে গেছে অথবা এখনও চালু করা হয়নি। অনুগ্রহ করে অন্য স্লট বা গেম ক্যাটাগরি সিলেক্ট করুন।'}
             </p>
             <button
-              onClick={() => setCurrentView('dev' as any)}
-              className="mt-2 text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-4 py-2 hover:bg-amber-500/20 rounded-xl transition-all"
+              onClick={() => {
+                setSelectedCategory('All');
+                setSelectedModeType('All');
+              }}
+              className="mt-1 text-xs bg-amber-550/10 border border-amber-500/20 text-amber-400 px-3.5 py-1.5 hover:bg-amber-500/20 rounded-xl transition-all font-bold cursor-pointer"
             >
-              {language === 'en' ? 'Access Testing Seeder Panel' : 'টেস্টার প্যানেল খুলুন'}
+              {language === 'en' ? 'Reset All Filters' : 'ফিল্টার রিসেট করুন'}
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 max-w-2xl mx-auto w-full">
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 max-w-2xl mx-auto w-full">
             {filteredTournaments.map((match) => {
               const capUsed = match.joined_count;
               const capTotal = match.total_slots;
@@ -355,7 +310,7 @@ export const Dashboard: React.FC = () => {
               return (
                 <div
                   key={match.match_id}
-                  className="bg-[#121420] border border-gray-800/90 rounded-3xl hover:border-amber-500/30 overflow-hidden flex flex-col justify-between transition-all group duration-300"
+                  className="bg-[#121420] border-2 border-gray-800/80 rounded-3xl hover:border-amber-500/40 overflow-hidden flex flex-col justify-between transition-all group duration-300 shadow-lg"
                 >
                   {/* Game Cover Banner Image slot */}
                   <div className="relative aspect-[16/9] w-full overflow-hidden shrink-0 bg-[#0d0e16]/85 border-b border-gray-800/40">
@@ -384,15 +339,15 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Body details and parameters metadata */}
-                  <div className="p-4 border-b border-gray-800/50 space-y-3.5">
+                  <div className="p-4 border-b border-gray-800/50 space-y-3.5 text-left">
                     <h3 className="font-extrabold text-white text-sm sm:text-base tracking-tight line-clamp-1">
                       {match.title}
                     </h3>
 
                     {/* Metadata attributes */}
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="flex items-center gap-1 text-gray-400 bg-[#0d0e16]/55 px-2.5 py-1.5 rounded-xl border border-white/5">
-                        <span className="text-[10px] text-gray-500 uppercase">
+                      <div className="flex items-center gap-1.5 text-gray-400 bg-[#0d0e16]/55 px-2.5 py-1.5 rounded-xl border border-white/5">
+                        <span className="text-[10px] text-gray-500 uppercase font-black font-semibold">
                           {(() => {
                             switch (match.game_category) {
                               case 'Ludo': return language === 'en' ? 'Board:' : 'বোর্ড:';
@@ -404,7 +359,7 @@ export const Dashboard: React.FC = () => {
                             }
                           })()}
                         </span>
-                        <span className="font-semibold text-white truncate text-[11px]">
+                        <span className="font-bold text-white truncate text-[11px]">
                           {match.map_name || (() => {
                             switch (match.game_category) {
                               case 'Ludo': return 'Classic Board';
@@ -419,8 +374,8 @@ export const Dashboard: React.FC = () => {
                           })()}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 text-gray-400 bg-[#0d0e16]/55 px-2.5 py-1.5 rounded-xl border border-white/5">
-                        <span className="text-[10px] text-gray-500 uppercase">
+                      <div className="flex items-center gap-1.5 text-gray-400 bg-[#0d0e16]/55 px-2.5 py-1.5 rounded-xl border border-white/5">
+                        <span className="text-[10px] text-gray-500 uppercase font-black">
                           {(() => {
                             switch (match.game_category) {
                               case 'Ludo':
@@ -432,7 +387,7 @@ export const Dashboard: React.FC = () => {
                             }
                           })()}
                         </span>
-                        <span className="font-semibold text-white truncate text-[11px]">
+                        <span className="font-bold text-white truncate text-[11px]">
                           {match.format || (() => {
                             switch (match.game_category) {
                               case 'Ludo': return '1v1';
@@ -451,21 +406,21 @@ export const Dashboard: React.FC = () => {
                   {/* Economy/Reward Grid */}
                   <div className="bg-[#1a1c2b]/30 p-4 grid grid-cols-3 gap-1 border-b border-gray-800/40 text-center">
                     <div>
-                      <span className="block text-[9px] text-slate-500 uppercase font-medium">
+                      <span className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider">
                         {t('prizePool')}
                       </span>
-                      <span className="text-sm font-mono font-extrabold text-amber-400">
+                      <span className="text-sm font-mono font-black text-amber-500">
                         {match.prize_pool} C
                       </span>
                     </div>
 
                     <div>
-                      <span className="block text-[9px] text-slate-500 uppercase font-medium">
+                      <span className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider">
                         {['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(match.game_category) 
                           ? t('perKill') 
                           : language === 'en' ? 'Kill Reward' : 'কিল পুরস্কার'}
                       </span>
-                      <span className={`text-sm font-mono font-extrabold ${['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(match.game_category) ? 'text-emerald-400' : 'text-gray-500'}`}>
+                      <span className={`text-sm font-mono font-black ${['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(match.game_category) ? 'text-emerald-400' : 'text-gray-500'}`}>
                         {['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(match.game_category) 
                           ? `${match.per_kill || '0'} C` 
                           : 'N/A'}
@@ -473,60 +428,60 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     <div>
-                      <span className="block text-[9px] text-slate-500 uppercase font-medium">
+                      <span className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider">
                         {t('entryFee')}
                       </span>
-                      <span className="text-sm font-mono font-extrabold text-white">
+                      <span className="text-sm font-mono font-black text-white">
                         {match.entry_fee || 'FREE'} C
                       </span>
                     </div>
                   </div>
 
-                  {/* Seat availability counter */}
-                  <div className="p-4 space-y-3">
+                  {/* Seat availability counter & Joining Call-To-Action Option */}
+                  <div className="p-4 space-y-3.5">
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-gray-400 flex items-center gap-1.5">
+                        <span className="text-gray-400 flex items-center gap-1.5 font-semibold">
                           <Users className="h-3.5 w-3.5 text-indigo-400" />
-                          {capUsed} / {capTotal} {language === 'en' ? 'Players' : 'খেলোয়াড়'}
+                          {capUsed} / {capTotal} {language === 'en' ? 'Players' : 'নিবন্ধিত খেলোয়াড়'}
                         </span>
-                        <span className="font-mono text-gray-500 font-bold">
+                        <span className="font-mono text-gray-400 font-black">
                           {capTotal - capUsed} {t('slotsAvailable')}
                         </span>
                       </div>
                       
                       {/* Custom progress bar */}
-                      <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-gray-950 rounded-full overflow-hidden border border-white/5">
                         <div 
-                          className="h-full bg-gradient-to-r from-amber-500 to-orange-600 rounded-full transition-all" 
+                          className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-650 rounded-full transition-all duration-300" 
                           style={{ width: `${pct}%` }}
                         />
                       </div>
                     </div>
 
-                    {/* Button with validation action checks */}
+                    {/* Prominent, clean action option button */}
                     {isJoined ? (
                       <button
                         onClick={() => {
                           setCurrentView('joined');
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className="w-full py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-1 cursor-pointer select-none"
+                        className="w-full py-3 bg-emerald-500/15 hover:bg-emerald-500/25 border-2 border-emerald-500/40 text-emerald-400 font-extrabold rounded-2xl text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none uppercase tracking-wider"
                       >
                         <UserCheck className="h-4 w-4" />
-                        {language === 'en' ? 'Registered - View Room Card' : 'নিবন্ধিত সম্পন্ন - রুম আইডি দেখুন'}
+                        <span>{language === 'en' ? 'Registered - View Room Info' : 'নিবন্ধিত সম্পন্ন - রুম আইডি দেখুন 🔑'}</span>
                       </button>
                     ) : isFull ? (
-                      <div className="w-full text-center py-2 bg-gray-800 text-gray-500 rounded-xl font-bold text-xs">
+                      <div className="w-full text-center py-3 bg-gray-800 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-wider">
                         {t('matchFull')}
                       </div>
                     ) : (
                       <button
                         onClick={() => handleMatchClick(match)}
-                        className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-1 cursor-pointer hover:shadow-lg hover:shadow-orange-500/5 select-none"
+                        className="w-full py-3 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 hover:from-amber-350 hover:to-orange-450 text-black font-black rounded-2xl text-xs sm:text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:shadow-lg hover:shadow-orange-500/10 hover:scale-[1.01] active:scale-95 duration-150 select-none uppercase tracking-wider"
                       >
-                        {t('joinNow')}
-                        <ArrowRight className="h-3 w-3" />
+                        <span>{language === 'en' ? 'JOIN MATCH NOW' : 'টুর্নামেন্টে জয়েন করুন 🎮'}</span>
+                        <ArrowRight className="h-4 w-4 stroke-[3]" />
                       </button>
                     )}
                   </div>
@@ -535,7 +490,7 @@ export const Dashboard: React.FC = () => {
             })}
           </div>
         )}
-      </section>
+      </div>
 
       {/* Confirmation Slide-up Bottom Sheet Modal */}
       {selectedMatch && (
