@@ -72,7 +72,7 @@ const AppContent: React.FC = () => {
       <Header />
 
       {/* Main Body Grid Container */}
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 pb-24 md:pb-8">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-2 md:px-6 lg:px-8 py-4 md:py-8 space-y-4 md:space-y-8 pb-24 md:pb-8">
         
         {/* Dynamic Route views */}
         <div className="py-2">

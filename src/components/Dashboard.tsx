@@ -212,7 +212,7 @@ export const Dashboard: React.FC = () => {
         <label className="text-[10px] text-[#a78bfa] font-black uppercase tracking-widest block leading-none">
           {language === 'en' ? '⚡ SELECT SLOT MODE' : '⚡ গেম খেলার স্লট মোড (CS / BR / লোন উলফ):'}
         </label>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 w-full">
+        <div className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-gray-800 w-full">
           {[
             { id: 'All', labelEn: 'All Modes & Slots', labelBn: 'সকল স্লট 🎮', icon: '🔥' },
             { id: 'CS', labelEn: 'Clash Squad (CS)', labelBn: 'CS স্লট (ক্ল্যাশ স্কোয়াড) 💥', icon: '⚡' },
@@ -224,14 +224,14 @@ export const Dashboard: React.FC = () => {
               <button
                 key={mode.id}
                 onClick={() => setSelectedModeType(mode.id)}
-                className={`flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl text-[11px] sm:text-xs font-black transition-all relative cursor-pointer active:scale-95 whitespace-nowrap select-none border-2 duration-150 ${
+                className={`flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[11px] sm:text-xs font-black transition-all relative cursor-pointer active:scale-95 whitespace-nowrap select-none border shrink-0 duration-150 ${
                   isSel 
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-black border-amber-400 shadow-lg font-black'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-black border-amber-400 shadow-md font-black'
                     : 'bg-[#141624]/80 hover:bg-[#1a1d30] text-gray-300 border-gray-800/80'
                 }`}
               >
                 <span className="text-sm shrink-0">{mode.icon}</span>
-                <span className="truncate">{language === 'en' ? mode.labelEn : mode.labelBn}</span>
+                <span>{language === 'en' ? mode.labelEn : mode.labelBn}</span>
                 {isSel && (
                   <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse border-2 border-black" />
                 )}
@@ -299,7 +299,7 @@ export const Dashboard: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:gap-5 max-w-2xl mx-auto w-full">
+          <div className="grid grid-cols-1 gap-4 sm:gap-5 max-w-2xl mx-auto w-full pb-28">
             {filteredTournaments.map((match) => {
               const capUsed = match.joined_count;
               const capTotal = match.total_slots;
@@ -313,7 +313,7 @@ export const Dashboard: React.FC = () => {
                   className="bg-[#121420] border-2 border-gray-800/80 rounded-3xl hover:border-amber-500/40 overflow-hidden flex flex-col justify-between transition-all group duration-300 shadow-lg"
                 >
                   {/* Game Cover Banner Image slot */}
-                  <div className="relative aspect-[16/9] w-full overflow-hidden shrink-0 bg-[#0d0e16]/85 border-b border-gray-800/40">
+                  <div className="relative h-32 sm:h-48 w-full overflow-hidden shrink-0 bg-[#0d0e16]/85 border-b border-gray-800/40">
                     <img
                       src={match.image_url || getGameFallbackBanner(match.game_category)}
                       alt={match.title}
@@ -339,7 +339,7 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Body details and parameters metadata */}
-                  <div className="p-4 border-b border-gray-800/50 space-y-3.5 text-left">
+                  <div className="p-3.5 sm:p-4 border-b border-gray-800/50 space-y-2.5 sm:space-y-3.5 text-left">
                     <h3 className="font-extrabold text-white text-sm sm:text-base tracking-tight line-clamp-1">
                       {match.title}
                     </h3>
@@ -404,7 +404,7 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Economy/Reward Grid */}
-                  <div className="bg-[#1a1c2b]/30 p-4 grid grid-cols-3 gap-1 border-b border-gray-800/40 text-center">
+                  <div className="bg-[#1a1c2b]/30 p-3 sm:p-4 grid grid-cols-3 gap-1 border-b border-gray-800/40 text-center">
                     <div>
                       <span className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider">
                         {t('prizePool')}
@@ -438,7 +438,7 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Seat availability counter & Joining Call-To-Action Option */}
-                  <div className="p-4 space-y-3.5">
+                  <div className="p-3 sm:p-4 space-y-2.5 sm:space-y-3.5">
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-gray-400 flex items-center gap-1.5 font-semibold">
