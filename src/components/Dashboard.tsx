@@ -240,8 +240,6 @@ export const Dashboard: React.FC = () => {
           })}
         </div>
       </div>
-
-      {/* ⚠️ CRITICAL RULES DISCIPLINE WARNING CARD */}
       <div className="bg-gradient-to-r from-[#170e0a] via-[#22130c] to-[#170e0a] border-2 border-rose-600/40 p-4.5 rounded-3xl flex flex-row items-center gap-4.5 shadow-2xl relative overflow-hidden animate-slide-up">
         {/* Blinking orange status dot */}
         <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5">
@@ -285,21 +283,21 @@ export const Dashboard: React.FC = () => {
             <h3 className="text-white font-bold text-sm">{language === 'en' ? 'No Matches in This Slot' : 'এই স্লটে নতুন কোনো ম্যাচ নেই'}</h3>
             <p className="text-gray-400 text-[11px] leading-relaxed max-w-xs mx-auto">
               {language === 'en' 
-                ? 'There are currently no active matches for the selected categories/slots. Please choose another game or wait for newer matches.'
-                : 'এই স্লটের সব ম্যাচ সম্পূর্ণ হয়ে গেছে অথবা এখনও চালু করা হয়নি। অনুগ্রহ করে অন্য স্লট বা গেম ক্যাটাগরি সিলেক্ট করুন।'}
+                ? 'There are currently no active matches for the selected categories/slots.'
+                : 'এই স্লটের সব ম্যাচ সম্পূর্ণ হয়ে গেছে অথবা এখনও চালু করা হয়নি।'}
             </p>
             <button
               onClick={() => {
                 setSelectedCategory('All');
                 setSelectedModeType('All');
               }}
-              className="mt-1 text-xs bg-amber-550/10 border border-amber-500/20 text-amber-400 px-3.5 py-1.5 hover:bg-amber-500/20 rounded-xl transition-all font-bold cursor-pointer"
+              className="mt-1 text-xs bg-amber-500/10 border border-amber-500/20 text-amber-400 px-3.5 py-1.5 hover:bg-amber-500/20 rounded-xl transition-all font-bold cursor-pointer"
             >
               {language === 'en' ? 'Reset All Filters' : 'ফিল্টার রিসেট করুন'}
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:gap-5 max-w-2xl mx-auto w-full pb-28">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-1.5 xs:gap-2.5 sm:gap-4 pb-28 w-full px-0.5 md:px-0">
             {filteredTournaments.map((match) => {
               const capUsed = match.joined_count;
               const capTotal = match.total_slots;
@@ -310,10 +308,10 @@ export const Dashboard: React.FC = () => {
               return (
                 <div
                   key={match.match_id}
-                  className="bg-[#121420] border-2 border-gray-800/80 rounded-3xl hover:border-amber-500/40 overflow-hidden flex flex-col justify-between transition-all group duration-300 shadow-lg"
+                  className="bg-[#121420] border border-gray-850 xs:border-2 xs:border-gray-800/80 rounded-xl xs:rounded-2xl hover:border-amber-500/40 overflow-hidden flex flex-col justify-between transition-all group duration-350 shadow-md w-full"
                 >
                   {/* Game Cover Banner Image slot */}
-                  <div className="relative h-32 sm:h-48 w-full overflow-hidden shrink-0 bg-[#0d0e16]/85 border-b border-gray-800/40">
+                  <div className="relative h-16 xs:h-20 sm:h-36 md:h-44 lg:h-48 w-full overflow-hidden shrink-0 bg-[#0d0e16]/85 border-b border-gray-800/40">
                     <img
                       src={match.image_url || getGameFallbackBanner(match.game_category)}
                       alt={match.title}
@@ -324,12 +322,12 @@ export const Dashboard: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-[#121420] via-transparent to-black/35" />
                     
                     {/* Floating top tags and clock */}
-                    <div className="absolute top-3.5 left-3.5 flex gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-extrabold font-mono px-3 py-1 rounded-lg bg-black/70 backdrop-blur-md text-amber-400 border border-amber-500/20 shadow-lg select-none">
+                    <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 flex gap-1 flex-wrap">
+                      <span className="text-[6px] xs:text-[8px] sm:text-[10px] font-extrabold font-mono px-1 py-0.5 sm:px-3 sm:py-1 rounded-sm sm:rounded-lg bg-black/70 backdrop-blur-md text-amber-400 border border-amber-500/20 shadow-lg select-none leading-none">
                         {match.game_category}
                       </span>
                       {match.game_mode && (
-                        <span className="text-[9px] font-black font-sans px-2.5 py-1 rounded-md bg-[#a78bfa] text-black border border-[#a78bfa]/20 uppercase tracking-wider shadow-lg select-none">
+                        <span className="text-[6px] xs:text-[8px] sm:text-[9px] font-black font-sans px-1 py-0.5 sm:px-2.5 sm:py-1 rounded-sm sm:rounded-md bg-[#a78bfa] text-black border border-[#a78bfa]/20 uppercase tracking-wider shadow-lg select-none leading-none">
                           {match.game_mode.replace(/\s*\(.*\)/g, '')}
                         </span>
                       )}
@@ -339,34 +337,34 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Body details and parameters metadata */}
-                  <div className="p-3.5 sm:p-4 border-b border-gray-800/50 space-y-2.5 sm:space-y-3.5 text-left">
-                    <h3 className="font-extrabold text-white text-sm sm:text-base tracking-tight line-clamp-1">
+                  <div className="p-1.5 xs:p-2 sm:p-4 border-b border-gray-800/50 space-y-1 xs:space-y-1.5 sm:space-y-3.5 text-left">
+                    <h3 className="font-extrabold text-white text-[10px] xs:text-xs sm:text-base tracking-tight line-clamp-1 leading-tight sm:leading-normal">
                       {match.title}
                     </h3>
 
                     {/* Metadata attributes */}
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="flex items-center gap-1.5 text-gray-400 bg-[#0d0e16]/55 px-2.5 py-1.5 rounded-xl border border-white/5">
-                        <span className="text-[10px] text-gray-500 uppercase font-black font-semibold">
+                    <div className="grid grid-cols-2 gap-1 sm:gap-2 text-[8px] xs:text-[10px] sm:text-xs">
+                      <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 text-gray-400 bg-[#0d0e16]/55 px-1 xs:px-1.5 py-0.5 xs:py-1 sm:px-2.5 sm:py-1.5 rounded-md sm:rounded-xl border border-white/5 min-w-0">
+                        <span className="text-[6px] xs:text-[7px] sm:text-[10px] text-gray-500 uppercase font-black shrink-0">
                           {(() => {
                             switch (match.game_category) {
                               case 'Ludo': return language === 'en' ? 'Board:' : 'বোর্ড:';
-                              case 'DLS': return language === 'en' ? 'Rules:' : 'নিয়মাবলি:';
+                              case 'DLS': return language === 'en' ? 'Rules:' : 'নিয়ম:';
                               case 'COC': return language === 'en' ? 'Arena:' : 'রঙ্গভূমি:';
                               case 'Subway Surfers': return language === 'en' ? 'Target:' : 'টার্গেট:';
                               case 'Mobile Legends': return language === 'en' ? 'Map:' : 'ম্যাপ:';
-                              default: return t('map') + ':';
+                              default: return (language === 'en' ? 'Map:' : 'ম্যাপ:');
                             }
                           })()}
                         </span>
-                        <span className="font-bold text-white truncate text-[11px]">
+                        <span className="font-bold text-white truncate text-[8px] xs:text-[9px] sm:text-[11px]">
                           {match.map_name || (() => {
                             switch (match.game_category) {
-                              case 'Ludo': return 'Classic Board';
-                              case 'DLS': return '6 Mins (Any Team)';
-                              case 'COC': return 'TownHall 12+';
-                              case 'Subway Surfers': return '10 Lakh Target';
-                              case 'Mobile Legends': return 'Land of Dawn';
+                              case 'Ludo': return 'Classic';
+                              case 'DLS': return '6 Min';
+                              case 'COC': return 'TH12+';
+                              case 'Subway Surfers': return '10 L';
+                              case 'Mobile Legends': return 'MLBB';
                               case 'PUBG/BGMI': return 'Erangel';
                               case 'Call of Duty': return 'Crash';
                               default: return 'Bermuda';
@@ -374,8 +372,8 @@ export const Dashboard: React.FC = () => {
                           })()}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-gray-400 bg-[#0d0e16]/55 px-2.5 py-1.5 rounded-xl border border-white/5">
-                        <span className="text-[10px] text-gray-500 uppercase font-black">
+                      <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 text-gray-400 bg-[#0d0e16]/55 px-1 xs:px-1.5 py-0.5 xs:py-1 sm:px-2.5 sm:py-1.5 rounded-md sm:rounded-xl border border-white/5 min-w-0">
+                        <span className="text-[6px] xs:text-[7px] sm:text-[10px] text-gray-500 uppercase font-black shrink-0">
                           {(() => {
                             switch (match.game_category) {
                               case 'Ludo':
@@ -383,11 +381,11 @@ export const Dashboard: React.FC = () => {
                               case 'COC':
                               case 'Mobile Legends': return language === 'en' ? 'Mode:' : 'মোড:';
                               case 'Subway Surfers': return language === 'en' ? 'Type:' : 'ধরণ:';
-                              default: return t('format') + ':';
+                              default: return (language === 'en' ? 'Format:' : 'ফরমেট:');
                             }
                           })()}
                         </span>
-                        <span className="font-bold text-white truncate text-[11px]">
+                        <span className="font-bold text-white truncate text-[8px] xs:text-[9px] sm:text-[11px]">
                           {match.format || (() => {
                             switch (match.game_category) {
                               case 'Ludo': return '1v1';
@@ -404,54 +402,54 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Economy/Reward Grid */}
-                  <div className="bg-[#1a1c2b]/30 p-3 sm:p-4 grid grid-cols-3 gap-1 border-b border-gray-800/40 text-center">
+                  <div className="bg-[#1a1c2b]/30 p-1 xs:p-1.5 sm:p-4 grid grid-cols-3 gap-0.5 sm:gap-1 border-b border-gray-800/40 text-center">
                     <div>
-                      <span className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider">
+                      <span className="block text-[6px] xs:text-[7px] sm:text-[9px] text-slate-500 uppercase font-bold tracking-wider leading-none mb-0.5">
                         {t('prizePool')}
                       </span>
-                      <span className="text-sm font-mono font-black text-amber-500">
-                        {match.prize_pool} C
+                      <span className="text-[8px] xs:text-[10px] sm:text-sm font-mono font-black text-amber-500">
+                        {match.prize_pool}C
                       </span>
                     </div>
 
                     <div>
-                      <span className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider">
+                      <span className="block text-[6px] xs:text-[7px] sm:text-[9px] text-slate-500 uppercase font-bold tracking-wider leading-none mb-0.5">
                         {['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(match.game_category) 
-                          ? t('perKill') 
-                          : language === 'en' ? 'Kill Reward' : 'কিল পুরস্কার'}
+                          ? (language === 'en' ? 'Per Kill' : 'প্রতি কিল') 
+                          : language === 'en' ? 'Reward' : 'পুরস্কার'}
                       </span>
-                      <span className={`text-sm font-mono font-black ${['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(match.game_category) ? 'text-emerald-400' : 'text-gray-500'}`}>
+                      <span className={`text-[8px] xs:text-[10px] sm:text-sm font-mono font-black ${['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(match.game_category) ? 'text-emerald-400' : 'text-gray-500'}`}>
                         {['Free Fire', 'PUBG/BGMI', 'Call of Duty'].includes(match.game_category) 
-                          ? `${match.per_kill || '0'} C` 
+                          ? `${match.per_kill || '0'}C` 
                           : 'N/A'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider">
+                      <span className="block text-[6px] xs:text-[7px] sm:text-[9px] text-slate-500 uppercase font-bold tracking-wider leading-none mb-0.5">
                         {t('entryFee')}
                       </span>
-                      <span className="text-sm font-mono font-black text-white">
-                        {match.entry_fee || 'FREE'} C
+                      <span className="text-[8px] xs:text-[10px] sm:text-sm font-mono font-black text-white">
+                        {match.entry_fee || 'FREE'}C
                       </span>
                     </div>
                   </div>
 
                   {/* Seat availability counter & Joining Call-To-Action Option */}
-                  <div className="p-3 sm:p-4 space-y-2.5 sm:space-y-3.5">
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-gray-400 flex items-center gap-1.5 font-semibold">
-                          <Users className="h-3.5 w-3.5 text-indigo-400" />
-                          {capUsed} / {capTotal} {language === 'en' ? 'Players' : 'নিবন্ধিত খেলোয়াড়'}
+                  <div className="p-1.5 xs:p-2 sm:p-4 space-y-1 xs:space-y-1.5 sm:space-y-3.5">
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center text-[7px] xs:text-[8px] sm:text-xs">
+                        <span className="text-gray-400 flex items-center gap-0.5 xs:gap-1 font-semibold truncate">
+                          <Users className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5 text-indigo-400 shrink-0" />
+                          <span className="truncate">{capUsed}/{capTotal} {language === 'en' ? 'Joined' : 'নিবন্ধিত'}</span>
                         </span>
-                        <span className="font-mono text-gray-400 font-black">
-                          {capTotal - capUsed} {t('slotsAvailable')}
+                        <span className="font-mono text-gray-450 font-extrabold shrink-0">
+                          {capTotal - capUsed} {language === 'en' ? 'Left' : 'বাকি'}
                         </span>
                       </div>
                       
                       {/* Custom progress bar */}
-                      <div className="w-full h-2 bg-gray-950 rounded-full overflow-hidden border border-white/5">
+                      <div className="w-full h-1 sm:h-2 bg-gray-950 rounded-full overflow-hidden border border-white/5">
                         <div 
                           className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-650 rounded-full transition-all duration-300" 
                           style={{ width: `${pct}%` }}
@@ -466,22 +464,22 @@ export const Dashboard: React.FC = () => {
                           setCurrentView('joined');
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className="w-full py-3 bg-emerald-500/15 hover:bg-emerald-500/25 border-2 border-emerald-500/40 text-emerald-400 font-extrabold rounded-2xl text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none uppercase tracking-wider"
+                        className="w-full py-1.5 xs:py-2 sm:py-3 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 font-extrabold rounded-lg sm:rounded-2xl text-[8px] xs:text-[9px] sm:text-xs transition-all flex items-center justify-center gap-1 cursor-pointer select-none uppercase tracking-wider"
                       >
-                        <UserCheck className="h-4 w-4" />
-                        <span>{language === 'en' ? 'Registered - View Room Info' : 'নিবন্ধিত সম্পন্ন - রুম আইডি দেখুন 🔑'}</span>
+                        <UserCheck className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-4 sm:w-4 shrink-0" />
+                        <span className="truncate">{language === 'en' ? 'Registered - Room Info' : 'নিবন্ধিত সম্পন্ন'}</span>
                       </button>
                     ) : isFull ? (
-                      <div className="w-full text-center py-3 bg-gray-800 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-wider">
+                      <div className="w-full text-center py-1.5 xs:py-2 sm:py-3 bg-gray-800 text-gray-500 rounded-lg sm:rounded-2xl font-black text-[8px] xs:text-[9px] sm:text-xs uppercase tracking-wider">
                         {t('matchFull')}
                       </div>
                     ) : (
                       <button
                         onClick={() => handleMatchClick(match)}
-                        className="w-full py-3 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 hover:from-amber-350 hover:to-orange-450 text-black font-black rounded-2xl text-xs sm:text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:shadow-lg hover:shadow-orange-500/10 hover:scale-[1.01] active:scale-95 duration-150 select-none uppercase tracking-wider"
+                        className="w-full py-1.5 xs:py-2 sm:py-3 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 hover:from-amber-350 hover:to-orange-450 text-black font-black rounded-lg sm:rounded-2xl text-[8px] xs:text-[9px] sm:text-xs transition-all flex items-center justify-center gap-1 cursor-pointer hover:shadow-lg hover:shadow-orange-500/10 hover:scale-[1.01] active:scale-95 duration-150 select-none uppercase tracking-wider"
                       >
-                        <span>{language === 'en' ? 'JOIN MATCH NOW' : 'টুর্নামেন্টে জয়েন করুন 🎮'}</span>
-                        <ArrowRight className="h-4 w-4 stroke-[3]" />
+                        <span className="truncate">{language === 'en' ? 'JOIN NOW' : 'জয়েন করুন'}</span>
+                        <ArrowRight className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-4 sm:w-4 stroke-[3] shrink-0" />
                       </button>
                     )}
                   </div>

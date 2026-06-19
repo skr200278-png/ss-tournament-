@@ -3,6 +3,7 @@ const CACHE_NAME = 'protournament-v1';
 const ASSETS = [
   '/',
   '/index.html',
+  '/icon-192.png',
   '/icon-512.png',
   '/manifest.json'
 ];
@@ -36,8 +37,12 @@ self.addEventListener('fetch', (event) => {
   // Only intercept simple GET requests
   if (event.request.method !== 'GET') return;
 
-  // Only handle http/https requests (ignore extensions, third-party non-web schemes)
+  // Only handle http/https requests
   if (!event.request.url.startsWith('http')) return;
+
+  // CRITICAL: Only intercept same-origin requests (our bundle assets, index.html, static local icons, etc.)
+  // This ensures external profile pictures (Google Auth), dynamic database endpoints, and third-party image URLs load normally using default browser caching.
+  if (!event.request.url.startsWith(self.location.origin)) return;
 
   event.respondWith(
     fetch(event.request)
