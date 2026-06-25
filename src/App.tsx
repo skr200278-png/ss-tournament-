@@ -3,6 +3,7 @@ import { AppProvider, useApp } from './components/AppContext';
 import { testFirestoreConnection } from './firebase';
 import { Header } from './components/Header';
 import { HomeView } from './components/HomeView';
+import { AllTournamentsView } from './components/AllTournamentsView';
 import { Dashboard } from './components/Dashboard';
 import { WalletView } from './components/WalletView';
 import { MyMatchesList } from './components/MyMatchesList';
@@ -48,6 +49,8 @@ const AppContent: React.FC = () => {
         return <HomeView />;
       case 'games':
         return <Dashboard />;
+      case 'all_tournaments':
+        return <AllTournamentsView />;
       case 'wallet':
         return <ProfileSettingsView />;
       case 'joined':
@@ -109,42 +112,42 @@ const AppContent: React.FC = () => {
 
           <p className="text-center font-mono text-[10px] text-gray-600 border-t border-gray-800/60 pt-4 leading-relaxed max-w-4xl mx-auto">
             {language === 'en' 
-              ? 'Disclaimers: Outlets, games, titles Free Fire, PUBG or Ludo references belong to respective developers. All currency is in simulated Coins. 1 BDT = 1 Coin. Ready for direct APK wrappers standard configuration (Capacitor/Cordova) layout.'
-              : 'দাবিত্যাগ: ফ্রি ফায়ার, পাবজি বা লুডু গেমের মালিকানা ও ট্রেডমার্ক যথাক্রমে তাদের নিজস্ব গেম স্টুডিওর। এখানে ব্যবহৃত সকল কারেন্সি টুর্নামেন্ট কয়েনের মাধ্যমে নিয়ন্ত্রিত এবং সরাসরি মোবাইল ব্যাংকিং দ্বারা রিডিম করা হয়।'}
+              ? 'Disclaimers: Outlets, games, titles Free Fire, PUBG or Ludo references belong to respective developers. All currency is in Bangladeshi Taka (BDT ৳). Ready for direct APK wrappers standard configuration (Capacitor/Cordova) layout.'
+              : 'দাবিত্যাগ: ফ্রি ফায়ার, পাবজি বা লুডু গেমের মালিকানা ও ট্রেডমার্ক যথাক্রমে তাদের নিজস্ব গেম স্টুডিওর। এখানে ব্যবহৃত সকল কারেন্সি টাকার মাধ্যমে নিয়ন্ত্রিত এবং সরাসরি মোবাইল ব্যাংকিং দ্বারা রিডিম করা হয়।'}
           </p>
         </div>
       </footer>
 
       {/* Mobile Bottom Navigation Bar (Phone-style persistent layout) */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f111a] border-t border-gray-800/80 backdrop-blur-lg bg-opacity-95 shadow-[0_-8px_30px_rgb(0,0,0,0.8)] pb-safe">
-        <div className="grid grid-cols-6 h-16 items-center">
+        <div className="grid grid-cols-5 h-16 items-center justify-items-center">
           <button
             onClick={() => {
               setCurrentView('home');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`flex flex-col items-center justify-center h-full transition-all ${
+            className={`flex flex-col items-center justify-center h-full w-full transition-all ${
               currentView === 'home' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
             }`}
           >
             <Home className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-bold">
+            <span className="text-[10px] mt-1 font-bold font-sans">
               {language === 'en' ? 'Home' : 'হোম'}
             </span>
           </button>
 
           <button
             onClick={() => {
-              setCurrentView('games');
+              setCurrentView('all_tournaments');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`flex flex-col items-center justify-center h-full transition-all ${
-              currentView === 'games' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
+            className={`flex flex-col items-center justify-center h-full w-full transition-all ${
+              currentView === 'all_tournaments' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Gamepad2 className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-bold">
-              {language === 'en' ? 'Games' : 'গেমস'}
+            <Trophy className="h-5 w-5" />
+            <span className="text-[10px] mt-1 font-bold font-sans truncate max-w-full px-0.5">
+              {language === 'en' ? 'Join Match' : 'জয়েন টুর্নামেন্ট'}
             </span>
           </button>
 
@@ -153,28 +156,13 @@ const AppContent: React.FC = () => {
               setCurrentView('joined');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`flex flex-col items-center justify-center h-full transition-all ${
+            className={`flex flex-col items-center justify-center h-full w-full transition-all ${
               currentView === 'joined' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
             }`}
           >
             <Calendar className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-bold">
-              {language === 'en' ? 'Matches' : 'আমার ম্যাচ'}
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              setCurrentView('results');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className={`flex flex-col items-center justify-center h-full transition-all ${
-              currentView === 'results' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <Trophy className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-bold">
-              {language === 'en' ? 'Winners' : 'বিজয়ী'}
+            <span className="text-[10px] mt-1 font-bold font-sans">
+              {language === 'en' ? 'Matches' : 'ম্যাচ'}
             </span>
           </button>
 
@@ -183,12 +171,12 @@ const AppContent: React.FC = () => {
               setCurrentView('chat');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`flex flex-col items-center justify-center h-full transition-all ${
+            className={`flex flex-col items-center justify-center h-full w-full transition-all ${
               currentView === 'chat' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
             }`}
           >
             <MessageSquare className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-bold">
+            <span className="text-[10px] mt-1 font-bold font-sans">
               {language === 'en' ? 'Chat' : 'আড্ডা'}
             </span>
           </button>
@@ -198,12 +186,12 @@ const AppContent: React.FC = () => {
               setCurrentView('profile');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`flex flex-col items-center justify-center h-full transition-all ${
+            className={`flex flex-col items-center justify-center h-full w-full transition-all ${
               currentView === 'profile' || currentView === 'wallet' ? 'text-amber-400 font-bold scale-105' : 'text-gray-400 hover:text-white'
             }`}
           >
             <User className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-bold">
+            <span className="text-[10px] mt-1 font-bold font-sans">
               {language === 'en' ? 'Profile' : 'প্রোফাইল'}
             </span>
           </button>

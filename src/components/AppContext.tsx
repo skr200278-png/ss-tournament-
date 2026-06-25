@@ -35,8 +35,8 @@ interface AppContextType {
   isGuest: boolean;
   language: Language;
   setLanguage: (lang: Language) => void;
-  currentView: 'home' | 'games' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat';
-  setCurrentView: (view: 'home' | 'games' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat') => void;
+  currentView: 'home' | 'games' | 'all_tournaments' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat';
+  setCurrentView: (view: 'home' | 'games' | 'all_tournaments' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat') => void;
   selectedCategory: string; // "All" or a game name
   setSelectedCategory: (cat: string) => void;
   tournaments: Tournament[];
@@ -108,7 +108,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('app_language', language);
   }, [language]);
-  const [currentView, setCurrentView] = useState<'home' | 'games' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'games' | 'all_tournaments' | 'wallet' | 'joined' | 'admin' | 'results' | 'profile' | 'chat'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [transactions, setTransactions] = useState<CoinTransaction[]>([]);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from './AppContext';
-import { Trophy, Wallet, Gamepad2, Calendar, Languages, LogIn, LogOut, Menu, X, Coins, Shield, User, Download, Info, Copy, Check, MessageSquare, Share2, Home } from 'lucide-react';
+import { Trophy, Wallet, Gamepad2, Calendar, Languages, LogIn, LogOut, Menu, X, Coins, Shield, User, Download, Info, Copy, Check, MessageSquare, Share2, Home, Sparkles } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { 
@@ -79,9 +79,10 @@ export const Header: React.FC = () => {
 
   const menuItems = [
     { view: 'home' as const, label: language === 'en' ? 'Home' : 'হোম', icon: Home },
+    { view: 'all_tournaments' as const, label: language === 'en' ? 'Join Tournament' : 'জয়েন টুর্নামেন্ট', icon: Trophy },
     { view: 'games' as const, label: language === 'en' ? 'Games' : 'গেমস', icon: Gamepad2 },
     { view: 'joined' as const, label: t('myMatches'), icon: Calendar },
-    { view: 'results' as const, label: language === 'en' ? 'Winners' : 'ফলাফল / বিজয়ী', icon: Trophy },
+    { view: 'results' as const, label: language === 'en' ? 'Winners' : 'ফলাফল', icon: Sparkles },
     { view: 'profile' as const, label: language === 'en' ? 'Profile' : 'প্রোফাইল', icon: User },
     { view: 'chat' as const, label: language === 'en' ? 'Community Chat' : 'গ্রুপ আড্ডা', icon: MessageSquare },
   ];
@@ -155,10 +156,10 @@ export const Header: React.FC = () => {
                   <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 shrink-0" />
                   <div className="text-right font-sans">
                     <span className="hidden sm:block text-[9px] text-gray-400 font-medium leading-none mb-0.5">
-                      {language === 'en' ? 'COINS' : 'কয়েন'}
+                      {language === 'en' ? 'DEPOSIT' : 'ডিপোজিট'}
                     </span>
                     <span className="text-xs font-mono font-bold text-amber-400 leading-none">
-                      {profile.coins_balance}
+                      ৳{profile.coins_balance}
                     </span>
                   </div>
                 </div>
@@ -167,10 +168,10 @@ export const Header: React.FC = () => {
                   <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 shrink-0" />
                   <div className="text-right font-sans">
                     <span className="hidden sm:block text-[9px] text-gray-400 leading-none font-medium mb-0.5">
-                      {language === 'en' ? 'WON' : 'উইনিং'}
+                      {language === 'en' ? 'WINNING' : 'উইনিং'}
                     </span>
                     <span className="text-xs font-mono font-bold text-emerald-400 leading-none">
-                      {profile.winning_balance}
+                      ৳{profile.winning_balance}
                     </span>
                   </div>
                 </div>

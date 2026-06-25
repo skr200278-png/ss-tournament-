@@ -1742,7 +1742,7 @@ export const AdminDashboard: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 pt-1">
               <h3 className="font-extrabold text-white text-base flex items-center gap-2">
-                {depositViewMode === 'pending' ? 'Pending Coin Deposit Requests' : 'Approved & Rejected Coin Deposit History'}
+                {depositViewMode === 'pending' ? 'Pending Deposit Requests (৳)' : 'Approved & Rejected Deposit History'}
                 <span className={`font-extrabold px-2.5 py-0.5 rounded-full text-[10px] font-mono ${
                   depositViewMode === 'pending' ? 'bg-emerald-500 text-black' : 'bg-gray-800 text-gray-300'
                 }`}>
@@ -1775,7 +1775,7 @@ export const AdminDashboard: React.FC = () => {
                     <th className="pb-3">Payment Method</th>
                     <th className="pb-3">Account Send Number</th>
                     <th className="pb-3 font-mono">Transaction ID (TxID)</th>
-                    <th className="pb-3 font-mono text-center">Amount (C)</th>
+                    <th className="pb-3 font-mono text-center">Amount (৳)</th>
                     <th className="pb-3 text-right">{depositViewMode === 'pending' ? 'Verify Action' : 'Status'}</th>
                   </tr>
                 </thead>
@@ -1784,7 +1784,7 @@ export const AdminDashboard: React.FC = () => {
                     pendingDeposits.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="py-8 text-center text-gray-500 font-semibold text-xs">
-                          No pending coin recharges found in Firebase logs.
+                          No pending deposit requests found in Firebase logs.
                         </td>
                       </tr>
                     ) : (
@@ -1941,7 +1941,7 @@ export const AdminDashboard: React.FC = () => {
                           </td>
                           <td className="py-4 font-bold text-[#e11d48]">{tx.payment_method}</td>
                           <td className="py-4 font-mono font-semibold tracking-wider text-slate-300">{tx.account_number}</td>
-                          <td className="py-4 font-mono font-extrabold text-[#f43f5e] text-center text-sm">{tx.amount} Coin</td>
+                          <td className="py-4 font-mono font-extrabold text-[#f43f5e] text-center text-sm">৳{tx.amount}</td>
                           <td className="py-4 text-right space-x-2 whitespace-nowrap">
                             <button
                               onClick={() => handleApproveWithdrawal(tx)}
@@ -1976,7 +1976,7 @@ export const AdminDashboard: React.FC = () => {
                           </td>
                           <td className="py-4 font-bold text-[#e11d48]">{tx.payment_method}</td>
                           <td className="py-4 font-mono font-semibold tracking-wider text-slate-300">{tx.account_number}</td>
-                          <td className="py-4 font-mono font-extrabold text-[#f43f5e] text-center text-sm">{tx.amount} Coin</td>
+                          <td className="py-4 font-mono font-extrabold text-[#f43f5e] text-center text-sm">৳{tx.amount}</td>
                           <td className="py-4 text-right whitespace-nowrap pr-2">
                             {tx.status === 'approved' ? (
                               <span className="py-1.5 px-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold inline-flex items-center gap-1">
@@ -2401,7 +2401,7 @@ export const AdminDashboard: React.FC = () => {
                     disabled={migratingAll}
                     className="self-start text-[10px] font-semibold px-2 py-0.5 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-black rounded-md mt-1 transition-all cursor-pointer"
                   >
-                    {migratingAll ? "Processing..." : "⚠️ Fix 2000 Coin Accounts to 20 Coins"}
+                    {migratingAll ? "Processing..." : "⚠️ Fix 2000 Taka Accounts to 20 Taka"}
                   </button>
                 ) : (
                   <span className="text-[10px] text-gray-500">All registered balances are secure and corrected (No 2000 balances left).</span>
@@ -2448,10 +2448,10 @@ export const AdminDashboard: React.FC = () => {
                           <span className="text-gray-300 block font-semibold">{u.email}</span>
                         </td>
                         <td className="py-3 text-center font-mono font-bold text-amber-400 text-sm">
-                          {u.coins_balance} C
+                          ৳{u.coins_balance}
                         </td>
                         <td className="py-3 text-center font-mono font-bold text-emerald-400 text-sm">
-                          {u.winning_balance} C
+                          ৳{u.winning_balance}
                         </td>
                         <td className="py-3 text-right pr-1">
                           <button
@@ -2462,7 +2462,7 @@ export const AdminDashboard: React.FC = () => {
                             }}
                             className="py-1 px-3 border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500 text-amber-300 hover:text-black rounded-lg font-bold"
                           >
-                            Add/Subtract Coins
+                            Add/Subtract Balance
                           </button>
                         </td>
                       </tr>
@@ -2644,7 +2644,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <p className="text-xs text-gray-400 pb-1 font-sans leading-relaxed">
-              কয়েন যোগ করতে সাধারণ সংখ্যা (যেমন <span className="text-emerald-400">100</span>) লিখুন এবং কয়েন কর্তন বা কমাতে মাইনাস সংখ্যা (যেমন <span className="text-rose-400 font-bold">-50</span>) টাইপ করুন:
+              টাকা যোগ করতে সাধারণ সংখ্যা (যেমন <span className="text-emerald-400">100</span>) লিখুন এবং টাকা কর্তন বা কমাতে মাইনাস সংখ্যা (যেমন <span className="text-rose-400 font-bold">-50</span>) টাইপ করুন:
               <strong className="text-slate-200 block mt-1.5 p-2 bg-black/30 border border-gray-800 rounded-lg">{selectedUser.name} ({selectedUser.email || 'No email'})</strong>
             </p>
 
@@ -2656,13 +2656,13 @@ export const AdminDashboard: React.FC = () => {
                   onChange={(e) => setManualBalanceType(e.target.value as any)}
                   className="w-full bg-[#0a0b12] border border-gray-800 rounded-xl px-3 py-2.5 text-white active:outline-none focus:outline-none focus:border-amber-550 cursor-pointer text-xs"
                 >
-                  <option value="coins">Standard Main Coins (মেইন রিচার্জ কয়েন)</option>
-                  <option value="winning">Winning Winnings Coins (উইনিং উইথড্র কয়েন)</option>
+                  <option value="coins">Deposit Balance (মেইন রিচার্জ টাকা)</option>
+                  <option value="winning">Winning Balance (উইনিং উইথড্র টাকা)</option>
                 </select>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] text-gray-500 font-bold uppercase block">Coin Balance Change Amount / পরিবর্তন করার কয়েন সংখ্যা</label>
+                <label className="text-[10px] text-gray-500 font-bold uppercase block">Balance Change Amount / পরিবর্তন করার টাকার সংখ্যা</label>
                 <input
                   type="number"
                   value={manualBalanceAmount}

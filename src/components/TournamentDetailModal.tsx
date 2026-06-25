@@ -405,8 +405,8 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
                     </p>
                     <p className="text-[11px] text-rose-400">
                       {language === 'en' 
-                        ? `You need ${tournament.entry_fee - userCoins} more coins to register for this match.`
-                        : `এই খেলায় অংশ নিতে আপনার আরও ${tournament.entry_fee - userCoins}টি কয়েন প্রয়োজন।`}
+                        ? `You need ৳${tournament.entry_fee - userCoins} more to register for this match.`
+                        : `এই খেলায় অংশ নিতে আপনার আরও ৳${tournament.entry_fee - userCoins} প্রয়োজন।`}
                     </p>
                     <button
                       type="button"
@@ -749,7 +749,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({ to
                 className="flex-1 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 font-extrabold text-black rounded-2xl text-xs hover:from-amber-400 hover:to-orange-500 transition-all disabled:opacity-40 flex items-center justify-center gap-1.5 cursor-pointer hover:shadow-lg hover:shadow-orange-500/10 select-none"
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin text-black" />}
-                {isSubmitting ? t('joiningInProgress') : (language === 'en' ? `Pay ${totalPaymentRequired} Coins & Join` : `নিশ্চিত করুন (${totalPaymentRequired} কয়েন কাটবে)`)}
+                {isSubmitting ? t('joiningInProgress') : (language === 'en' ? `Pay ৳${totalPaymentRequired} & Join` : `নিশ্চিত করুন (৳${totalPaymentRequired} কাটবে)`)}
               </button>
             </div>
           </form>

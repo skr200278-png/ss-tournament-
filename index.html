@@ -11,6 +11,15 @@
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
     <script>
+      // Gracefully prevent and suppress cross-origin / third-party iframe script errors or benign resize observer alerts
+      window.addEventListener('error', function(e) {
+        if (e.message && (e.message.toLowerCase().includes('script error') || e.message.toLowerCase().includes('resizeobserver'))) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          return true;
+        }
+      }, true);
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')

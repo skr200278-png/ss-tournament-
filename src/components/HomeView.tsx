@@ -17,6 +17,8 @@ import {
   Zap,
   HelpCircle
 } from 'lucide-react';
+import { TournamentDetailModal } from './TournamentDetailModal';
+import { getGameFallbackBanner } from './Dashboard';
 
 export const HomeView: React.FC = () => {
   const { 
@@ -31,6 +33,8 @@ export const HomeView: React.FC = () => {
 
   const [copied, setCopied] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
+  const [selectedMatch, setSelectedMatch] = useState<any | null>(null);
 
   // In-app webview warning detection
   const isInAppBrowser = () => {
@@ -295,7 +299,7 @@ export const HomeView: React.FC = () => {
       </div>
 
       {/* 4. SEAMLESS INTERACTION PLATFORM STATS */}
-      <div className="bg-gradient-to-r from-gray-900 to-[#100e2b] border border-gray-800 p-5 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left relative overflow-hidden">
+      <div className="bg-gradient-to-r from-gray-900 to-[#100e2b] border border-gray-800 p-5 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left relative overflow-hidden shadow-xl">
         <div className="absolute -top-12 -right-12 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
         
         <div className="space-y-1.5 flex-1 select-none">
@@ -316,57 +320,83 @@ export const HomeView: React.FC = () => {
 
         {/* Bento grid sub counters */}
         <div className="grid grid-cols-2 gap-4 w-full sm:w-auto shrink-0 font-mono text-center sm:text-left">
-          <div className="bg-black/25 border border-gray-800 p-3 rounded-2xl min-w-[120px]">
+          <div className="bg-black/25 border border-gray-800 p-3 rounded-2xl min-w-[125px]">
             <span className="text-[9px] text-gray-500 block font-bold uppercase">{language === 'en' ? 'Lobbies' : 'মোট টুর্নামেন্ট'}</span>
-            <span className="text-amber-500 font-black text-lg block mt-0.5">{tournaments.length} Matches</span>
+            <span className="text-amber-500 font-black text-sm block mt-0.5">{tournaments.length} Matches</span>
           </div>
-          <div className="bg-black/25 border border-gray-800 p-3 rounded-2xl min-w-[120px]">
+          <div className="bg-black/25 border border-gray-800 p-3 rounded-2xl min-w-[125px]">
             <span className="text-[9px] text-gray-500 block font-bold uppercase">{language === 'en' ? 'Exchange Rate' : 'মুদ্রার হার'}</span>
-            <span className="text-emerald-400 font-black text-lg block mt-0.5">1 BDT = 1 Coin</span>
+            <span className="text-emerald-400 font-black text-sm block mt-0.5">1 BDT = 1 Coin</span>
           </div>
         </div>
       </div>
 
       {/* 5. QUICK SHORTCUTS ROW GUIDING PLAYERS */}
-      <div className="bg-[#121420] border border-gray-800 rounded-3xl p-5 sm:p-6 space-y-4">
-        <h3 className="text-white font-extrabold text-sm sm:text-base flex items-center gap-1.5">
+      <div className="bg-[#121420] border border-gray-800 rounded-3xl p-4 sm:p-6 space-y-4">
+        <h3 className="text-white font-extrabold text-sm sm:text-base flex items-center gap-1.5 select-none font-sans">
           <Zap className="h-4 w-4 text-amber-500" />
           <span>{language === 'en' ? 'Quick Gaming Shortcuts' : 'ঝটপট নেভিগেশন ও গাইড'}</span>
         </h3>
         
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-5 gap-1.5 sm:gap-3">
           <button
             onClick={() => setCurrentView('games')}
-            className="p-3 bg-black/25 rounded-2xl border border-gray-800 hover:border-amber-500/40 hover:bg-black/40 text-center transition-all cursor-pointer group"
+            className="p-1.5 sm:p-3 bg-black/25 rounded-2xl border border-gray-800 hover:border-amber-500/40 hover:bg-black/40 text-center transition-all cursor-pointer group select-none active:scale-95"
           >
-            <Gamepad2 className="h-5 w-5 text-amber-500 mx-auto mb-1 animate-pulse" />
-            <span className="block text-[10px] font-bold text-gray-300 group-hover:text-amber-400">
-              {language === 'en' ? 'Play Match' : 'খেলুন'}
+            <Gamepad2 className="h-4.5 w-4.5 text-amber-500 mx-auto mb-1" />
+            <span className="block text-[8px] xs:text-[9.5px] font-bold text-gray-300 group-hover:text-amber-400 truncate">
+              {language === 'en' ? 'Games' : 'গেমস'}
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              setCurrentView('all_tournaments');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="p-1.5 sm:p-3 bg-gradient-to-br from-amber-500/5 to-orange-500/5 rounded-2xl border border-amber-500/30 hover:border-amber-500/70 hover:bg-[#1a1c2d] text-center transition-all cursor-pointer group select-none active:scale-95 relative"
+          >
+            <span className="absolute -top-1 right-1 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-450 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            </span>
+            <Trophy className="h-4.5 w-4.5 text-amber-500 mx-auto mb-1 animate-pulse" />
+            <span className="block text-[8px] xs:text-[9.5px] font-extrabold text-amber-400 group-hover:text-amber-300 truncate">
+              {language === 'en' ? 'Join Match' : 'জয়েন টুর্নামেন্ট'}
             </span>
           </button>
 
           <button
             onClick={() => setCurrentView('joined')}
-            className="p-3 bg-black/25 rounded-2xl border border-gray-800 hover:border-amber-500/40 hover:bg-black/40 text-center transition-all cursor-pointer group"
+            className="p-1.5 sm:p-3 bg-black/25 rounded-2xl border border-gray-800 hover:border-amber-500/40 hover:bg-black/40 text-center transition-all cursor-pointer group select-none active:scale-95"
           >
-            <Trophy className="h-5 w-5 text-indigo-400 mx-auto mb-1" />
-            <span className="block text-[10px] font-bold text-gray-300 group-hover:text-indigo-400">
-              {language === 'en' ? 'Registered' : 'আমার ম্যাচ'}
+            <Smartphone className="h-4.5 w-4.5 text-indigo-400 mx-auto mb-1" />
+            <span className="block text-[8px] xs:text-[9.5px] font-bold text-gray-300 group-hover:text-indigo-400 truncate">
+              {language === 'en' ? 'My Matches' : 'আমার ম্যাচ'}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('results')}
+            className="p-1.5 sm:p-3 bg-black/25 rounded-2xl border border-gray-800 hover:border-amber-500/40 hover:bg-black/40 text-center transition-all cursor-pointer group select-none active:scale-95"
+          >
+            <Trophy className="h-4.5 w-4.5 text-rose-450 mx-auto mb-1" />
+            <span className="block text-[8px] xs:text-[9.5px] font-bold text-gray-300 group-hover:text-rose-400 truncate">
+              {language === 'en' ? 'Winners' : 'ফলাফল 🏆'}
             </span>
           </button>
 
           <button
             onClick={() => setCurrentView('profile')}
-            className="p-3 bg-black/25 rounded-2xl border border-gray-800 hover:border-amber-500/40 hover:bg-black/40 text-center transition-all cursor-pointer group"
+            className="p-1.5 sm:p-3 bg-black/25 rounded-2xl border border-gray-800 hover:border-amber-500/40 hover:bg-black/40 text-center transition-all cursor-pointer group select-none active:scale-95"
           >
-            <Users className="h-5 w-5 text-emerald-450 mx-auto mb-1" />
-            <span className="block text-[10px] font-bold text-gray-300 group-hover:text-emerald-400">
-              {language === 'en' ? 'Support DESK' : 'সাপোর্ট নিন'}
+            <Users className="h-4.5 w-4.5 text-emerald-450 mx-auto mb-1" />
+            <span className="block text-[8px] xs:text-[9.5px] font-bold text-gray-300 group-hover:text-emerald-400 truncate">
+              {language === 'en' ? 'Support' : 'সাপোর্ট নিন'}
             </span>
           </button>
         </div>
       </div>
-
     </div>
   );
 };

@@ -1,19 +1,27 @@
 // ProTournament BD Service Worker for installable PWA support
-const CACHE_NAME = 'protournament-v1';
+const CACHE_NAME = 'protournament-v3';
 const ASSETS = [
   '/',
   '/index.html',
+  '/manifest.json',
+  '/icon-72.png',
+  '/icon-96.png',
+  '/icon-128.png',
+  '/icon-144.png',
+  '/icon-152.png',
   '/icon-192.png',
-  '/icon-512.png',
-  '/manifest.json'
+  '/icon-384.png',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Allow caching to fail gracefully on some dynamic environment routes
-      return cache.addAll(ASSETS).catch(err => console.log("Assets pre-caching handled:", err));
+      // Pre-cache vital local assets, caching them gracefully
+      return cache.addAll(ASSETS).catch(err => {
+        console.warn("PWA pre-caching handled and skipping missing assets:", err);
+      });
     })
   );
 });
@@ -24,6 +32,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('Clearing old cache:', key);
             return caches.delete(key);
           }
         })
@@ -34,35 +43,38 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only intercept simple GET requests
+  // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
-  // Only handle http/https requests
-  if (!event.request.url.startsWith('http')) return;
+  const url = new URL(event.request.url);
+  const isLocalAsset = url.origin === self.location.origin;
 
-  // CRITICAL: Only intercept same-origin requests (our bundle assets, index.html, static local icons, etc.)
-  // This ensures external profile pictures (Google Auth), dynamic database endpoints, and third-party image URLs load normally using default browser caching.
-  if (!event.request.url.startsWith(self.location.origin)) return;
-
-  event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        // If we get a valid resource from the network, update the cache
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        // If network request fails (offline), look in the cache
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+  if (isLocalAsset) {
+    // For local assets, perform safe cache-first with background network-refresh
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
           }
+          return networkResponse;
+        }).catch((err) => {
+          console.warn('Local background fetch failed:', err);
         });
+
+        // Always prioritize instantaneous cached response, falling back immediately to live fetch
+        return cachedResponse || fetchPromise;
       })
-  );
+    );
+  } else {
+    // Non-local dynamic assets are network-first to avoid cross-domain issues
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match(event.request);
+      })
+    );
+  }
 });

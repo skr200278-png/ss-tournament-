@@ -65,7 +65,7 @@ export const WalletView: React.FC = () => {
 
     const amount = Number(depAmount);
     if (!amount || amount < 10) {
-      setDepMsg({ type: 'error', text: language === 'en' ? 'Minimum deposit is 10 Coins.' : 'সর্বনিম্ন ১০টি কয়েন নিতে হবে।' });
+      setDepMsg({ type: 'error', text: language === 'en' ? 'Minimum deposit is 10 BDT.' : 'সর্বনিম্ন ১০ টাকা রিচার্জ করতে হবে।' });
       return;
     }
 
@@ -144,7 +144,7 @@ export const WalletView: React.FC = () => {
     const winBalance = profile?.winning_balance ?? 0;
 
     if (!amount || amount < 50) {
-      setWdMsg({ type: 'error', text: language === 'en' ? 'Minimum withdrawal is 50 Coins.' : 'সর্বনিম্ন ৫০টি কয়েন উত্তোলন করা যাবে।' });
+      setWdMsg({ type: 'error', text: language === 'en' ? 'Minimum withdrawal is 50 BDT.' : 'সর্বনিম্ন ৫০ টাকা উত্তোলন করা যাবে।' });
       return;
     }
 
@@ -256,7 +256,7 @@ export const WalletView: React.FC = () => {
               {t('mainCoins')}
             </span>
             <div className="text-3xl sm:text-4xl font-mono font-extrabold text-white">
-              {profile?.coins_balance ?? 0} <span className="text-sm font-sans text-gray-500 font-normal">Coins</span>
+              ৳{profile?.coins_balance ?? 0} <span className="text-sm font-sans text-gray-500 font-normal">{language === 'en' ? 'BDT' : 'টাকা'}</span>
             </div>
             <p className="text-[11px] text-gray-400">
               {language === 'en' ? 'Used for register game matches entry' : 'টুর্নামেন্টে জয়েন করার জন্য ব্যবহৃত হবে'}
@@ -275,7 +275,7 @@ export const WalletView: React.FC = () => {
               {t('winningCoins')}
             </span>
             <div className="text-3xl sm:text-4xl font-mono font-extrabold text-white">
-              {profile?.winning_balance ?? 0} <span className="text-sm font-sans text-gray-500 font-normal">Coins</span>
+              ৳{profile?.winning_balance ?? 0} <span className="text-sm font-sans text-gray-500 font-normal">{language === 'en' ? 'BDT' : 'টাকা'}</span>
             </div>
             <p className="text-[11px] text-gray-400">
               {language === 'en' ? 'Directly withdrawable to BDT cash account' : 'বিকাশ, নগদ বা রকেটে সরাসরি প্রত্যাহারযোগ্য'}
@@ -448,8 +448,8 @@ export const WalletView: React.FC = () => {
                             </h4>
                             <p className="text-white/95 text-xs leading-relaxed max-w-sm mx-auto">
                               {language === 'en'
-                                ? 'Your transaction ticket is now pending. Admin will verify your payment against the bank ledger and approve the coins within 5-30 minutes. If you are testing, you can approve it yourself via the Admin Panel!'
-                                : 'আপনার ট্রানজেকশন টিকিটটি পেন্ডিং অবস্থায় সিস্টেমে সাবমিট হয়েছে! এডমিন প্যানেল bKash/Nagad/Rocket হিস্ট্রি চেক করে ৫ থেকে ৩০ মিনিটের মধ্যে কয়েন ব্যালেন্সে যুক্ত করে দেবে। (আপনি নিজেও ডেমো এডমিন প্যানেল থেকে এটি ইনস্ট্যান্ট অ্যাপ্রুভ করতে পারবেন!)'}
+                                ? 'Your transaction ticket is now pending. Admin will verify your payment against the bank ledger and credit your wallet within 5-30 minutes. If you are testing, you can approve it yourself via the Admin Panel!'
+                                : 'আপনার ট্রানজেকশন টিকিটটি পেন্ডিং অবস্থায় সিস্টেমে সাবমিট হয়েছে! এডমিন প্যানেল bKash/Nagad/Rocket হিস্ট্রি চেক করে ৫ থেকে ৩০ মিনিটের মধ্যে ব্যালেন্সে টাকা যুক্ত করে দেবে। (আপনি নিজেও ডেমো এডমিন প্যানেল থেকে এটি ইনস্ট্যান্ট অ্যাপ্রুভ করতে পারবেন!)'}
                             </p>
                           </div>
 
@@ -690,7 +690,7 @@ export const WalletView: React.FC = () => {
                             <span className="text-amber-300 font-bold">•</span>
                             <span>
                               {language === 'en' 
-                                ? 'Confirm by typing your Wallet PIN. Paste the generated Transaction ID to unlock coins.' 
+                                ? 'Confirm by typing your Wallet PIN. Paste the generated Transaction ID to credit your account.' 
                                 : 'নিশ্চিত করতে এখন আপনার পেমেন্ট পিন লিখে ট্রানজেকশন সফল করার পর প্রাপ্ত ট্রানজেকশন আইডিটি উপরে দিন।'}
                             </span>
                           </p>
@@ -711,7 +711,7 @@ export const WalletView: React.FC = () => {
                           className="w-full py-4 mt-1 bg-white text-slate-900 hover:bg-slate-50 font-black text-xs tracking-widest rounded-2xl transition-all shadow-lg flex items-center justify-center gap-1.5 cursor-pointer uppercase select-none active:scale-95"
                         >
                           <Send className="h-3.5 w-3.5" style={{ color: selectedMethod === 'bKash' ? '#e2136e' : selectedMethod === 'Nagad' ? '#f95707' : '#8b5cf6' }} />
-                          {language === 'en' ? 'Verify Receipt & Add Coins' : 'কয়েন নিতে ট্রানজেকশন আইডি যাচাই করুন'}
+                          {language === 'en' ? 'Verify Receipt & Add Balance' : 'টাকা নিতে ট্রানজেকশন আইডি যাচাই করুন'}
                         </button>
                       </form>
                     </div>
@@ -814,18 +814,18 @@ export const WalletView: React.FC = () => {
           <div className="bg-[#121420]/80 border border-gray-800 rounded-3xl p-6 space-y-4">
             <h3 className="font-extrabold text-white text-sm flex items-center gap-1.5">
               <ShieldCheck className="h-4.5 w-4.5 text-amber-500" />
-              {language === 'en' ? 'Verified Coin System' : '১০০% নিরাপদ ট্রানজেকশন'}
+              {language === 'en' ? 'Verified Payment System' : '১০০% নিরাপদ ট্রানজেকশন'}
             </h3>
             
             <ul className="space-y-3 text-xs text-gray-400 leading-relaxed list-disc list-inside">
               <li>
-                <strong className="text-amber-400">{language === 'en' ? 'Auto Deposit' : 'অটো ডিপোজিট'}:</strong> {language === 'en' ? 'Processed in 5-10 seconds automatically. No manual validation keys required.' : 'একেবারে ৫-১০ সেকেন্ডের মধ্যে সম্পন্ন হয়ে অটোমেটিক কয়েন ব্যালেন্সে যুক্ত হবে। কোনো যাচাইকরণের অপেক্ষায় থাকতে হবে না।'}
+                <strong className="text-amber-400">{language === 'en' ? 'Auto Deposit' : 'অটো ডিপোজিট'}:</strong> {language === 'en' ? 'Processed in 5-10 seconds automatically. No manual validation keys required.' : 'একেবারে ৫-১০ সেকেন্ডের মধ্যে সম্পন্ন হয়ে অটোমেটিক ব্যালেন্সে টাকা যুক্ত হবে। কোনো যাচাইকরণের অপেক্ষায় থাকতে হবে না।'}
               </li>
               <li>
                 <strong className="text-amber-400">{language === 'en' ? 'Manual Deposit' : 'ম্যানুয়াল ডিপোজিট'}:</strong> {language === 'en' ? 'Check details, copy the merchant wallet BDT number, send money personal cash out, and paste TxID. Admin evaluates slow tickets in 10-30 mins.' : 'নাম্বার কপি করে ম্যানুয়ালি বিকাশ/নগদে টাকা পাঠিয়ে ট্রানজেকশন আইডি টিকেট জমা দিতে হবে। এডমিন প্যানেল খতিয়ে ১০-৩০ মিনিটে অনুমোদিত করবে।'}
               </li>
               <li>
-                <strong className="text-emerald-400">{language === 'en' ? 'How to Withdraw' : 'টাকা উত্তোলন (উইথড্র)'}:</strong> {language === 'en' ? 'Winning balance coins from tournaments can be requested for Cash Out to personal bKash or Nagad. Managed manually by administrators to prevent scams.' : 'টুর্নামেন্ট জেতা উইনিং কয়েন ব্যালেন্স যেকোনো সময়ে বিকাশ বা নগদে টাকা উত্তোলনের জন্য রিকোয়েস্ট করুন। আপনার সিকিউরিটি নিশ্চিতে এডমিন প্যানেল দ্বারা ম্যানুয়ালি টাকা পেমেন্ট করা হবে।'}
+                <strong className="text-emerald-400">{language === 'en' ? 'How to Withdraw' : 'টাকা উত্তোলন (উইথড্র)'}:</strong> {language === 'en' ? 'Winning balance from tournaments can be requested for Cash Out to personal bKash or Nagad. Managed manually by administrators to prevent scams.' : 'টুর্নামেন্ট জেতা উইনিং ব্যালেন্স যেকোনো সময়ে বিকাশ বা নগদে টাকা উত্তোলনের জন্য রিকোয়েস্ট করুন। আপনার সিকিউরিটি নিশ্চিতে এডমিন প্যানেল দ্বারা ম্যানুয়ালি টাকা পেমেন্ট করা হবে।'}
               </li>
             </ul>
 
@@ -865,7 +865,7 @@ export const WalletView: React.FC = () => {
                   <th className="py-3 px-4">{language === 'en' ? 'TRANSACTION ID / DATE' : 'আইডি ও তারিখ'}</th>
                   <th className="py-3 px-4">{language === 'en' ? 'TYPE' : 'ধরণ'}</th>
                   <th className="py-3 px-4">{language === 'en' ? 'METHOD / INFO' : 'টাকা প্রেরক'}</th>
-                  <th className="py-3 px-4">{language === 'en' ? 'COINS AMOUNT' : 'কয়েন পরিমাণ'}</th>
+                  <th className="py-3 px-4">{language === 'en' ? 'AMOUNT' : 'টাকার পরিমাণ'}</th>
                   <th className="py-3 px-4">{language === 'en' ? 'STATUS' : 'অবস্থা (স্ট্যাটাস)'}</th>
                   <th className="py-3 px-4 text-center">{language === 'en' ? 'TEST ACTION' : 'টেস্ট একশন'}</th>
                 </tr>
@@ -937,7 +937,7 @@ export const WalletView: React.FC = () => {
                       </td>
 
                       <td className="py-4 px-4 font-mono font-bold text-sm text-sky-400">
-                        {isDeposit ? '+' : '-'}{tx.amount} C
+                        {isDeposit ? '+' : '-'}৳{tx.amount}
                       </td>
 
                       <td className="py-4 px-4">
