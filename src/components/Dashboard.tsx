@@ -36,17 +36,17 @@ export const categories = [
 export const getGameFallbackBanner = (category: string): string => {
   switch (category) {
     case 'Free Fire':
-      return 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop';
+      return 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=50&w=400&auto=format&fit=crop';
     case 'PUBG/BGMI':
-      return 'https://images.unsplash.com/photo-1553481187-be93c21490a9?q=80&w=800&auto=format&fit=crop';
+      return 'https://images.unsplash.com/photo-1553481187-be93c21490a9?q=50&w=400&auto=format&fit=crop';
     case 'Ludo':
-      return 'https://images.unsplash.com/photo-1611195974226-a6a9be9dd763?q=80&w=800&auto=format&fit=crop';
+      return 'https://images.unsplash.com/photo-1611195974226-a6a9be9dd763?q=50&w=400&auto=format&fit=crop';
     case 'Call of Duty':
-      return 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop';
+      return 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=50&w=400&auto=format&fit=crop';
     case 'Mobile Legends':
-      return 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop';
+      return 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=50&w=400&auto=format&fit=crop';
     default:
-      return 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=800&auto=format&fit=crop';
+      return 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=50&w=400&auto=format&fit=crop';
   }
 };
 

@@ -1,17 +1,17 @@
 // ProTournament BD Service Worker for installable PWA support
-const CACHE_NAME = 'protournament-v3';
+const CACHE_NAME = 'protournament-v5';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-72.png',
-  '/icon-96.png',
-  '/icon-128.png',
-  '/icon-144.png',
-  '/icon-152.png',
-  '/icon-192.png',
-  '/icon-384.png',
-  '/icon-512.png'
+  './',
+  'index.html',
+  'manifest.json',
+  'icon-72.png',
+  'icon-96.png',
+  'icon-128.png',
+  'icon-144.png',
+  'icon-152.png',
+  'icon-192.png',
+  'icon-384.png',
+  'icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

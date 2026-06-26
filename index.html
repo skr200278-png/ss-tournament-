@@ -22,9 +22,35 @@
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('ProTournament BD Service Worker registered successfully:', reg.scope))
-            .catch(err => console.warn('Service Worker registration failed:', err));
+          const isDev = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1' || 
+                        window.location.hostname.includes('ais-dev-');
+
+          if (!isDev) {
+            navigator.serviceWorker.register('/sw.js')
+              .then(reg => console.log('ProTournament BD Service Worker registered successfully:', reg.scope))
+              .catch(err => console.warn('Service Worker registration failed:', err));
+          } else {
+            console.log('Skipping Service Worker registration in development/preview mode');
+            // Unregister any active service worker in development to prevent caching conflicts
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+              for (let registration of registrations) {
+                registration.unregister().then(success => {
+                  if (success) console.log('Successfully unregistered stale development service worker');
+                });
+              }
+            });
+            // Clear browser cache storage to prevent loading of stale/broken assets in development
+            if (window.caches) {
+              caches.keys().then(keys => {
+                keys.forEach(key => {
+                  caches.delete(key).then(() => {
+                    console.log('Cleared stale dev cache:', key);
+                  });
+                });
+              });
+            }
+          }
         });
       }
     </script>

@@ -83,7 +83,7 @@ export const HomeView: React.FC = () => {
       titleBn: "ফ্রি ফায়ার ক্ল্যাশ স্কোয়াড",
       subtitleEn: "Show your raw skills & earn coins every match!",
       subtitleBn: "আপনার গেমিং স্কিল দেখান এবং প্রতি ম্যাচে কয়েন জিতুন!",
-      img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop",
+      img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=60&w=600&auto=format&fit=crop",
       badge: "HOT"
     },
     {
@@ -91,7 +91,7 @@ export const HomeView: React.FC = () => {
       titleBn: "পাবজি মোবাইল শোডাউন",
       subtitleEn: "Join Classic Erangel rooms & claim the chicken dinner!",
       subtitleBn: "ক্লাসিক ইরাঙ্গেল রুমে যোগ দিন ও চিকেন ডিনার জিতে নিন!",
-      img: "https://images.unsplash.com/photo-1553481187-be93c21490a9?q=80&w=1200&auto=format&fit=crop",
+      img: "https://images.unsplash.com/photo-1553481187-be93c21490a9?q=60&w=600&auto=format&fit=crop",
       badge: "POPULAR"
     },
     {
@@ -99,7 +99,7 @@ export const HomeView: React.FC = () => {
       titleBn: "লুডু কিং ১ বনাম ১ লড়াই",
       subtitleEn: "Quick matches, instant winnings and direct cashouts!",
       subtitleBn: "কুইক ম্যাচ, সাথে সাথে বিজয় নির্ধারণ এবং উইথড্র!",
-      img: "https://images.unsplash.com/photo-1611195974226-a6a9be9dd763?q=80&w=1200&auto=format&fit=crop",
+      img: "https://images.unsplash.com/photo-1611195974226-a6a9be9dd763?q=60&w=600&auto=format&fit=crop",
       badge: "EASY"
     }
   ];

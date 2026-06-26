@@ -147,7 +147,7 @@ const AppContent: React.FC = () => {
           >
             <Trophy className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-bold font-sans truncate max-w-full px-0.5">
-              {language === 'en' ? 'Join Match' : 'জয়েন টুর্নামেন্ট'}
+              {language === 'en' ? 'Join Tournament' : 'জয়েন টুর্নামেন্ট'}
             </span>
           </button>
 
