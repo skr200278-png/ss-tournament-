@@ -6,6 +6,8 @@
     <title>ProTournament BD | টুর্নামেন্ট ক্রিকেট, ফ্রি ফায়ার ও লুডু</title>
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#f59e0b" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
@@ -20,38 +22,55 @@
         }
       }, true);
 
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          const isDev = window.location.hostname === 'localhost' || 
-                        window.location.hostname === '127.0.0.1' || 
-                        window.location.hostname.includes('ais-dev-');
+      try {
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            try {
+              const isDev = window.location.hostname === 'localhost' || 
+                            window.location.hostname === '127.0.0.1' || 
+                            window.location.hostname.includes('ais-dev-');
 
-          if (!isDev) {
-            navigator.serviceWorker.register('/sw.js')
-              .then(reg => console.log('ProTournament BD Service Worker registered successfully:', reg.scope))
-              .catch(err => console.warn('Service Worker registration failed:', err));
-          } else {
-            console.log('Skipping Service Worker registration in development/preview mode');
-            // Unregister any active service worker in development to prevent caching conflicts
-            navigator.serviceWorker.getRegistrations().then(registrations => {
-              for (let registration of registrations) {
-                registration.unregister().then(success => {
-                  if (success) console.log('Successfully unregistered stale development service worker');
-                });
+              if (!isDev) {
+                navigator.serviceWorker.register('/sw.js')
+                  .then(reg => console.log('ProTournament BD Service Worker registered successfully:', reg.scope))
+                  .catch(err => console.warn('Service Worker registration failed:', err));
+              } else {
+                console.log('Skipping Service Worker registration in development/preview mode');
+                try {
+                  // Unregister any active service worker in development to prevent caching conflicts
+                  navigator.serviceWorker.getRegistrations().then(registrations => {
+                    for (let registration of registrations) {
+                      registration.unregister().then(success => {
+                        if (success) console.log('Successfully unregistered stale development service worker');
+                      }).catch(e => console.warn('Unregister failed:', e));
+                    }
+                  }).catch(e => console.warn('getRegistrations failed:', e));
+                } catch (swErr) {
+                  console.warn('SW getRegistrations error:', swErr);
+                }
+
+                try {
+                  // Clear browser cache storage to prevent loading of stale/broken assets in development
+                  if (window.caches) {
+                    caches.keys().then(keys => {
+                      keys.forEach(key => {
+                        caches.delete(key).then(() => {
+                          console.log('Cleared stale dev cache:', key);
+                        }).catch(e => {});
+                      });
+                    }).catch(e => {});
+                  }
+                } catch (cacheErr) {
+                  console.warn('Caches error:', cacheErr);
+                }
               }
-            });
-            // Clear browser cache storage to prevent loading of stale/broken assets in development
-            if (window.caches) {
-              caches.keys().then(keys => {
-                keys.forEach(key => {
-                  caches.delete(key).then(() => {
-                    console.log('Cleared stale dev cache:', key);
-                  });
-                });
-              });
+            } catch (innerErr) {
+              console.warn('Inner load error:', innerErr);
             }
-          }
-        });
+          });
+        }
+      } catch (outerErr) {
+        console.warn('Outer Service Worker / Caches check blocked by browser sandbox:', outerErr);
       }
     </script>
   </head>

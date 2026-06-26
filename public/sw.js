@@ -1,9 +1,10 @@
 // ProTournament BD Service Worker for installable PWA support
-const CACHE_NAME = 'protournament-v5';
+const CACHE_NAME = 'protournament-v6';
 const ASSETS = [
   './',
   'index.html',
   'manifest.json',
+  'favicon.ico',
   'icon-72.png',
   'icon-96.png',
   'icon-128.png',

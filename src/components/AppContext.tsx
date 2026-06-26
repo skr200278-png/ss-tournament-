@@ -287,7 +287,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     Nagad_number: "01948110394",
     Rocket_number: "01827491024",
     notice: "🔥 Welcome to ProTournament BD! Free Fire, PUBG & Ludo cash prize matches are online. Deposit is instant with personal Cash Out services.",
-    banner_url: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1200",
+    banner_url: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=50&w=600",
     payment_mode: "manual" as "manual" | "auto",
     gateway_type: "sms_forwarder" as "sms_forwarder" | "third_party_api_sim",
     third_party_api_key: "",

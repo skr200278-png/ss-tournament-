@@ -32,17 +32,17 @@ const WinnerCelebrationBanner: React.FC<{ match: Tournament }> = ({ match }) => 
   if (!customImg || !customImg.trim().startsWith('http')) {
     switch (theme) {
       case 'cyber_neon':
-        customImg = "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800";
+        customImg = "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=50&w=400";
         break;
       case 'royal_champion':
-        customImg = "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=800";
+        customImg = "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=50&w=400";
         break;
       case 'gaming_dark':
-        customImg = "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&q=80&w=800";
+        customImg = "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&q=50&w=400";
         break;
       case 'classic_gold':
       default:
-        customImg = "https://images.unsplash.com/photo-1578269174936-2709b5a5e003?auto=format&fit=crop&q=80&w=800";
+        customImg = "https://images.unsplash.com/photo-1578269174936-2709b5a5e003?auto=format&fit=crop&q=50&w=400";
         break;
     }
   }
